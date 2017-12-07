@@ -3,9 +3,7 @@
 # Author: Joseph Crispell
 # Repository created: 07-12-17
 
-
-Description:
-These are my java class files that I am currently working with
+These are my java class files that I am currently working with.
 If you're interested in loading these into eclipse, here is what I do on my windows machine:
 1. Download repository from github and unzip
 2. Open eclipse and set working directory to this folder
