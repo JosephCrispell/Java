@@ -20,6 +20,35 @@ public class ArrayMethods {
 	}
 	
 	// Methods
+	public static boolean compare(String[] a, String[] b){
+		
+		// Initialise a variable to store the result
+		boolean result = false;
+		
+		// Check if input arrays are the same length
+		if(a.length == b.length){
+			
+			// Index the second input array
+			Hashtable<String, Integer> bIndexed = HashtableMethods.indexArray(b);
+			
+			// Check whether all of a are present in b
+			int count = 0;
+			for(int i = 0; i < a.length; i++){
+				if(bIndexed.get(a[i]) != null){
+					count++;
+				}else{
+					break;
+				}
+			}
+			
+			if(count == a.length){
+				result = true;
+			}
+		}
+		
+		return result;
+	}
+	
 	public static String[] returnElementsOnlyPresentInA(String[] a, String[] b){
 		
 		String[] elementsOnlyInA = new String[a.length];

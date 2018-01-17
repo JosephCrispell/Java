@@ -1,5 +1,6 @@
 package identifyingHomoplasies;
 
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.Hashtable;
 import java.util.Scanner;
@@ -11,6 +12,7 @@ import methods.ArrayMethods;
 import methods.CalendarMethods;
 import methods.GeneticMethods;
 import methods.HashtableMethods;
+import methods.WriteToFile;
 import phylogeneticTree.BeastNewickTreeMethods;
 import phylogeneticTree.CalculateDistancesToMRCAs;
 import phylogeneticTree.Node;
@@ -21,31 +23,70 @@ public class HomoplasyFinder {
 	public static void main(String[] args) throws IOException{
 		
 		/**
+		 * Command line tool set up
+		 */
+		
+//		if(args[0].equals("-help") || args[0].equals("") || args[0].equals("-h") || args[0].equals("help")){
+//			System.out.println("HomoplasyFinder: a tool to identify homoplasies within a phylogenetic tree and alignment");
+//			System.out.println("\nCommand Line Structure:");
+//			System.out.println("\tjava -jar homoplasyFinder_DATE.jar verbose thresholdProp sequences.fasta newick.tree refID\n");
+//			System.out.println("\t\tverbose\tDetailed output [0] or none [1]");
+//			System.out.println("\t\tthresholdProp\tProportion of isolates homoplasy must be found to be ignored");
+//			System.out.println("\t\tsequences.fasta\tPath to FASTA file containing alignment");
+//			System.out.println("\t\tnewick.tree\tPath to newick formatted tree file");
+//			System.out.println("\t\trefID\t\tThe identifier of reference sequence in FASTA file if present");
+//			System.out.println("\nNotes:");
+//			System.out.println("First line of input FASTA file contains the number of isolates and sites in the file");
+//
+//			System.exit(0);
+//		}
+//		
+//		// Get the command line arguments
+//		boolean verbose = args[0].matches("1");
+//		double thresholdAlleleSupportInPop = Double.parseDouble(args[1]);
+//		String fasta = args[2];
+//		String treeFile = args[3];
+//		String reference = "NONE";
+//		if(args.length == 5){
+//			reference = args[4];
+//		}
+		/**
 		 * Setting up
 		 */
 		
 		// Set the path
-		//String path = "C:/Users/Joseph Crisp/Desktop/UbuntuSharedFolder/Homoplasmy/";
+		//String path = "C:/Users/Joseph Crisp/Desktop/UbuntuSharedFolder/NewZealand/NewAnalyses_12-05-16/MLTree/";
 		String path = "C:/Users/Joseph Crisp/Desktop/UbuntuSharedFolder/Woodchester_CattleAndBadgers/NewAnalyses_13-07-17/vcfFiles/";
 				
 		// Get the current date
-		//String date = CalendarMethods.getCurrentDate("dd-MM-yy");
+		String date = CalendarMethods.getCurrentDate("dd-MM-yy");
 		
 		/**
 		 * Indexing SNPs in FASTA file
 		 */
 		
 		// Read in the FASTA file
-		//String fasta = path + "example_" + date + ".fasta";
+		//String fasta = path + "sequences_withRef_Prox-10_14-06-16.fasta";
 		String fasta = path + "sequences_Prox-10_29-09-2017.fasta";
 		Sequence[] sequences = GeneticMethods.readFastaFile(fasta);
 				
 		// Parse file names
+		String name;
+		String[] parts;
 		for(Sequence sequence : sequences){
 			if(sequence.getName().matches("Ref-1997") == true){
 				continue;
 			}
-			sequence.setName(sequence.getName().split("_")[0]);
+			
+			name = sequence.getName();
+			parts = name.split("_");
+			if(name.matches("(.*)#(.*)") == true){
+				name = parts[0] + "_" + parts[1];
+			}else{
+				name = parts[0];
+			}
+			
+			sequence.setName(name);
 		}
 		
 		// Index the isolates
@@ -81,7 +122,7 @@ public class HomoplasyFinder {
 		 */
 		
 		// Read in the newick tree
-		//String treeFile = path + "example_" + date + ".tree";
+		//String treeFile = path + "mlTree_withRef_14-06-16.tree";
 		String treeFile = path + "mlTree_29-09-2017.tree";
 		Node tree = readNewickTree(treeFile);
 		
@@ -100,20 +141,95 @@ public class HomoplasyFinder {
 		 * Identifying potential homoplasmy events
 		 */
 		
-		// Define threshold proportion of isolates to be considered ancestral
-		double thresholdAlleleSupportInPop = 0.5;
+		// Create an output file
+		//String outputFile = path + "homoplasyReport_" + date + ".txt";
+		String outputFile = path + "homoplasyReport_" + date + ".txt";
+		BufferedWriter bWriter = WriteToFile.openFile(outputFile, false);
+		String header = "Node/IsolateID\tPosition\tAllele\tNNodesBackToRootAlleleFound\t";
+		header = header + "IsolatesAlleleFoundIn\tAreIsolatesMonophyletic?\t";
+		header = header + "\tMeanDistanceToIsolates\tMeanDistanceBetweenIsolates";
+		WriteToFile.writeLn(bWriter, header);
 		
 		// Examine each of the nodes to check for evidence of homoplasmies
+		double thresholdAlleleSupportInPop = 0.5;
 		identifyPotentialHomoplasiesInAllNodes(tree, variantPositionInfo, thresholdAlleleSupportInPop,
 				variantPositionAlleleForEachIsolate, geneticDistances, sequences, isolateIndices,
-				isolateNodes, reference);
+				isolateNodes, reference, bWriter, true);
+		
+		// Close the output file
+		WriteToFile.close(bWriter);
 	}
 
+	public static boolean checkWhetherAlreadySeenHomoplasy(String[] previousHomoplasyIds, String homoplasyId){
+		
+		// Get the isolate IDs associated with the current homoplasy
+		String[][] homoplasyIsolates = getIsolateIDsFromHomoplasyId(homoplasyId);
+		
+		// Get the isolate IDs associated with the homosplasies already found
+		String[][][] isolatesOfPreviousHomoplasies = getIsolateIDsFromHomoplasyIds(previousHomoplasyIds);
+		
+		// Initialise a variable to store the result
+		boolean result = false;
+		
+		// Get whether the current homoplasy matches any of those found before
+		for(int i = 0; i < previousHomoplasyIds.length; i++){
+			
+			if(compareIsolatesBetweenHomoplasies(homoplasyIsolates, isolatesOfPreviousHomoplasies[i]) == true){
+				result = true;
+				break;
+			}
+		}
+		
+		return result;
+	}
+	
+	public static boolean compareIsolatesBetweenHomoplasies(String[][] a, String[][] b){
+		
+		boolean result = false;
+		
+		// Check position first then compare the isolates (to and from) - these need to match either: 
+		//		to=to AND from=from
+		//		to=from AND from=to 
+		if(a[2][0].matches(b[2][0]) == true && (ArrayMethods.compare(a[0], b[0]) == true ||
+		    ArrayMethods.compare(a[0], b[1]) == true ) &&
+		   (ArrayMethods.compare(a[1], b[0]) == true ||
+		   ArrayMethods.compare(a[1], b[1]) == true)){
+			result = true;
+		}
+		
+		return result;
+	}
+	
+	public static String[][][] getIsolateIDsFromHomoplasyIds(String[] ids){
+		
+		String[][][] output = new String[ids.length][3][0];
+		for(int i = 0; i < ids.length; i++){
+			output[i] = getIsolateIDsFromHomoplasyId(ids[i]);
+		}
+		
+		return output;
+	}
+	
+	public static String[][] getIsolateIDsFromHomoplasyId(String id){
+		String[] parts = id.split(":");
+		
+		String[][] output = new String[3][1];
+		output[0] = parts[0].split("-");
+		output[1] = parts[1].split("-");
+		output[2][0] = parts[2];
+		
+		return output;
+	}
+	
 	public static void identifyPotentialHomoplasiesInAllNodes(Node node, 
 			Hashtable<Integer, VariantPosition> variantPositionInfo, double thresholdAlleleSupportInPop,
 			Hashtable<String, String[]> variantPositionAlleleForEachIsolate,
 			int[][] geneticDistances, Sequence[] sequences, Hashtable<String, Integer> isolateIndices,
-			Hashtable<String, Node> isolateNodes, String reference){
+			Hashtable<String, Node> isolateNodes, String reference, BufferedWriter bWriter,
+			boolean verbose) throws IOException{
+		
+		// Initialise a variable to identify any homoplasy found
+		String homoplasyId;
 		
 		// Get the isolates associated with the current node
 		String[] isolatesAssociatedWithCurrentNode = node.getNodeInfo().getNodeId().split("-");
@@ -147,27 +263,42 @@ public class HomoplasyFinder {
 					if(isolatesFoundIn.length != 0 &&
 							variantPositionInfo.get(position).getAlleleSupport(allele) < thresholdAlleleSupportInPop){
 						
+						// Build an ID to identify the current homoplasy
+						homoplasyId = node.getNodeInfo().getNodeId() + ":" + ArrayMethods.toString(isolatesFoundIn, "-")
+							+ ":" + position;
+						
+						// Check whether this homoplasy has already been identified
+						if(checkWhetherAlreadySeenHomoplasy(Global.idsOfHomoplasiesFound, homoplasyId) == true){
+							continue;
+						}
+						
+						// Store the current homoplasy as found
+						Global.idsOfHomoplasiesFound = ArrayMethods.append(Global.idsOfHomoplasiesFound, homoplasyId);
+												
 						// Print information about allele
-						System.out.println("################################################################");
-						System.out.println("Potential introduced homoplasy found in node associated with isolate(s): " + 
-								node.getNodeInfo().getNodeId() +
-								"\tPosition in FASTA sequence: " + (position + 1) + "\tAllele: " + allele);
+						if(verbose == true){
+							System.out.println("Potential homoplasy in node associated with isolate(s): " + 
+									node.getNodeInfo().getNodeId() + "\tFrom: " + 
+									ArrayMethods.toString(isolatesFoundIn, "-") + "\tPosition: " + (position + 1) + 
+									"\tAllele: " + allele);
+						}						
+						WriteToFile.write(bWriter, node.getNodeInfo().getNodeId() + "\t" + (position + 1) +"\t" + allele + "\t");
 						
 						// Search for allele on path to root
-						searchForAlleleOnPathToRoot(node, vpAllele);
+						searchForAlleleOnPathToRoot(node, vpAllele, bWriter);
 						
 						// Note the other isolates found in
-						System.out.print("\nAlelle also found in: " + ArrayMethods.toString(isolatesFoundIn, ", "));
-						System.out.println("\nFraction = " + isolatesFoundIn.length + "/" + 
-								(variantPositionAlleleForEachIsolate.size() - isolatesAssociatedWithCurrentNode.length));
+						WriteToFile.write(bWriter, ArrayMethods.toString(isolatesFoundIn, "-") + "\t");
 						
 						// Are the other isolates the SNP was found in monophyletic?
-						checkIfIsolatesAreMonophyletic(isolatesFoundIn, isolateNodes);
+						checkIfIsolatesAreMonophyletic(isolatesFoundIn, isolateNodes, bWriter);
 						
 						// Look at the genetic distances associated with the isolates with an allele at this site
 						examineInterIsolateGeneticDistancesAssociatedWithVariantPosition(geneticDistances, sequences, 
 								variantPositionAlleleForEachIsolate, vpAllele,
-								HashtableMethods.getValuesInt(isolateIndices, isolatesAssociatedWithCurrentNode));
+								HashtableMethods.getValuesInt(isolateIndices, isolatesAssociatedWithCurrentNode),
+								bWriter);
+						WriteToFile.write(bWriter, "\n");
 					}
 				}
 			}
@@ -179,7 +310,7 @@ public class HomoplasyFinder {
 				for(Node subNode : node.getSubNodes()){
 					identifyPotentialHomoplasiesInAllNodes(subNode, variantPositionInfo, thresholdAlleleSupportInPop,
 							variantPositionAlleleForEachIsolate, geneticDistances, sequences, isolateIndices,
-							isolateNodes, reference);
+							isolateNodes, reference, bWriter, verbose);
 				}
 			}
 		}
@@ -231,6 +362,7 @@ public class HomoplasyFinder {
 			
 		}else if(reference.matches("NONE") == false){
 			System.out.println("ERROR: Reference sequence not found under: " + reference);
+			System.exit(0);
 		}
 		
 		return indexedReferenceAlleles;
@@ -260,67 +392,8 @@ public class HomoplasyFinder {
 		return output;
 	}
 	
-	public static void identifyPotentialHomoplasiesInTerminalNodes(Node[] terminalNodes, 
-			Hashtable<Integer, VariantPosition> variantPositionInfo, double thresholdAlleleSupportInPop,
-			Hashtable<String, String[]> variantPositionAlleleForEachIsolate,
-			int[][] geneticDistances, Sequence[] sequences, Hashtable<String, Integer> isolateIndices,
-			Hashtable<String, Node> isolateNodes, String reference){
-		
-		// Initialise an array to store the isolate associated with a given terminal node 
-		// (needs to be in array to work with a method)
-		String[] terminalNodeIsolate;
-		
-		// Initialise a vector to store the isolates each potential homoplasy was found in
-		String[] isolatesFoundIn;
-		
-		// Examine each terminal node
-		for(Node terminalNode : terminalNodes){
-			
-			// Get the isolate associated with the current node and store in array
-			terminalNodeIsolate = terminalNode.getNodeInfo().getNodeId().split("-");
-			
-			// Identify the variant position alleles only present in current isolate/terminalNode/subNode and 
-			// not in isolates of other sub nodes
-			String[] uniqueVariantPositionAlleles = 
-					identifyVariantPositionAllelesFoundInTerminalNodeAndNotInOthersOfParentNode(terminalNode);
-			
-			// Are any of these variant position alleles present in other isolates in the population?
-			for(String vpAllele : uniqueVariantPositionAlleles){
-				
-				// Get position of current variant position
-				String[] parts = vpAllele.split(":");
-				int position = Integer.parseInt(parts[0]);
-				char allele = parts[1].toCharArray()[0];
-				
-				if(variantPositionInfo.get(position).getAlleleCount(allele) > 1 &&
-						variantPositionInfo.get(position).getAlleleSupport(allele) < thresholdAlleleSupportInPop){
-					
-					// Print information about allele
-					System.out.println("################################################################");
-					System.out.println("Potential introduced homoplasy found in isolate: " + 
-							terminalNode.getNodeInfo().getNodeId() +
-							"\tPosition in FASTA sequence: " + (position + 1) + "\tAllele: " + allele);
-					
-					// Search for allele on path to root
-					searchForAlleleOnPathToRoot(terminalNode, vpAllele);
-					
-					// Note which isolates allele found in
-					isolatesFoundIn = reportWhichIsolatesAlleleIn(variantPositionAlleleForEachIsolate,
-							terminalNodeIsolate, vpAllele);
-					
-					// Are the other isolates the SNP was found in monophyletic?
-					checkIfIsolatesAreMonophyletic(isolatesFoundIn, isolateNodes);
-					
-					// Look at the genetic distances associated with the isolates with an allele at this site
-					examineInterIsolateGeneticDistancesAssociatedWithVariantPosition(geneticDistances, sequences, 
-							variantPositionAlleleForEachIsolate, vpAllele,
-							HashtableMethods.getValuesInt(isolateIndices, terminalNodeIsolate));
-				}
-			}			
-		}
-	}
-	
-	public static boolean checkIfIsolatesAreMonophyletic(String[] isolates, Hashtable<String, Node> isolateNodes){
+	public static boolean checkIfIsolatesAreMonophyletic(String[] isolates, Hashtable<String, Node> isolateNodes,
+			BufferedWriter bWriter) throws IOException{
 				
 		// Initialise a variable to return
 		boolean monophyletic = false;
@@ -366,11 +439,9 @@ public class HomoplasyFinder {
 					// Check only the isolates of interest were found in the terminal node isolates
 					if(isolates.length == terminalNodeIsolates.length){
 						monophyletic = true;
-						System.out.println("These " + isolates.length +	" isolates are monophyletic" + 
-								" (present single clade containing no other isolates)");
+						WriteToFile.write(bWriter, "YES\t");
 					}else{
-						System.out.println("These " + isolates.length +	" isolates are NOT monophyletic" + 
-								" (present in multiple clades)");
+						WriteToFile.write(bWriter, "NO\t");
 					}
 					
 					// FINISH
@@ -381,7 +452,9 @@ public class HomoplasyFinder {
 					parent = parent.getParentNode();
 				}
 			}
-		}		
+		}else{
+			WriteToFile.write(bWriter, "NA\t");
+		}
 		
 		return monophyletic;		
 	}
@@ -389,7 +462,7 @@ public class HomoplasyFinder {
 	public static void examineInterIsolateGeneticDistancesAssociatedWithVariantPosition(
 			int[][] geneticDistances, Sequence[] sequences, 
 			Hashtable<String, String[]> variantPositionAlleleForEachIsolate,
-			String vpAllele, int[] isolateIndices){
+			String vpAllele, int[] isolateIndices, BufferedWriter bWriter) throws IOException{
 		
 		// Get the position for the input variant position allele
 		String[] parts = vpAllele.split(":");
@@ -467,12 +540,8 @@ public class HomoplasyFinder {
 		}
 		
 		// Report findings
-		System.out.println("\nmean distance to other isolates with variant position allele = " +
-				ArrayMethods.mean(distancesToOtherIsolatesThatHaveIt));
-		System.out.println("mean distance between other isolates with variant position allele = " +
-				ArrayMethods.mean(distancesBetweenOtherIsolatesThatHaveIt));
-		System.out.println("ratio = " + ArrayMethods.mean(distancesToOtherIsolatesThatHaveIt) / 
-				ArrayMethods.mean(distancesBetweenOtherIsolatesThatHaveIt));
+		WriteToFile.write(bWriter, ArrayMethods.mean(distancesToOtherIsolatesThatHaveIt) + "\t");
+		WriteToFile.write(bWriter, ArrayMethods.mean(distancesBetweenOtherIsolatesThatHaveIt) + "\t");
 	}
 	
 	public static String getAlleleOfVariantPositionInIsolate(String[] isolateVariantPositionAlleles, String position){
@@ -593,7 +662,7 @@ public class HomoplasyFinder {
 		return isolates;
 	}
 	
-	public static void searchForAlleleOnPathToRoot(Node node, String vpAllele){
+	public static void searchForAlleleOnPathToRoot(Node node, String vpAllele, BufferedWriter bWriter) throws IOException{
 		
 		// Does the SNP ever appear on nodes on path to root?
 		int found = -1;
@@ -606,10 +675,9 @@ public class HomoplasyFinder {
 		}				
 		
 		if(found != -1){
-			System.out.println("\nFound " + found + " node(s) back on path towards root (length = " + 
-					node.getPathToRoot().length + ")");
+			WriteToFile.write(bWriter, found + "\t");
 		}else{
-			System.out.println("\nAllele not found to be common on any nodes on path towards root");
+			WriteToFile.write(bWriter,"NA\t");
 		}
 	}
 	
