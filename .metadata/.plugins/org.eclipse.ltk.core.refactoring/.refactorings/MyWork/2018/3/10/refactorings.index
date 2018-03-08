@@ -1,0 +1,6 @@
+1520345393791	Rename local variable 'commonAllelesOnlyFoundInAboveOrBelow'
+1520346332259	Rename local variable 'assignedAlleles'
+1520348999643	Rename local variable 'allele'
+1520349097339	Rename local variable 'potentialHomoplasy'
+1520350822157	Rename local variable 'unassigned'
+1520351392367	Rename local variable 'homoplasyPositions'

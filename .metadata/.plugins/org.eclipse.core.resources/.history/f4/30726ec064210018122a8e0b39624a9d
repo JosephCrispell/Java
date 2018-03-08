@@ -1,0 +1,360 @@
+package identifyingHomoplasies;
+
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.util.Hashtable;
+
+import geneticDistances.Sequence;
+import methods.ArrayMethods;
+import methods.CalendarMethods;
+import methods.GeneticMethods;
+import methods.HashtableMethods;
+import methods.WriteToFile;
+import phylogeneticTree.BeastNewickTreeMethods;
+import phylogeneticTree.CalculateDistancesToMRCAs;
+import phylogeneticTree.Node;
+import phylogeneticTree.NodeMethods;
+
+public class HomoplasyFinder3 {
+
+	public static void main(String[] args) throws IOException{
+		
+		// Set the path
+		String path = "C:/Users/Joseph Crisp/Desktop/UbuntuSharedFolder/Homoplasmy/";
+				
+		// Get the current date
+		String date = CalendarMethods.getCurrentDate("dd-MM-yy");
+		
+		// Set verbose
+		boolean verbose = true;
+		
+		/**
+		 * Read in the phylogeny
+		 */
+
+		String treeFile = path + "example_06-03-18.tree";
+		Node tree = readNewickTree(treeFile, verbose);
+		
+		/**
+		 * Read in the FASTA file
+		 */
+		
+		// Read in the FASTA file
+		String fasta = path + "example_06-03-18.fasta";
+		Hashtable<String, char[]> sequences = storeSequencesInHashtable(GeneticMethods.readFastaFile(fasta, verbose));
+		
+		// Get the alleles in the population and the isolates they are associated with
+		Hashtable<String, String[]> alleles = noteAllelesInPopulation(sequences, verbose);
+		
+		/**
+		 * Assign allele to node in phylogeny if:
+		 * - Found in all isolates above and not in any below node OR vice versa
+		 */
+		
+		// Assign alleles
+		assignAllelesToCurrentNode(tree, sequences, HashtableMethods.getKeysString(sequences), verbose);
+		
+		// Get the assigned alleles
+		Hashtable<String, Node> assignedAlleles = Global.nodeForEachAllele;
+				
+		/**
+		 * Examine the un-assigned alleles - these are potential homoplasies
+		 */
+		examineUnAssignedAlleles(assignedAlleles, alleles, verbose);
+	}
+	
+	// Methods section
+	public static BufferedWriter buildOutputFile(String date, String path) throws IOException{
+		
+		String outputFile = path + "homoplasyReport_" + date + ".txt";
+		BufferedWriter bWriter = WriteToFile.openFile(outputFile, false);
+		WriteToFile.writeLn(bWriter, "Position\tAlleles\tIsolatesForAlleles");
+				
+		return bWriter;
+	}
+	
+	public static Hashtable<String, String[]> noteAllelesInPopulation(Hashtable<String, char[]> sequences, boolean verbose){
+		
+		if(verbose == true){
+			System.out.println("Recording alleles present in population...");
+		}
+		
+		// Initialise a hashtable to store the isolates associated with each allele
+		Hashtable<String, String[]> alleles = new Hashtable<String, String[]>();
+		
+		// Initialise a variable to store each allele
+		String allele;
+		
+		// Examine each isolate
+		for(String id : HashtableMethods.getKeysString(sequences)){
+			
+			// Examine each position in the current isolate's sequence
+			for(int pos = 0; pos < sequences.get(id).length; pos++){
+				
+				// Create a key for the current allele
+				allele = pos + ":" + sequences.get(id)[pos];
+				
+				// Check if we have encountered the current allele before
+				if(alleles.get(allele) != null){
+					
+					alleles.put(allele, ArrayMethods.append(alleles.get(allele), id));
+				}else{
+					
+					String[] ids = {id};
+					alleles.put(allele, ids);
+				}
+			}
+		}
+		
+		return alleles;
+	}
+	
+	public static String[] findAllelesCommonToAAndNotInB(Hashtable<String, Boolean> a, Hashtable<String, Boolean> b){
+		
+		// Initialise an array to store the alleles common to A and absent from B
+		String[] alleles = new String[a.size()];
+		int pos = -1;
+		
+		// Examine each of the alleles in A
+		for(String allele : HashtableMethods.getKeysString(a)){
+			
+			// Check if current allele common to A and not in b
+			if(a.get(allele) == true && b.get(allele) == null){
+				pos++;
+				alleles[pos] = allele;
+			}
+		}
+		
+		return ArrayMethods.subset(alleles, 0, pos);
+	}
+
+	public static void examineUnAssignedAlleles(Hashtable<String, Node> assignedAlleles, Hashtable<String, String[]> alleles, boolean verbose,
+			String path, String date) throws IOException{
+		
+		// Print progress information
+		if(verbose == true){
+			System.out.println("Identifying potential homoplasies...");
+		}
+		
+		// Build an output file
+		BufferedWriter bWriter = buildOutputFile(date, path);
+		
+		// Note the unassigned alleles
+		String[] potentialHomoplasies = new String[alleles.size() - assignedAlleles.size()];
+		int pos = -1;
+		for(String allele : HashtableMethods.getKeysString(alleles)){
+			
+			// Ignore allele if assigned to node
+			if(assignedAlleles.get(allele) != null){
+				continue;
+			}
+			
+			// Store the current allele
+			pos++;
+			potentialHomoplasies[pos] = allele;
+		}
+		
+		// Note the positions involved
+		String[] parts;
+		int position;
+		char nucleotide;
+		Hashtable<Integer, char[]> potentialHomoplasyPositions = new Hashtable<Integer, char[]>();
+		for(String allele : potentialHomoplasies){
+			
+			// Split the allele into its position and nucleotide
+			parts = allele.split(":");
+			position = Integer.parseInt(parts[0]);
+			nucleotide = parts[1].toCharArray()[0];
+			
+			// Check if already encountered this position
+			if(potentialHomoplasyPositions.get(position) != null){
+				potentialHomoplasyPositions.put(position, ArrayMethods.append(potentialHomoplasyPositions.get(position), nucleotide));
+			}else{
+				char[] nucleotides = {nucleotide};
+				potentialHomoplasyPositions.put(position, nucleotides);
+			}
+		}
+		
+		// Report the information about each homoplasy
+		for(int allelePosition : HashtableMethods.getKeysInt(potentialHomoplasyPositions)){
+			
+			if(verbose == true){
+				System.out.println("---------------------------------------------------------------------------");
+				System.out.println("Potential homoplasy identified at position: " + (allelePosition + 1) + " with alleles " + 
+						ArrayMethods.toString(potentialHomoplasyPositions.get(allelePosition), ", "));
+			}
+			
+			WriteToFile.write(bWriter, (allelePosition + 1) + "\t" + ArrayMethods.toString(potentialHomoplasyPositions.get(allelePosition), ", ") + "\t");
+			
+			char[] allelesForHomoplasy = potentialHomoplasyPositions.get(allelePosition);
+			for(int i = 0; i < allelesForHomoplasy.length; i++){
+				if(verbose == true){
+					System.out.println("Isolates with allele " + allelesForHomoplasy[i] + ": " + 
+							ArrayMethods.toString(alleles.get(allelePosition + ":" + allelesForHomoplasy[i]), ", "));
+				}
+				if(i == 0){
+					WriteToFile.write(bWriter, ArrayMethods.toString(alleles.get(allelePosition + ":" + allelesForHomoplasy[i]), "-"));
+				}else{
+					WriteToFile.write(bWriter, "," + ArrayMethods.toString(alleles.get(allelePosition + ":" + allelesForHomoplasy[i]), "-"));
+				}				
+			}
+			WriteToFile.write(bWriter, "\n");
+		}
+		
+		// Close the output file
+		bWriter.close();
+		
+	}
+	
+	public static void assignAllelesToCurrentNode(Node node, Hashtable<String, char[]> sequences, String[] ids, boolean verbose){
+		
+		// Print progress		
+		if(verbose == true){
+			Global.nodeNo++;
+			System.out.println("Assigning alleles to node " + Global.nodeNo + " of " + ((2 * ids.length) - 1));
+		}
+		
+		// Get all the isolates below the current node and note their common alleles
+		String[] idsBelow = getIdsBelowNode(node);
+		Hashtable<String, Boolean> allelesBelow = findCommonAlleles(idsBelow, sequences);
+		
+		// Get all the isolates above the current node and note their common alleles
+		String[] idsAbove = ArrayMethods.returnNotCommonElements(idsBelow, ids);
+		Hashtable<String, Boolean> allelesAbove = findCommonAlleles(idsAbove, sequences);
+		
+		// Identify alleles common to isolates above node and NOT in isolates below OR vice versa
+		String[] allelesCommonToBelowAndNotInAbove = findAllelesCommonToAAndNotInB(allelesBelow, allelesAbove);
+		String[] allelesCommonToAboveAndNotInBelow = findAllelesCommonToAAndNotInB(allelesAbove, allelesBelow);
+		String[] allelesToAssignToCurrentNode = ArrayMethods.combine(allelesCommonToBelowAndNotInAbove, allelesCommonToAboveAndNotInBelow);
+		
+		// Assign each of the alleles found to the current node
+		for(String allele : allelesToAssignToCurrentNode){
+			if(Global.nodeForEachAllele.get(allele) == null){
+				Global.nodeForEachAllele.put(allele, node);
+			}else{
+				System.out.println("ERROR!: Current allele (" + allele + ") already assigned to node.");
+				System.exit(0);
+			}
+			
+		}
+		
+		// Examine each of the current node's sub-nodes
+		if(node.getSubNodes().length != 0){
+			for(Node subNode : node.getSubNodes()){
+			
+				assignAllelesToCurrentNode(subNode, sequences, ids, verbose);
+			}
+		}
+	}
+	
+	public static Hashtable<String, Boolean> findCommonAlleles(String[] ids, Hashtable<String, char[]> sequences){
+		
+		// Initialise a hashtable to store the common alleles
+		Hashtable<String, Integer> alleleCounts = new Hashtable<String, Integer>();
+		
+		// Initialise an array to store each isolates sequence
+		char[] sequence;
+		
+		// Initialise a variable to act as an allele key
+		String alleleKey;
+		
+		// Examine each isolate
+		for(int idIndex = 0; idIndex < ids.length; idIndex++){
+			
+			// Get the current isolates sequence
+			sequence = sequences.get(ids[idIndex]);
+			
+			// Examine each site in the current isolates sequence
+			for(int pos = 0; pos < sequence.length; pos++){
+				
+				// Define key based on the current allele at the current position
+				alleleKey = pos + ":" + sequence[pos];
+				
+				// Check whether we have seen the current allele at the current site before
+				if(alleleCounts.get(alleleKey) != null){
+					alleleCounts.put(alleleKey, alleleCounts.get(alleleKey) + 1);
+				}else{
+					alleleCounts.put(alleleKey, 1);
+				}
+			}
+		}
+		
+		// Note which alleles are common
+		Hashtable<String, Boolean> alleles = new Hashtable<String, Boolean>();
+		for(String allele : HashtableMethods.getKeysString(alleleCounts)){
+			
+			if(alleleCounts.get(allele) == ids.length){
+				alleles.put(allele, true);
+			}else{
+				alleles.put(allele, false);
+			}
+		}
+		
+		return alleles;
+	}
+	
+	public static void noteTerminalNodes(Node node){
+		
+		// Check if we have reached a terminal node
+		if(node.getSubNodes().length != 0){
+				
+			// Examine the subnodes of the current node
+			for(Node subNode : node.getSubNodes()){
+			
+				noteTerminalNodes(subNode);
+			}
+		}else{
+			Global.terminalNodes = NodeMethods.append(Global.terminalNodes, node);
+		}
+	}
+
+	public static String[] getIdsBelowNode(Node node){
+				
+		// Reset the terminal nodes array
+		Global.terminalNodes = new Node[0];
+					
+		// Note the terminal nodes associated with the current node
+		noteTerminalNodes(node);
+		
+		// Note the isolates associated with the terminal nodes found
+		String[] ids = new String[Global.terminalNodes.length];
+		for(int i = 0; i < Global.terminalNodes.length; i++){
+			
+			ids[i] = Global.terminalNodes[i].getNodeInfo().getNodeId();
+		}
+		
+		// Reset the terminal nodes array
+		Global.terminalNodes = new Node[0];
+		
+		return(ids);
+	}
+
+	public static Hashtable<String, char[]> storeSequencesInHashtable(Sequence[] sequences){
+		
+		Hashtable<String, char[]> isolateSequences = new Hashtable<String, char[]>();
+		
+		// Examine each isolate sequence
+		for(int i = 0; i < sequences.length; i++){
+			
+			isolateSequences.put(sequences[i].getName(), sequences[i].getSequence());
+		}
+		
+		return(isolateSequences);
+	}
+
+	public static Node readNewickTree(String pathToFile, boolean verbose) throws IOException{
+		
+		if(verbose == true){
+			System.out.println("Reading newick tree file: " + pathToFile + ")...");
+		}
+		
+		// Get the Newick tree string from file
+		String newickTree = CalculateDistancesToMRCAs.readNewickFile(pathToFile); 
+		
+		// Store the tree as a series of traversable nodes
+		Node tree = BeastNewickTreeMethods.readNewickNode(newickTree, new Node(null, null, null));
+		
+		return tree;
+	}
+
+}

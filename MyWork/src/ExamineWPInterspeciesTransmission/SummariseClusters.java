@@ -35,7 +35,7 @@ public class SummariseClusters {
 		//########################################
 		
 		// Open the file containing Life Histories of animals associated with clusters
-		String lifeHistoryFile = path + "InterSpeciesClusters/sampledAnimalsLifeHistories_02-10-2017.txt";
+		String lifeHistoryFile = path + "InterSpeciesClusters/sampledAnimalsLifeHistories_13-02-2018.txt";
 		Hashtable<String, LifeHistorySummary> lifeHistories = readLifeHistories(lifeHistoryFile);
 		
 		// Remove test results that we're not interested in
@@ -485,7 +485,7 @@ public class SummariseClusters {
 			line += clusterSummaries[i].getMeanSequenceQualityOfIsolates(1) + "\t";
 			
 			line += ArrayMethods.toString(clusterSummaries[i].getNSampled(0), ",") + "\t";
-			line += ArrayMethods.toString(clusterSummaries[i].getNSampled(0), ",") + "\t";
+			line += ArrayMethods.toString(clusterSummaries[i].getNSampled(1), ",") + "\t";
 			line += ArrayMethods.toString(clusterSummaries[i].getNUnSampledDetected(0), ",") + "\t";
 			line += ArrayMethods.toString(clusterSummaries[i].getNUnSampledDetected(1), ",") + "\t";
 			line += ArrayMethods.toString(clusterSummaries[i].getNUnSampledInconclusive(), ",") + "\t";

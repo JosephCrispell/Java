@@ -92,7 +92,7 @@ public class ExamineCluster {
 		date = CalendarMethods.getCurrentDate("dd-MM-yyyy");
 
 		// Get a list of the isolates in each cluster
-		String clusterFile = path + "vcfFiles/clusters_02-10-17.csv";
+		String clusterFile = path + "vcfFiles/clusters_12-02-18.csv";
 		Cluster[] clusters = readClustersFile(clusterFile);
 
 		// Get the isolate sequences
@@ -110,7 +110,7 @@ public class ExamineCluster {
 
 		// Get the genetic distances to the MRCAs of each cluster
 		String newickFile = path + "vcfFiles/";
-		newickFile += "mlTree_29-09-2017.tree";
+		newickFile += "mlTree_12-02-18.tree";
 		noteDistancesToMRCAsOfClusters(clusters, newickFile);
 
 		// Add in the sequencing quality information

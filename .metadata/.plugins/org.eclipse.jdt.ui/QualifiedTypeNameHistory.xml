@@ -2,4 +2,5 @@
 <qualifiedTypeNameHistroy>
 <fullyQualifiedTypeName name="java.io.BufferedWriter"/>
 <fullyQualifiedTypeName name="methods.WriteToFile"/>
+<fullyQualifiedTypeName name="java.util.Hashtable"/>
 </qualifiedTypeNameHistroy>

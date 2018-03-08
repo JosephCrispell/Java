@@ -31,7 +31,7 @@ public class Node {
     public void setPathToRoot(Node[] nodes){
     	this.pathToRoot = nodes;
     }
-    public void setCommonVariantPositionAlleles(String[] snps){
+    public void setCommonAlleles(String[] snps){
     	this.commonVariantPositionAlleles = snps;
     }
     
@@ -48,7 +48,35 @@ public class Node {
     public Node[] getPathToRoot(){
     	return this.pathToRoot;
     }
-    public String[] getCommonVariantPositionAlleles(){
+    public String[] getCommonAlleles(){
     	return this.commonVariantPositionAlleles;
     }
+    
+    // General Methods
+    public static Node[] append(Node[] array, Node node){
+		
+		Node[] newArray = new Node[array.length + 1];
+		
+		for(int i = 0; i < array.length; i++){
+			newArray[i] = array[i];
+		}
+		
+		newArray[array.length] = node;
+		
+		return newArray;		
+	}
+	public static boolean in(Node[] array, Node element){
+		
+		boolean found = false;
+		
+		for(Node x : array){
+			if(x == element){
+				found = true;
+				break;
+			}
+		}
+		
+		return found;
+	}
+
 }

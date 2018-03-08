@@ -11,11 +11,11 @@ public class ArrayMethods {
 		
 		
 		
-		String[] a = {"A", "B", "C"};
-		String[] b = {"A", "C", "D"};
-		
-		System.out.println(ArrayMethods.toString(a, ","));
-		
+		String fasta = "example_07-03-18.fasta";
+		String date = fasta.split("_")[1];
+		System.out.println(date);
+		date = fasta.split("\\.")[0];
+		System.out.println(date);
 		// 
 	}
 	
@@ -330,7 +330,6 @@ public class ArrayMethods {
 		
 		return values;
 	}
-	
 	public static int[] convertToInteger(String[] array){
 		int[] converted = new int[array.length];
 		for(int i = 0; i < array.length; i++){
@@ -376,7 +375,6 @@ public class ArrayMethods {
 		
 		return copy;
 	}
-	
 	public static String[] randomShuffle(String[] array, int times, Random random){
 		
 		String[] copy = ArrayMethods.copy(array);
@@ -405,7 +403,6 @@ public class ArrayMethods {
 		return copy;
 		
 	}
-	
 	public static String[] randomPoissonShuffle(String[] array, double mean, int times){
 		
 		String[] copy = ArrayMethods.copy(array);
@@ -751,7 +748,6 @@ public class ArrayMethods {
 	
 		return array[pos];
 	}
-	
 	public static int randomWeightedChoice( int[] array, double[] weights, Random random){
 		
 		/** Convert Integer Weights into Weights which can be used
@@ -788,7 +784,6 @@ public class ArrayMethods {
 	
 		return array[pos];
 	}
-
 	public static int[] randomWeightedChoices(int [] array, double[] weights, Random random,
 			int nChoices, int replacement){
 		
@@ -814,7 +809,6 @@ public class ArrayMethods {
 		
 		return choices;
 	}
-	
 	public static int randomWeightedIndex(double[] weights, Random random){
 		
 		/** Convert Integer Weights into Weights which can be used
@@ -1261,11 +1255,9 @@ public class ArrayMethods {
 		int arrayLength = (end - start) / step; // Note automatically resolves to integer - using FLOOR - works out well in this method
 		int[] array = new int[arrayLength + 1]; // Note 1 bigger
 		
-		int value = start;
-		for(int index = 0; index < array.length; index++){
-			array[index] = value;
-			
-			value += step;
+		array[0] = start;
+		for(int index = 1; index < array.length; index++){
+			array[index] = array[index - 1] + step;
 		}
 		
 		return array;

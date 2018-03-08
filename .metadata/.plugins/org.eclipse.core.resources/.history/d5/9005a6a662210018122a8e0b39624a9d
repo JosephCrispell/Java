@@ -1,0 +1,10 @@
+package identifyingHomoplasies;
+
+import java.util.Hashtable;
+
+import phylogeneticTree.Node;
+
+public class Global {
+
+	public static Hashtable<String, Node> nodeForEachAllele = new Hashtable<String, Node>();
+}

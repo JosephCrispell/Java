@@ -91,6 +91,19 @@ public class HashtableMethods {
 		return indexed;
 	}
 	
+	public static Hashtable<Character, Integer> indexArray(char[] array){
+		
+		// Initialise a hashtable to store the index of each element of the input array
+		Hashtable<Character, Integer> indexed = new Hashtable<Character, Integer>();
+		
+		// Index each element of the input array
+		for(int i = 0; i < array.length; i++){
+			indexed.put(array[i], i);
+		}
+		
+		return indexed;
+	}
+	
 	public static int[] getKeysInt(Hashtable table){
 		
 		Set<Integer> keys = table.keySet();

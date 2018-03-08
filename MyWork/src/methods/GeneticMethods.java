@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.Hashtable;
 
 import geneticDistances.GeneticDistances;
 import geneticDistances.Sequence;
@@ -140,6 +141,79 @@ public class GeneticMethods {
 		return Sequence.subset(sequences, 0, pos);
 	}
 	
+	public static Sequence[] readFastaFile(String fileName, boolean verbose) throws IOException{
+		
+		/**
+		 * FASTA file structure:
+		 * 		220 3927
+		 *		>WB98_S53_93.vcf
+		 *		GGGCCTCTNNNCTTCAATACCCCCGATACAC
+		 *		>WB99_S59_94.vcf
+		 *		GGGCCTCTNNNNTTCAATACCCCCGATACAC
+		 *		... 
+		 * 
+		 */
+		
+		if(verbose == true){
+			System.out.println("Reading fasta file: " + fileName + "...");
+		}
+		
+		// Open the Sequence Fasta File for Reading
+    	InputStream input = new FileInputStream(fileName);
+    	BufferedReader reader = new BufferedReader(new InputStreamReader(input));
+    	
+    	// Initialise Variables to Store the Sequence Information
+    	String isolateName = "";
+    	String sequence = "";
+    	Sequence[] sequences = new Sequence[0];
+    	int pos = -1;
+    	
+    	int noSamples;
+    	int noNucleotides = -1;
+    	
+    	// Begin Reading the Fasta File
+    	String line = null;
+    	String[] parts;
+    	while(( line = reader.readLine()) != null){
+    		
+    		// Read the Header Information
+    		if(line.matches("(^[0-9])(.*)")){
+    			parts = line.split(" ");
+    			
+    			noSamples = Integer.parseInt(parts[0]);
+    			noNucleotides = Integer.parseInt(parts[1]);
+    			
+    			sequences = new Sequence[noSamples];
+    		
+    		// Deal with the Isolate Sequences
+    		}else if(line.matches("(^>)(.*)")){
+    			
+    			// Store the previous Sequence
+    			if(isolateName != ""){
+    				
+    				pos++;
+    				sequences[pos] = new Sequence(isolateName, sequence.toCharArray());
+    			}
+    			
+    			// Get the current isolates Information
+    			isolateName = line.substring(1);
+    			sequence = "";
+    		
+    		// Store the isolates sequence
+    		}else{
+    			
+    			sequence = sequence + "" + line;
+       		}  		
+    	}
+		reader.close();
+		
+		// Store the last isolate
+		pos++;
+		sequences[pos] = new Sequence(isolateName, sequence.toCharArray()); 
+		
+		return Sequence.subset(sequences, 0, pos);
+	}
+	
 	public static int calculateNumberDifferencesBetweenSequences(char[] a, char[] b, boolean[] informative){
 		
 		// Assumes the sequences are the same length
@@ -185,4 +259,42 @@ public class GeneticMethods {
 		return distances;
 	}
 
+	public static char[] consensus(char[][] sequences){
+		
+		// Initialise an array to store the consensus allele at each position
+		char[] consensus = new char[sequences[0].length];
+		
+		// Initialise an array to count the alleles present at each position
+		int[] counts = new int[5];
+		char[] alleles = {'A', 'C', 'G', 'T', 'N'};
+		Hashtable<Character, Integer> allelePositions = HashtableMethods.indexArray(alleles);	
+		
+		// Initialise an array to record which alleles are most supported
+		int[] maxAlleles;
+		
+		// Examine each position in the alignment
+		for(int pos = 0; pos < sequences[0].length; pos++){
+			
+			// Reset the counts of the alleles at the current position
+			counts = new int[5]; 
+			
+			// Count the alleles present amongst the isolates
+			for(int i = 0; i < sequences.length; i++){
+				counts[allelePositions.get(sequences[i][pos])] = counts[allelePositions.get(sequences[i][pos])] + 1;
+			}
+			
+			// Find the maximum values
+			maxAlleles = ArrayMethods.findMaxs(counts);
+			
+			// Check if multiple maximum values present
+			if(maxAlleles.length > 1){
+				consensus[pos] = 'N';
+			}else{
+				consensus[pos] = alleles[maxAlleles[0]];
+			}			
+		}
+		
+		return(consensus);
+	}
+	
 }
