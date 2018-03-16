@@ -7,6 +7,6 @@ import phylogeneticTree.Node;
 public class Global {
 
 	public static Node[] terminalNodes = new Node[0];
-	public static Hashtable<String, Node> nodeForEachAllele = new Hashtable<String, Node>();
+	public static Hashtable<String, Node[]> nodeForEachAllele = new Hashtable<String, Node[]>();
 	public static int nodeNo = 0;
 }

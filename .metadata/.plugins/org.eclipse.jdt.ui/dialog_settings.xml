@@ -1,13 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <section name="Workbench">
 	<item value="C:\Users\Joseph Crisp\Desktop\UbuntuSharedFolder\Java\MyWork\Library\uncommons-maths-1.2.3\uncommons-maths-1.2.3" key="org.eclipse.jdt.ui.lastextjar"/>
+	<section name="org.eclipse.ltk.ui.refactoring.settings">
+	</section>
 	<section name="FatJarPackageWizard">
 		<item value="C:\Users\Joseph Crisp\Desktop\UbuntuSharedFolder\Java" key="FatJarPackageWizardPage.ANTSCRIPT_LOCATION"/>
-		<item value="HomoplasyFinder - MyWork" key="FatJarPackageWizardPage.LAUNCH_CONFIGURATION_SELECTION_NAME"/>
-		<item value="C:\Users\Joseph Crisp\Desktop\UbuntuSharedFolder\Java\ExecutableJarFiles\HomoplasyFinder_08-01-18.jar" key="FatJarPackageWizardPage.DESTINATION_PATH_SELECTION"/>
+		<item value="HomoplasyFinder3 - MyWork" key="FatJarPackageWizardPage.LAUNCH_CONFIGURATION_SELECTION_NAME"/>
+		<item value="C:\Users\Joseph Crisp\Desktop\UbuntuSharedFolder\Java\ExecutableJarFiles\HomoplasyFinder_06-03-18.jar" key="FatJarPackageWizardPage.DESTINATION_PATH_SELECTION"/>
 		<item value="false" key="FatJarPackageWizardPage.ANTSCRIPT_SAVE"/>
 		<item value="1" key="FatJarPackageWizardPage.LIBRARY_HANDLING"/>
 		<list key="FatJarPackageWizardPage.DESTINATION_NAMES_ID">
+			<item value="C:\Users\Joseph Crisp\Desktop\UbuntuSharedFolder\Java\ExecutableJarFiles\HomoplasyFinder_06-03-18.jar"/>
 			<item value="C:\Users\Joseph Crisp\Desktop\UbuntuSharedFolder\Java\ExecutableJarFiles\HomoplasyFinder_08-01-18.jar"/>
 			<item value="C:\Users\Joseph Crisp\Desktop\UbuntuSharedFolder\Java\ExecutableJarFiles\HomoplasyFinder_05-01-18.jar"/>
 		</list>
@@ -23,7 +26,14 @@
 		<item value="1" key="rootMode"/>
 		<item value="false" key="linkWithEditor"/>
 	</section>
+	<section name="NewClassWizardPage">
+		<item value="false" key="create_constructor"/>
+		<item value="true" key="create_unimplemented"/>
+	</section>
+	<section name="RenameInformationPopup">
+	</section>
 	<section name="OptionalMessageDialog.hide.">
+		<item value="true" key="org.eclipse.jdt.ui.typecomment.deprecated"/>
 	</section>
 	<section name="BuildPathsPropertyPage">
 		<item value="3" key="pageIndex"/>
@@ -33,5 +43,12 @@
 	<section name="completion_proposal_size">
 	</section>
 	<section name="JavaElementSearchActions">
+	</section>
+	<section name="org.eclipse.jdt.internal.ui.text.QuickOutline">
+		<item value="true" key="org.eclipse.jdt.internal.ui.text.JavaOutlineInformationControlDIALOG_USE_PERSISTED_SIZE"/>
+		<item value="350" key="org.eclipse.jdt.internal.ui.text.JavaOutlineInformationControlDIALOG_WIDTH"/>
+		<item value="300" key="org.eclipse.jdt.internal.ui.text.JavaOutlineInformationControlDIALOG_HEIGHT"/>
+		<item value="false" key="GoIntoTopLevelTypeAction.isChecked"/>
+		<item value="false" key="org.eclipse.jdt.internal.ui.text.JavaOutlineInformationControlDIALOG_USE_PERSISTED_LOCATION"/>
 	</section>
 </section>

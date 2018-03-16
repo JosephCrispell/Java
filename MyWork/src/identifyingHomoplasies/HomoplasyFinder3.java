@@ -19,42 +19,44 @@ public class HomoplasyFinder3 {
 
 	public static void main(String[] args) throws IOException{
 		
-		if(args[0].equals("-help") || args[0].equals("") || args[0].equals("-h") || args[0].equals("help")){
-			System.out.println("HomoplasyFinder: a tool to identify homoplasies within a phylogenetic tree and alignment");
-			System.out.println("\nCommand Line Structure:");
-			System.out.println("\tjava -jar homoplasyFinder_DATE.jar verbose path sequences.fasta newick.tree\n");
-			System.out.println("\t\tverbose\tDetailed output [0] or none [1]");
-			System.out.println("\t\tsequences.fasta\tFASTA file containing alignment");
-			System.out.println("\t\tnewick.tree\tNewick formatted tree file");
-			System.out.println("\nNotes:");
-			System.out.println("First line of input FASTA file contains the number of isolates and sites in the file");
-
-			System.exit(0);
-		}
-	
-		// Get the command line arguments
-		boolean verbose = args[0].matches("1");
-		String fasta = args[1];
-		String treeFile = args[2];
-		String path = "";
-		String date = fasta.split("_")[1].split("\\.")[0];
+//		if(args[0].equals("-help") || args[0].equals("") || args[0].equals("-h") || args[0].equals("help")){
+//			System.out.println("HomoplasyFinder: a tool to identify homoplasies within a phylogenetic tree and alignment");
+//			System.out.println("\nCommand Line Structure:");
+//			System.out.println("\tjava -jar homoplasyFinder_DATE.jar verbose path sequences.fasta newick.tree\n");
+//			System.out.println("\t\tverbose\tDetailed output [0] or none [1]");
+//			System.out.println("\t\tsequences.fasta\tFASTA file containing alignment");
+//			System.out.println("\t\tnewick.tree\tNewick formatted tree file");
+//			System.out.println("\nNotes:");
+//			System.out.println("First line of input FASTA file contains the number of isolates and sites in the file");
+//
+//			System.exit(0);
+//		}
+//	
+//		// Get the command line arguments
+//		boolean verbose = args[0].matches("1");
+//		String fasta = args[1];
+//		String treeFile = args[2];
+//		String path = "";
+//		String date = fasta.split("_")[1].split("\\.")[0];
 		
 		// Set the path
 		//String path = "C:/Users/Joseph Crisp/Desktop/UbuntuSharedFolder/Homoplasmy/";
+		String path = "C:/Users/Joseph Crisp/Desktop/UbuntuSharedFolder/NewZealand/NewAnalyses_12-05-16/MLTree/";
 		
 						
 		// Get the current date
-		//String date = CalendarMethods.getCurrentDate("dd-MM-yy");
+		String date = CalendarMethods.getCurrentDate("dd-MM-yy");
 		
 		
 		// Set verbose
-		//boolean verbose = false;
+		boolean verbose = true;
 		
 		/**
 		 * Read in the phylogeny
 		 */
 
 		//String treeFile = path + "example_06-03-18.tree";
+		String treeFile = path + "mlTree_withRef_14-06-16.tree";
 		Node tree = readNewickTree(treeFile, verbose);
 		
 		/**
@@ -62,8 +64,21 @@ public class HomoplasyFinder3 {
 		 */
 		
 		// Read in the FASTA file
-		//String fasta = path + "example_06-03-18.fasta";
-		Hashtable<String, char[]> sequences = storeSequencesInHashtable(GeneticMethods.readFastaFile(fasta, verbose));
+		String fasta = path + "sequences_withRef_Prox-10_14-06-16.fasta";
+		Hashtable<String, char[]> sequencesFirst = storeSequencesInHashtable(GeneticMethods.readFastaFile(fasta, verbose));
+		
+		
+		Hashtable<String, char[]> sequences = new Hashtable<String, char[]>();
+		for(String key : HashtableMethods.getKeysString(sequencesFirst)){
+			
+			String[] parts = key.split("_");
+			String newKey = parts[0];
+			if(key.matches("(.*)#(.*)") == true){
+				newKey = parts[0] + "_" + parts[1];
+			}
+			sequences.put(newKey, sequencesFirst.get(key));
+		}
+		
 		
 		// Get the alleles in the population and the isolates they are associated with
 		Hashtable<String, String[]> alleles = noteAllelesInPopulation(sequences, verbose);
@@ -71,13 +86,15 @@ public class HomoplasyFinder3 {
 		/**
 		 * Assign allele to node in phylogeny if:
 		 * - Found in all isolates above and not in any below node OR vice versa
+		 * 
+		 * CURRENTLY DOESN'T FOR SOME ISOLATES IN CLADE HAVING AN 'N' WHICH WOULD MEAN SITE ISN'T COMMON
 		 */
 		
 		// Assign alleles
 		assignAllelesToCurrentNode(tree, sequences, HashtableMethods.getKeysString(sequences), verbose);
 		
 		// Get the assigned alleles
-		Hashtable<String, Node> assignedAlleles = Global.nodeForEachAllele;
+		Hashtable<String, Node[]> assignedAlleles = Global.nodeForEachAllele;
 				
 		/**
 		 * Examine the un-assigned alleles - these are potential homoplasies
@@ -150,7 +167,7 @@ public class HomoplasyFinder3 {
 		return ArrayMethods.subset(alleles, 0, pos);
 	}
 
-	public static void examineUnAssignedAlleles(Hashtable<String, Node> assignedAlleles, Hashtable<String, String[]> alleles, boolean verbose,
+	public static void examineUnAssignedAlleles(Hashtable<String, Node[]> assignedAlleles, Hashtable<String, String[]> alleles, boolean verbose,
 			String path, String date) throws IOException{
 		
 		// Print progress information
@@ -175,6 +192,7 @@ public class HomoplasyFinder3 {
 			pos++;
 			potentialHomoplasies[pos] = allele;
 		}
+		potentialHomoplasies = ArrayMethods.subset(potentialHomoplasies, 0, pos);
 		
 		// Note the positions involved
 		String[] parts;
@@ -252,12 +270,14 @@ public class HomoplasyFinder3 {
 		// Assign each of the alleles found to the current node
 		for(String allele : allelesToAssignToCurrentNode){
 			if(Global.nodeForEachAllele.get(allele) == null){
-				Global.nodeForEachAllele.put(allele, node);
+				Node[] nodes = {node};
+				Global.nodeForEachAllele.put(allele, nodes);
 			}else{
-				System.out.println("ERROR!: Current allele (" + allele + ") already assigned to node.");
-				System.exit(0);
-			}
-			
+				Global.nodeForEachAllele.put(allele, Node.append(Global.nodeForEachAllele.get(allele), node));
+				if(verbose == true){
+					System.out.println("Current allele (" + allele + ") already assigned to multiple nodes");
+				}				
+			}			
 		}
 		
 		// Examine each of the current node's sub-nodes
@@ -289,6 +309,16 @@ public class HomoplasyFinder3 {
 			// Examine each site in the current isolates sequence
 			for(int pos = 0; pos < sequence.length; pos++){
 				
+				// Check whether current position is an 'N' - insert a counter with no allele
+				if(sequence[pos] == 'N'){
+					if(alleleCounts.get(Integer.toString(pos)) != null){
+						alleleCounts.put(Integer.toString(pos), alleleCounts.get(Integer.toString(pos)) + 1);
+					}else{
+						alleleCounts.put(Integer.toString(pos), 1);
+					}
+					continue;
+				}
+				
 				// Define key based on the current allele at the current position
 				alleleKey = pos + ":" + sequence[pos];
 				
@@ -303,9 +333,22 @@ public class HomoplasyFinder3 {
 		
 		// Note which alleles are common
 		Hashtable<String, Boolean> alleles = new Hashtable<String, Boolean>();
+		int nNs;
 		for(String allele : HashtableMethods.getKeysString(alleleCounts)){
 			
-			if(alleleCounts.get(allele) == ids.length){
+			// Skip the 'N' records with position but no allele
+			if(allele.matches("(.*):(.*)") == false){
+				continue;
+			}
+			
+			// Find the number of Ns at the current site
+			nNs = 0;
+			if(alleleCounts.get(allele.split(":")[0]) != null){
+				nNs = alleleCounts.get(allele.split(":")[0]);
+			}
+			
+			// Check if allele is common to all isolates without 'N's
+			if(alleleCounts.get(allele) == (ids.length - nNs)){
 				alleles.put(allele, true);
 			}else{
 				alleles.put(allele, false);
