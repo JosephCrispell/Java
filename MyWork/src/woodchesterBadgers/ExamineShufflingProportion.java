@@ -21,7 +21,7 @@ public class ExamineShufflingProportion {
 		String date = CalendarMethods.getCurrentDate("dd-MM-yyyy");
 					
 		// Read in the Isolate data
-		String path = "C:/Users/Joseph Crisp/Desktop/UbuntuSharedFolder/Woodchester_CattleAndBadgers/NewAnalyses_13-07-17/";
+		String path = "C:/Users/Joseph Crisp/Desktop/UbuntuSharedFolder/Woodchester_CattleAndBadgers/NewAnalyses_22-03-18/";
 						
 		// Read in the Badger data
 		String sampledIsolateInfo = path + "IsolateData/BadgerInfo_08-04-15_LatLongs_XY_Centroids.csv";
@@ -35,7 +35,7 @@ public class ExamineShufflingProportion {
 						badgerIsolateLifeHistoryData.setShortestPathsBetweenGroups(CompareIsolates.findShortestPathsBetweenAllNodes(badgerIsolateLifeHistoryData.getGroupAdjacencyMatrix()));
 				
 		// Read in the sequences
-		String fastaFile = path + "vcfFiles/sequences_Prox-10_27-09-2017.fasta";
+		String fastaFile = path + "vcfFiles/sequences_Prox-10_24-03-2018.fasta";
 		Sequence[] sequences = GeneticMethods.readFastaFile(fastaFile);
 				
 		// Remove cattle

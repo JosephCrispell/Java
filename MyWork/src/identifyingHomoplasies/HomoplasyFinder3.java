@@ -41,7 +41,7 @@ public class HomoplasyFinder3 {
 		
 		// Set the path
 		//String path = "C:/Users/Joseph Crisp/Desktop/UbuntuSharedFolder/Homoplasmy/";
-		String path = "C:/Users/Joseph Crisp/Desktop/UbuntuSharedFolder/NewZealand/NewAnalyses_12-05-16/MLTree/";
+		String path = "C:/Users/Joseph Crisp/Desktop/UbuntuSharedFolder/Woodchester_CattleAndBadgers/NewAnalyses_22-03-18/vcfFiles/";
 		
 						
 		// Get the current date
@@ -56,7 +56,7 @@ public class HomoplasyFinder3 {
 		 */
 
 		//String treeFile = path + "example_06-03-18.tree";
-		String treeFile = path + "mlTree_withRef_14-06-16.tree";
+		String treeFile = path + "mlTree_27-03-18.tree";
 		Node tree = readNewickTree(treeFile, verbose);
 		
 		/**
@@ -64,34 +64,32 @@ public class HomoplasyFinder3 {
 		 */
 		
 		// Read in the FASTA file
-		String fasta = path + "sequences_withRef_Prox-10_14-06-16.fasta";
-		Hashtable<String, char[]> sequencesFirst = storeSequencesInHashtable(GeneticMethods.readFastaFile(fasta, verbose));
+		String fasta = path + "sequences_Prox-10_24-03-2018.fasta";
+		Sequence[] sequences = GeneticMethods.readFastaFile(fasta, verbose);
+		Hashtable<String, char[]> isolateSequencesPriorToParsingIDs = storeSequencesInHashtable(sequences);
 		
-		
-		Hashtable<String, char[]> sequences = new Hashtable<String, char[]>();
-		for(String key : HashtableMethods.getKeysString(sequencesFirst)){
+		// Parse New Zealand sequence IDs - don't match those used in tree
+		Hashtable<String, char[]> isolateSequences = new Hashtable<String, char[]>();
+		for(String key : HashtableMethods.getKeysString(isolateSequencesPriorToParsingIDs)){
 			
 			String[] parts = key.split("_");
 			String newKey = parts[0];
 			if(key.matches("(.*)#(.*)") == true){
 				newKey = parts[0] + "_" + parts[1];
 			}
-			sequences.put(newKey, sequencesFirst.get(key));
+			isolateSequences.put(newKey, isolateSequencesPriorToParsingIDs.get(key));
 		}
-		
-		
+				
 		// Get the alleles in the population and the isolates they are associated with
-		Hashtable<String, String[]> alleles = noteAllelesInPopulation(sequences, verbose);
+		Hashtable<String, String[]> alleles = noteAllelesInPopulation(isolateSequences, verbose);
 		
 		/**
 		 * Assign allele to node in phylogeny if:
 		 * - Found in all isolates above and not in any below node OR vice versa
-		 * 
-		 * CURRENTLY DOESN'T FOR SOME ISOLATES IN CLADE HAVING AN 'N' WHICH WOULD MEAN SITE ISN'T COMMON
 		 */
 		
 		// Assign alleles
-		assignAllelesToCurrentNode(tree, sequences, HashtableMethods.getKeysString(sequences), verbose);
+		assignAllelesToCurrentNode(tree, isolateSequences, HashtableMethods.getKeysString(isolateSequences), verbose);
 		
 		// Get the assigned alleles
 		Hashtable<String, Node[]> assignedAlleles = Global.nodeForEachAllele;
@@ -99,10 +97,43 @@ public class HomoplasyFinder3 {
 		/**
 		 * Examine the un-assigned alleles - these are potential homoplasies
 		 */
-		examineUnAssignedAlleles(assignedAlleles, alleles, verbose, path, date);
+		int[] positions = examineUnAssignedAlleles(assignedAlleles, alleles, verbose, path, date);
+		
+		/**
+		 * Return a FASTA file without the homoplasy sites
+		 */
+		printFASTAWithoutHomoplasies(positions, path, date, sequences);
 	}
 	
 	// Methods section
+	public static void printFASTAWithoutHomoplasies(int[] positions, String path, String date, Sequence[] sequences, boolean verbose) throws IOException{
+		
+		if(verbose == true){
+			System.out.println("Writing sequences (without homoplasy sites) to file...");
+		}
+		
+		// Open an output file
+		BufferedWriter bWriter = WriteToFile.openFile(path + "sequences_withoutHomoplasies_" + date + ".fasta", false);
+		
+		// Print out the number of isolates and sites in FASTA
+		WriteToFile.writeLn(bWriter, sequences.length + " " + (sequences[0].getSequence().length - positions.length));
+		
+		// Initialise an array to each isolate sequence data
+		char[] sequence = new char[sequences[0].getSequence().length];
+		
+		// Write out each of the sequences
+		for(int i = 0; i < sequences.length; i++){
+			
+			// Print sequence ID
+			WriteToFile.writeLn(bWriter, ">" + sequences[i].getName());
+			
+			// Print sequence
+			sequence = ArrayMethods.deletePositions(sequences[i].getSequence(), positions);
+			WriteToFile.writeLn(bWriter, ArrayMethods.toString(sequence, ""));
+		}
+		WriteToFile.close(bWriter);
+	}
+	
 	public static BufferedWriter buildOutputFile(String date, String path) throws IOException{
 		
 		String outputFile = path + "homoplasyReport_" + date + ".txt";
@@ -133,7 +164,7 @@ public class HomoplasyFinder3 {
 				// Create a key for the current allele
 				allele = pos + ":" + sequences.get(id)[pos];
 				
-				// Check if we have encountered the current allele before
+				// Check if we have encountered the current allele before - note each sequence allele found in
 				if(alleles.get(allele) != null){
 					
 					alleles.put(allele, ArrayMethods.append(alleles.get(allele), id));
@@ -167,7 +198,7 @@ public class HomoplasyFinder3 {
 		return ArrayMethods.subset(alleles, 0, pos);
 	}
 
-	public static void examineUnAssignedAlleles(Hashtable<String, Node[]> assignedAlleles, Hashtable<String, String[]> alleles, boolean verbose,
+	public static int[] examineUnAssignedAlleles(Hashtable<String, Node[]> assignedAlleles, Hashtable<String, String[]> alleles, boolean verbose,
 			String path, String date) throws IOException{
 		
 		// Print progress information
@@ -179,7 +210,7 @@ public class HomoplasyFinder3 {
 		BufferedWriter bWriter = buildOutputFile(date, path);
 		
 		// Note the unassigned alleles
-		String[] potentialHomoplasies = new String[alleles.size() - assignedAlleles.size()];
+		String[] homoplasies = new String[alleles.size() - assignedAlleles.size()];
 		int pos = -1;
 		for(String allele : HashtableMethods.getKeysString(alleles)){
 			
@@ -190,16 +221,16 @@ public class HomoplasyFinder3 {
 			
 			// Store the current allele
 			pos++;
-			potentialHomoplasies[pos] = allele;
+			homoplasies[pos] = allele;
 		}
-		potentialHomoplasies = ArrayMethods.subset(potentialHomoplasies, 0, pos);
+		homoplasies = ArrayMethods.subset(homoplasies, 0, pos);
 		
-		// Note the positions involved
+		// Note the alleles of teach position a homoplasy was found at
 		String[] parts;
 		int position;
 		char nucleotide;
-		Hashtable<Integer, char[]> potentialHomoplasyPositions = new Hashtable<Integer, char[]>();
-		for(String allele : potentialHomoplasies){
+		Hashtable<Integer, char[]> homoplasyPositions = new Hashtable<Integer, char[]>();
+		for(String allele : homoplasies){
 			
 			// Split the allele into its position and nucleotide
 			parts = allele.split(":");
@@ -207,26 +238,26 @@ public class HomoplasyFinder3 {
 			nucleotide = parts[1].toCharArray()[0];
 			
 			// Check if already encountered this position
-			if(potentialHomoplasyPositions.get(position) != null){
-				potentialHomoplasyPositions.put(position, ArrayMethods.append(potentialHomoplasyPositions.get(position), nucleotide));
+			if(homoplasyPositions.get(position) != null){
+				homoplasyPositions.put(position, ArrayMethods.append(homoplasyPositions.get(position), nucleotide));
 			}else{
 				char[] nucleotides = {nucleotide};
-				potentialHomoplasyPositions.put(position, nucleotides);
+				homoplasyPositions.put(position, nucleotides);
 			}
 		}
 		
 		// Report the information about each homoplasy
-		for(int allelePosition : HashtableMethods.getKeysInt(potentialHomoplasyPositions)){
+		for(int allelePosition : HashtableMethods.getKeysInt(homoplasyPositions)){
 			
 			if(verbose == true){
 				System.out.println("---------------------------------------------------------------------------");
 				System.out.println("Potential homoplasy identified at position: " + (allelePosition + 1) + " with alleles " + 
-						ArrayMethods.toString(potentialHomoplasyPositions.get(allelePosition), ", "));
+						ArrayMethods.toString(homoplasyPositions.get(allelePosition), ", "));
 			}
 			
-			WriteToFile.write(bWriter, (allelePosition + 1) + "\t" + ArrayMethods.toString(potentialHomoplasyPositions.get(allelePosition), ",") + "\t");
+			WriteToFile.write(bWriter, (allelePosition + 1) + "\t" + ArrayMethods.toString(homoplasyPositions.get(allelePosition), ",") + "\t");
 			
-			char[] allelesForHomoplasy = potentialHomoplasyPositions.get(allelePosition);
+			char[] allelesForHomoplasy = homoplasyPositions.get(allelePosition);
 			for(int i = 0; i < allelesForHomoplasy.length; i++){
 				if(verbose == true){
 					System.out.println("Isolates with allele " + allelesForHomoplasy[i] + ": " + 
@@ -244,6 +275,8 @@ public class HomoplasyFinder3 {
 		// Close the output file
 		bWriter.close();
 		
+		// Return an array of the homoplasy positions
+		return(HashtableMethods.getKeysInt(homoplasyPositions));
 	}
 	
 	public static void assignAllelesToCurrentNode(Node node, Hashtable<String, char[]> sequences, String[] ids, boolean verbose){
@@ -300,10 +333,10 @@ public class HomoplasyFinder3 {
 		// Initialise a variable to act as an allele key
 		String alleleKey;
 		
-		// Examine each isolate
+		// Count the alleles present across all the sequences
 		for(int idIndex = 0; idIndex < ids.length; idIndex++){
 			
-			// Get the current isolates sequence
+			// Get the current isolate's sequence
 			sequence = sequences.get(ids[idIndex]);
 			
 			// Examine each site in the current isolates sequence
@@ -331,7 +364,7 @@ public class HomoplasyFinder3 {
 			}
 		}
 		
-		// Note which alleles are common
+		// Note which alleles are common - found in all isolates
 		Hashtable<String, Boolean> alleles = new Hashtable<String, Boolean>();
 		int nNs;
 		for(String allele : HashtableMethods.getKeysString(alleleCounts)){

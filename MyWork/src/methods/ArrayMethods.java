@@ -11,15 +11,32 @@ public class ArrayMethods {
 		
 		
 		
-		String fasta = "example_07-03-18.fasta";
-		String date = fasta.split("_")[1];
-		System.out.println(date);
-		date = fasta.split("\\.")[0];
-		System.out.println(date);
+		char[] sequence = {'A', 'G', 'C', 'T', 'G', 'C'};
+		int[] positions = {3,5};
+		
+		System.out.println(toString(deletePositions(sequence, positions), ""));
 		// 
 	}
 	
 	// Methods
+	public static char[] deletePositions(char[] array, int[] positions){
+		
+		// Initialise a new array to store the sequence
+		char[] output = new char[array.length - positions.length];
+		int pos = -1;
+		for(int i = 0; i < array.length; i++){
+			
+			if(ArrayMethods.in(positions, i) == true){
+				continue;
+			}
+			
+			pos++;
+			output[pos] = array[i];
+		}
+		
+		return output;
+	}
+	
 	public static boolean compare(String[] a, String[] b){
 		
 		// Initialise a variable to store the result

@@ -24,7 +24,7 @@ public class Spoligotyping {
 		// Get the date
 		String date = CalendarMethods.getCurrentDate("dd-MM-yyyy");
 		
-		String path = "C:/Users/Joseph Crisp/Desktop/UbuntuSharedFolder/Woodchester_CattleAndBadgers/NewAnalyses_13-07-17/Mislabelling/Spoligotyping/";
+		String path = "C:/Users/Joseph Crisp/Desktop/UbuntuSharedFolder/Woodchester_CattleAndBadgers/NewAnalyses_22-03-18/Mislabelling/Spoligotyping/";
 		
 		// Get the reference spacer sequences to search for
 		String spacerSequencesFile = path + "Xia2016-43SpacerSequences-25bp.fasta";
@@ -36,20 +36,20 @@ public class Spoligotyping {
 		Hashtable<String, int[]> spoligotypeBinaryCodes = readSpoligotypeConversionTable(spoligotypeConversionTable);
 				
 		// Read in the spoligotyping region information
-		String annotationFile = "C:/Users/Joseph Crisp/Desktop/UbuntuSharedFolder/Reference/TransferAnnotations/" + 
-		"LT708304.1_AF2122-97_Malone2017_rmPrefixToLocusTag_Inc-repeats-mobile_DamiensComments_04-09-17.gff";
+		String annotationFile = "C:/Users/Joseph Crisp/Desktop/UbuntuSharedFolder/Reference/TransferAnnotations_09-02-18/" + 
+		"UpdatedMaloneAnnotations_09-02-18.gff";
 		int[][] spacerStartEnds = getSpacerRegionStartEnds(annotationFile,
 				"feature	CDS	3079186	307999",
 				"feature	gene	3084599	3084940");
 		
 		// Find the VCF files in the directory
-		String vcfFileDirectory = "C:/Users/Joseph Crisp/Desktop/UbuntuSharedFolder/Woodchester_CattleAndBadgers/NewAnalyses_13-07-17/vcfFiles/";
+		String vcfFileDirectory = "C:/Users/Joseph Crisp/Desktop/UbuntuSharedFolder/Woodchester_CattleAndBadgers/NewAnalyses_22-03-18/vcfFiles/";
 		String[] filesInDirectory = GeneralMethods.getAllFilesInDirectory(vcfFileDirectory, ".vcf.gz");
 		
 		// Get the previous spoligotype information if available
-		String isolateDataPath = "C:/Users/Joseph Crisp/Desktop/UbuntuSharedFolder/Woodchester_CattleAndBadgers/NewAnalyses_13-07-17/IsolateData/";
+		String isolateDataPath = "C:/Users/Joseph Crisp/Desktop/UbuntuSharedFolder/Woodchester_CattleAndBadgers/NewAnalyses_22-03-18/IsolateData/";
 		String badgerFile = isolateDataPath + "BadgerInfo_08-04-15_LatLongs_XY_Centroids.csv";
-		String cattleFile = isolateDataPath + "CattleIsolateInfo_LatLongs_plusID_outbreakSize_Coverage_AddedStrainIDs.csv";
+		String cattleFile = isolateDataPath + "CattleIsolateInfo_AddedNew_TB1484-TB1490_22-03-18.csv";
 		Hashtable<String, String> isolateTypes = getBadgerIsolateSpoligotypes(badgerFile);
 		getCattleIsolateSpoligotypes(cattleFile, isolateTypes);
 		

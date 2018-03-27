@@ -24,7 +24,7 @@ public class EpidemiologicalMetricsForFilterSensitivity {
 		String date = CalendarMethods.getCurrentDate("dd-MM-yyyy");
 				
 		// Read in the Isolate data
-		String path = "C:/Users/Joseph Crisp/Desktop/UbuntuSharedFolder/Woodchester_CattleAndBadgers/NewAnalyses_13-07-17/";
+		String path = "C:/Users/Joseph Crisp/Desktop/UbuntuSharedFolder/Woodchester_CattleAndBadgers/NewAnalyses_22-03-18/";
 				
 		// Read in the Badger data
 		String sampledIsolateInfo = path + "IsolateData/BadgerInfo_08-04-15_LatLongs_XY_Centroids.csv";
@@ -38,7 +38,7 @@ public class EpidemiologicalMetricsForFilterSensitivity {
 		badgerIsolateLifeHistoryData.setShortestPathsBetweenGroups(CompareIsolates.findShortestPathsBetweenAllNodes(badgerIsolateLifeHistoryData.getGroupAdjacencyMatrix()));
 		
 		// Read in the sequences
-		String fastaFile = path + "vcfFiles/sequences_Prox-10_27-09-2017.fasta";
+		String fastaFile = path + "vcfFiles/sequences_Prox-10_23-03-2018.fasta";
 		Sequence[] sequences = GeneticMethods.readFastaFile(fastaFile);
 		
 		// Remove cattle
@@ -48,6 +48,13 @@ public class EpidemiologicalMetricsForFilterSensitivity {
 		String outputFile = path + "Mislabelling/Badger-RF-BR/" + "geneticVsEpiTable_" + date + ".txt";
 		makeComparisonsBetweenIsolates(sequences, badgerIsolateLifeHistoryData, outputFile, false, true);
 
+	}
+	
+	public static void parseSequenceNames(Sequence[] sequences){
+		
+		for(int i = 0; i < sequences.length; i++){
+			sequences[i].setName(sequences[i].getName().split("_")[0]);
+		}
 	}
 	
 	public static void makeComparisonsBetweenIsolates(Sequence[] sequences,
@@ -105,7 +112,7 @@ public class EpidemiologicalMetricsForFilterSensitivity {
 		double[] epiMetrics = new double[33];
 		
 		// Parse the sequence names and convert them to IDs
-		CompareIsolates.setIsolateIds(sequences);
+		parseSequenceNames(sequences);
 		
 		// Initialise variables to store the isolate data
 		SampleInfo badgerI = null;

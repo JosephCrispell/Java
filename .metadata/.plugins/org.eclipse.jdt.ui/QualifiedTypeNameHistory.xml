@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <qualifiedTypeNameHistroy>
 <fullyQualifiedTypeName name="java.io.BufferedWriter"/>
-<fullyQualifiedTypeName name="methods.WriteToFile"/>
 <fullyQualifiedTypeName name="java.util.Hashtable"/>
 <fullyQualifiedTypeName name="phylogeneticTree.Node"/>
+<fullyQualifiedTypeName name="methods.WriteToFile"/>
 </qualifiedTypeNameHistroy>

@@ -97,7 +97,7 @@ public class CreateDescriptiveEpidemiologicalStats {
 			sequences[i].setName(isolateId);
 			
 			// Note cattle and reference isolates
-			if(isolateId.matches("TB(.*)") == true || isolateId.matches("Ref(.*)") == true){
+			if(isolateId.matches("WB(.*)") == false){
 				indicesOfIsolatesToRemove.put(i, isolateId);
 			}			
 		}
