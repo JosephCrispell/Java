@@ -91,7 +91,7 @@ public class CalendarMethods {
 	public static int[] getOrder(Calendar[] array){
 		
 		Calendar[] srtdArray = copy(array);
-		int[] orderedIndices = ArrayMethods.range(0, array.length - 1, 1);
+		int[] orderedIndices = ArrayMethods.seq(0, array.length - 1, 1);
 		
 		/**
 		 * This Method Uses the Bubble Sort Algorithm

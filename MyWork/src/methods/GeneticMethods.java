@@ -15,31 +15,35 @@ public class GeneticMethods {
 
 	public static void main(String[] args) throws IOException{
 		
-		String path = "C:/Users/Joseph Crisp/Desktop/UbuntuSharedFolder/Woodchester_CattleAndBadgers/NewAnalyses_02-06-16/";
-				
-		// Get the genetic distances to the Reference
-		String fastaFile = path + "InitialTree/";
-		fastaFile += "sequences_plusRef_Prox-10_22-08-16.fasta";
-		Sequence[] sequences = GeneticDistances.readFastaFile(fastaFile);
-		CompareIsolates.setIsolateIds(sequences);
+	
+	}
+
+	public static char[] getReverseCompliment(char[] sequence){
 		
-		// Calculate the proportion of Ns
-		int badger = 0;
-		int cow = 0;
-		for(int i = 0; i < sequences.length; i++){
+		// Initialise an array to store the reverse compliment
+		char[] reverseCompliment = new char[sequence.length];
+		
+		// Note the compliment of each nucleotide
+		Hashtable<Character, Character> nucleotideCompliment = new Hashtable<Character, Character>();
+		nucleotideCompliment.put('A', 'T');
+		nucleotideCompliment.put('C', 'G');
+		nucleotideCompliment.put('G', 'C');
+		nucleotideCompliment.put('T', 'A');
+		
+		// Examine each character in the sequence in reverse direction
+		int pos = -1;
+		for(int i = sequence.length - 1; i >= 0; i--){
+			pos++;
 			
-			if(calculatePropNs(sequences[i].getSequence()) > 0.1){
-				if(sequences[i].getName().matches("TB(.*)") == true){
-					cow++;
-				}else{
-					badger++;
-				}
-				System.out.println(sequences[i].getName() + "\t" + calculatePropNs(sequences[i].getSequence()));
-			}			
+			if(nucleotideCompliment.get(sequence[i]) != null){
+				reverseCompliment[pos] = nucleotideCompliment.get(sequence[i]);
+			}else{
+				reverseCompliment[pos] = 'N';
+				System.out.println("ERROR: non-nucleotide present in alignment: " + sequence[i]);
+			}
 		}
 		
-		System.out.println("Found " + (cow + badger) + " crap isolates!\n" + "N. Badgers = " + badger +
-				"\nN. Cows = " + cow);
+		return reverseCompliment;
 	}
 	
 	public static double calculatePropNs(char[] sequence){

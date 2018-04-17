@@ -111,7 +111,7 @@ public class Methods {
 	
 	public static int randomlyChooseSource(double[] weights, Random random){
 		
-		int[] ids = ArrayMethods.range(0, weights.length - 1, 1);
+		int[] ids = ArrayMethods.seq(0, weights.length - 1, 1);
 				
 		return ArrayMethods.randomWeightedChoice(ids, weights, random);
 	}
@@ -120,7 +120,7 @@ public class Methods {
 			int timeStep) throws IOException{
 		
 		// Initialise an array for the ids of the individuals in the population
-		int[] ids = ArrayMethods.range(0, population.length - 1, 1);
+		int[] ids = ArrayMethods.seq(0, population.length - 1, 1);
 		
 		// Calculate the infectious of each individual in the population - for weighted source selection
 		double[] weights = returnWeightsAssignedToEachIndividualInPopulation(infectiousness, population);

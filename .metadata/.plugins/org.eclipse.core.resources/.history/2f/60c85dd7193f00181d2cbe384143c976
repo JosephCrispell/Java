@@ -1,0 +1,12 @@
+package ComparingGenomes;
+
+public class AnnotationSet {
+
+	private String source;
+	private Annotation[] annotations;
+	private String sequence;
+	
+	public AnnotationSet{
+		
+	}
+}

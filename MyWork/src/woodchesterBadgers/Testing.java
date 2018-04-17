@@ -469,7 +469,7 @@ public class Testing {
 	public static int[] randomIndices(Sequence[] array, int replacement, int n){
 		
 		// Create an array of indices
-		int[] indices = ArrayMethods.range(0, array.length -1, 1);
+		int[] indices = ArrayMethods.seq(0, array.length -1, 1);
 		
 		// Create Instance of a Random Number Generator
 		MersenneTwister random = new MersenneTwister();

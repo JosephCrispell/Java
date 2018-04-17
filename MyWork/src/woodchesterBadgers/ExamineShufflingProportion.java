@@ -42,7 +42,7 @@ public class ExamineShufflingProportion {
 		sequences = CreateDescriptiveEpidemiologicalStats.removeCattleIsolateSequences(sequences);
 				
 		// Generate genetic vs. epi tables for shuffled isolates
-		double[] shufflingProps = ArrayMethods.range(0, 1, 0.05);
+		double[] shufflingProps = ArrayMethods.seq(0, 1, 0.05);
 		int nReps = 10;
 		Sequence[] shuffled;
 		String outputFile;
@@ -91,7 +91,7 @@ public class ExamineShufflingProportion {
 	}
 	
 	public static int[] shuffleProportionOfIndices(int length, double proportion, Random random){
-		int[] indices = ArrayMethods.range(0, length - 1, 1);
+		int[] indices = ArrayMethods.seq(0, length - 1, 1);
 		
 		// Select isolates to shuffle
 		int[] toShuffle = ArrayMethods.randomChoices(indices, (int) (proportion * (double) length),
@@ -100,7 +100,7 @@ public class ExamineShufflingProportion {
 		int[] shuffled = ArrayMethods.shuffle(toShuffle, random);
 		
 		// Apply the above shuffling
-		int[] indicesWithShuffled = ArrayMethods.range(0, length - 1, 1);
+		int[] indicesWithShuffled = ArrayMethods.seq(0, length - 1, 1);
 		for(int i = 0; i < toShuffle.length; i++){
 			
 			indicesWithShuffled[toShuffle[i]] = indices[shuffled[i]];

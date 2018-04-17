@@ -418,7 +418,7 @@ public class Population {
 					// Note which badgers the mother infected
 					this.population[groupIndex][badgerIndex].setInfectees(ArrayMethods.combine(
 							this.population[groupIndex][badgerIndex].getInfectees(), 
-							ArrayMethods.range(this.badgerId + 1, this.badgerId + nCubs, 1)));
+							ArrayMethods.seq(this.badgerId + 1, this.badgerId + nCubs, 1)));
 				}
 				
 				// Create each of the cubs
@@ -725,7 +725,7 @@ public class Population {
 		// dimensions = { noRows, noCols }
 		
 		// Place the Groups on the Grid
-		int[] groupIds = ArrayMethods.range(0, nGroups - 1, 1);
+		int[] groupIds = ArrayMethods.seq(0, nGroups - 1, 1);
 		int[][] grid = GridMethods.createRandomPopulationGrid(dimensions[0], dimensions[1], groupIds);
 		
 		// Generate the Distance Matrix
@@ -963,7 +963,7 @@ public class Population {
 		if(nMutations > 0){
 			
 			// Generate a list of the these mutations
-			int[] newEvents = ArrayMethods.range(this.mutationEventNo + 1, this.mutationEventNo + nMutations, 1);
+			int[] newEvents = ArrayMethods.seq(this.mutationEventNo + 1, this.mutationEventNo + nMutations, 1);
 
 			// Combine the new mutation events with the individuals current list
 			this.population[groupIndex][badgerIndex].addMutationEvents(newEvents, seasonCount);

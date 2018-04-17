@@ -25,7 +25,7 @@ public class SummariseClusters {
 	public static void main(String[] args) throws IOException{
 		
 		// Set the path
-		String path = "C:/Users/Joseph Crisp/Desktop/UbuntuSharedFolder/Woodchester_CattleAndBadgers/NewAnalyses_13-07-17/";
+		String path = "C:/Users/Joseph Crisp/Desktop/UbuntuSharedFolder/Woodchester_CattleAndBadgers/NewAnalyses_22-03-18/";
 		
 		// Get the current date
 		String date = CalendarMethods.getCurrentDate("dd-MM-yyyy");
@@ -35,7 +35,7 @@ public class SummariseClusters {
 		//########################################
 		
 		// Open the file containing Life Histories of animals associated with clusters
-		String lifeHistoryFile = path + "InterSpeciesClusters/sampledAnimalsLifeHistories_13-02-2018.txt";
+		String lifeHistoryFile = path + "InterSpeciesClusters/sampledAnimalsLifeHistories_05-04-2018.txt";
 		Hashtable<String, LifeHistorySummary> lifeHistories = readLifeHistories(lifeHistoryFile);
 		
 		// Remove test results that we're not interested in
@@ -50,7 +50,7 @@ public class SummariseClusters {
 		Hashtable<String, Location> locationInfo = readLocationsTable(locationsFile);
 		//  Get the cattle isolate breakdown locations
 		String cattleIsolateSamplingInfo = path + "IsolateData/" +
-	              "CattleIsolateInfo_LatLongs_plusID_outbreakSize_Coverage_AddedStrainIDs.csv";
+	              "CattleIsolateInfo_AddedNew_TB1484-TB1490_22-03-18.csv";
 		getIsolateBreakdownCphs(lifeHistories, cattleIsolateSamplingInfo, locationInfo);
 		
 		// ** Add the Land Parcel Centroids of Breakdown herds
@@ -979,8 +979,12 @@ public class SummariseClusters {
 			
 			// Get the breakdown ID
 			parts = cols[16].split("-");
-			breakdownCph = parts[0];
-			breakdownCph = breakdownCph.substring(0, breakdownCph.length() - 2);
+			breakdownCph = "NA";
+			breakdownCph = "NA";
+			if(parts[0].length() > 0){
+				breakdownCph = parts[0];
+				breakdownCph = breakdownCph.substring(0, breakdownCph.length() - 2);
+			}			
 
 			// Get the breakdown location
 			breakdownX = -1;
@@ -1115,7 +1119,7 @@ public class SummariseClusters {
 			String[] idsOfContactAnimals = cols[16].split(",");
 			Calendar[] startDatesOfContacts = CalendarMethods.parseDates(cols[17].split(","), "-", dayMonthYear, true);
 			Calendar[] endDatesOfContacts = CalendarMethods.parseDates(cols[18].split(","), "-", dayMonthYear, true);
-			String[] contactHerds = cols[19].split(",");
+			String[] contactHerds = cols[19].split(",", -1);
 			lifeHistory.setContactInfo(storeContactEventInfo(cols[0], idsOfContactAnimals, 
 					startDatesOfContacts, endDatesOfContacts, contactHerds));
 			
@@ -1179,8 +1183,7 @@ public class SummariseClusters {
 
 	public static ContactEvent[] storeContactEventInfo(String animalId, String[] contactIds, Calendar[] starts,
 			Calendar[] ends, String[] herds){
-		
-		
+
 		// Initialise a large array to store the contact event information
 		ContactEvent[] events = new ContactEvent[contactIds.length];
 		int usedPos = -1;

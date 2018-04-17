@@ -1,0 +1,19 @@
+package ComparingGenomes;
+
+public class AnnotationSet {
+
+	private String source;
+	private Annotation[] annotations;
+	private int annotationPos;
+	private String sequence;
+	
+	public AnnotationSet(String name){
+		
+		this.source = name;
+		this.annotations = new Annotation[1000];
+		this.annotationPos = -1;
+	}
+	
+	// Setting methods
+	
+}

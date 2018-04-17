@@ -57,10 +57,10 @@ public class NetworkMethods {
 		int rowLength = (int) Math.sqrt(popSize);
 		
 		// Individuals on Left Side
-		int[] leftIndividuals = ArrayMethods.range(0, popSize, rowLength);
+		int[] leftIndividuals = ArrayMethods.seq(0, popSize, rowLength);
 				
 		// Individuals on Right Side
-		int[] rightIndividuals = ArrayMethods.range(rowLength - 1, popSize, rowLength);
+		int[] rightIndividuals = ArrayMethods.seq(rowLength - 1, popSize, rowLength);
 		
 		// Build Network
 		for(int i = 0; i < population.length; i++){
@@ -117,7 +117,7 @@ public class NetworkMethods {
 		int[][] adjacency = new int[population.length][population.length];
 		
 		// Note Group Indexes and Individuals in each group
-		int[] groupIds = ArrayMethods.range(0, noGroups - 1, 1);
+		int[] groupIds = ArrayMethods.seq(0, noGroups - 1, 1);
 		int[][] groups = new int[noGroups][groupSize];
 		
 		// Create Each Group

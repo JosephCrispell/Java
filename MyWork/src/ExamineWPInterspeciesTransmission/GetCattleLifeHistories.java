@@ -322,7 +322,7 @@ public class GetCattleLifeHistories {
 		 */
 		
 		// Note the years to examine
-		int[] yearsToExamine = ArrayMethods.range(2002, 2014, 1);
+		int[] yearsToExamine = ArrayMethods.seq(2002, 2014, 1);
 		
 		// Initialise variables necessary for parsing the file
 		String line = null;
@@ -504,7 +504,7 @@ public class GetCattleLifeHistories {
 		 */
 		
 		// Note the years to examine
-		int[] yearsToExamine = ArrayMethods.range(2002, 2014, 1);
+		int[] yearsToExamine = ArrayMethods.seq(2002, 2014, 1);
 		
 		// Initialise variables necessary for parsing the file
 		String line = null;

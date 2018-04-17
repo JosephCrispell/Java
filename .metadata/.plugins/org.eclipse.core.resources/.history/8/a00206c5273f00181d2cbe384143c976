@@ -1,0 +1,102 @@
+package ComparingGenomes;
+
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.Hashtable;
+
+public class GenbankFile {
+	
+	private String fileName;
+	private AnnotationSet[] annotationSets; // Note genbank file can have multiple annotated sequences
+	private int pos;
+	
+	public GenbankFile(String file, Hashtable<String, Integer> annotationTypes) throws IOException{
+		
+		readGenbankFile(file, annotationTypes);
+	}
+	
+	// General methods
+	private void readGenbankFile(String file, Hashtable<String, Integer> annotationTypes) throws IOException{
+		
+		// Store the file name
+		this.fileName = file;
+		
+		// Open the animals table file
+		InputStream input = new FileInputStream(file);
+		BufferedReader reader = new BufferedReader(new InputStreamReader(input));
+		
+		// Initialise a variables to parse the file
+		String line = null;
+		String[] parts;
+		
+		// Initialise a variable to store the annotation information and sequence
+		String source;
+		AnnotationSet annotations = null;
+		boolean foundSequence = false;
+		StringBuilder sequence = new StringBuilder();
+												
+		// Begin reading the file
+		while(( line = reader.readLine()) != null){			
+			
+			// Search for SOURCE line
+			if(line.matches("(^)SOURCE(.*)") == true){
+				source = line.split("  +")[1];
+				if(annotations != null){
+					// Store previous annotation set and sequence
+				}
+				annotations = new AnnotationSet(source);
+				sequence = "";
+				continue;
+			}
+			
+			// Split the current line into parts
+			parts = line.split("( +)");
+			
+			// Check if found new annotation
+			if(parts.length == 3 && parts[2].matches("(.*)\\.\\.(.*)") == true && annotationTypes.get(parts[1]) != null){
+				
+				// Store the annotation information
+				annotations.addAnnotation(parts[2], new Annotation(parts[2], parts[1]));
+				continue;
+			}
+			
+			// Check if found sequence
+			if(foundSequence == false && line.matches("ORIGIN(.*)")){
+				foundSequence = true;
+				continue;
+			}
+			
+			// Check if reached end of sequence
+			if(foundSequence == true && line.matches("//")){
+				foundSequence = false;
+				annotations.setSequence(sequence.toString());
+				continue;
+			}
+			
+			// Build sequence until end if reached
+			if(foundSequence == true){
+				
+				System.out.println(parts[2] + "\t" + parts.length);
+				for(int i = 2; i < parts.length; i++){
+					sequence.append(parts[i]);
+				}
+			}
+						
+		}
+		
+		// Close the input file
+		input.close();
+		reader.close();		
+	}
+	
+	public void addNewAnnotationSet(AnnotationSet annotations){
+		
+		
+	}
+	
+	// Getting and setting methods
+}

@@ -1,0 +1,40 @@
+package ComparingGenomes;
+
+import methods.ArrayMethods;
+
+public class Annotation {
+
+	int[] coordinates;
+	boolean compliment = false;
+	
+	public Annotation(String coords){
+		
+		parseCoords(coords);
+		
+	}
+	
+	// General methods
+	public void parseCoords(String coords){
+		
+		// Remove ">" or "<" if present
+		coords = coords.replace(">", "");
+		coords = coords.replace("<", "");
+		
+		// Check if compliment required
+		if(coords.matches("complement(.*)") == true){
+			this.compliment = true;
+			
+			coords = coords.substring(11, coords.length() - 1);
+		}
+		
+		// Check if join present
+		if(coords.matches("join(.*)") == true){
+			
+			coords = coords.substring(5, coords.length() - 1);
+			this.coordinates = ArrayMethods.range(ArrayMethods.convertToInteger(coords.split("\\.\\.|,")));
+			
+		}else{
+			this.coordinates = ArrayMethods.convertToInteger(coords.split("\\.\\."));
+		}		
+	}
+}

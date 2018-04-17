@@ -229,7 +229,7 @@ public class SimulationMethods {
 		double[] sexRatios = getGroupSexRatios(groups, minAge);
 		
 		// Create an array of group Ids
-		int[] groupIds = ArrayMethods.range(0, groups.length - 1, 1);
+		int[] groupIds = ArrayMethods.seq(0, groups.length - 1, 1);
 		
 		// Need to assess every individual in the population
 		for(Individual individual : population.getIndividuals()){
@@ -284,7 +284,7 @@ public class SimulationMethods {
 		
 		// Extract the groups in the population
 		Group[] groups = population.getGroups();
-		int[] groupIDs = ArrayMethods.range(0,  groups.length, 1);
+		int[] groupIDs = ArrayMethods.seq(0,  groups.length, 1);
 		int sinkGrpIndex = -99;
 		
 		// Get the Sex Ratios for the groups
@@ -338,7 +338,7 @@ public class SimulationMethods {
 		
 		// Initialise status variable
 		int status;
-		int[] states = ArrayMethods.range(0, noStates - 1, 1);
+		int[] states = ArrayMethods.seq(0, noStates - 1, 1);
 		
 		for(int i = 0; i < noSeeds; i++){
 		
@@ -378,7 +378,7 @@ public class SimulationMethods {
 		MersenneTwister random = new MersenneTwister();
 		
 		// Create an array of the potential infection states
-		int[] potentialStates = ArrayMethods.range(0, noInfectionStates - 1, 1);
+		int[] potentialStates = ArrayMethods.seq(0, noInfectionStates - 1, 1);
 		
 		// Extract the probabilities of the current individual progression into a different disease state given it's current state
 		double[] stateWeights = progressionProbs[individual.getStatusIndex()];
@@ -505,7 +505,7 @@ public class SimulationMethods {
 	public static double[][] generateGroupDistanceMatrix(int noGroups, int[] gridDimensions){
 		
 		// Generate array of Group Indexes (IDs)
-		int[] groupIds = ArrayMethods.range(0, noGroups - 1, 1);
+		int[] groupIds = ArrayMethods.seq(0, noGroups - 1, 1);
 		
 		// Randomly place those groups on a grid of the right dimensions
 		int[][] grid = GridMethods.createRandomPopulationGrid(gridDimensions[0], gridDimensions[1], groupIds);

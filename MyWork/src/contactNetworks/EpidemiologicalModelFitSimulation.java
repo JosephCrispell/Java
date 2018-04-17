@@ -421,7 +421,7 @@ public class EpidemiologicalModelFitSimulation {
 		int indexMut = -1;
 				
 		// Seed the Infection
-		int randomGroupIndex = ArrayMethods.randomChoice(ArrayMethods.range(0, groups.length - 1, 1));
+		int randomGroupIndex = ArrayMethods.randomChoice(ArrayMethods.seq(0, groups.length - 1, 1));
 		Individual seed = IndividualMethods.randomChoice(groups[randomGroupIndex]);
 		int[] mutationEvents = new int[1];
 		mutationEvents[0] = Global.mutationEventNo;
@@ -1014,8 +1014,8 @@ public class EpidemiologicalModelFitSimulation {
 	public static double[][] createGroupedSpatialEnvironment(Individual[] population, int noGroups, int x, int y, int buffer){
 		
 		// Create Group Distance Matrix
-		int[][] grid = GridMethods.createRandomPopulationGrid(x, y, ArrayMethods.range(0, noGroups - 1, 1));
-		double[][] groupDistanceMatrix = GridMethods.generateEuclideanDistanceMatrix(grid, ArrayMethods.range(0, noGroups - 1, 1));
+		int[][] grid = GridMethods.createRandomPopulationGrid(x, y, ArrayMethods.seq(0, noGroups - 1, 1));
+		double[][] groupDistanceMatrix = GridMethods.generateEuclideanDistanceMatrix(grid, ArrayMethods.seq(0, noGroups - 1, 1));
 		
 		// Allocate Individuals to Groups and Record as each Individuals groupId
 		int groupSize = population.length / noGroups;
@@ -1063,8 +1063,8 @@ public class EpidemiologicalModelFitSimulation {
 
 	public static double[][] createGroupDistanceMatrix(int noGroups, int x, int y){
 		// Create Group Distance Matrix
-		int[][] grid = GridMethods.createRandomPopulationGrid(x, y, ArrayMethods.range(0, noGroups - 1, 1));
-		double[][] groupDistanceMatrix = GridMethods.generateEuclideanDistanceMatrix(grid, ArrayMethods.range(0, noGroups - 1, 1));
+		int[][] grid = GridMethods.createRandomPopulationGrid(x, y, ArrayMethods.seq(0, noGroups - 1, 1));
+		double[][] groupDistanceMatrix = GridMethods.generateEuclideanDistanceMatrix(grid, ArrayMethods.seq(0, noGroups - 1, 1));
 	
 		return groupDistanceMatrix;
 	}

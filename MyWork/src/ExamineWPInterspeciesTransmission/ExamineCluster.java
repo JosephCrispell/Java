@@ -40,8 +40,8 @@ public class ExamineCluster {
 		 */
 
 		// Set the date for these files
-		String date = "28-09-2017"; // Override date
-		String path = "C:/Users/Joseph Crisp/Desktop/UbuntuSharedFolder/Woodchester_CattleAndBadgers/NewAnalyses_13-07-17/";
+		String date = "04-04-2018"; // Override date
+		String path = "C:/Users/Joseph Crisp/Desktop/UbuntuSharedFolder/Woodchester_CattleAndBadgers/NewAnalyses_22-03-18/";
 
 		// Read in the Cattle data
 		String consolidatedSampledAnimalInfo = path + "IsolateData/ConsolidatedCattleIsolateData_" + date + ".txt";
@@ -92,12 +92,12 @@ public class ExamineCluster {
 		date = CalendarMethods.getCurrentDate("dd-MM-yyyy");
 
 		// Get a list of the isolates in each cluster
-		String clusterFile = path + "vcfFiles/clusters_12-02-18.csv";
+		String clusterFile = path + "vcfFiles/clusters_27-03-18.csv";
 		Cluster[] clusters = readClustersFile(clusterFile);
 
 		// Get the isolate sequences
 		String fastaFile = path + "vcfFiles/";
-		fastaFile += "sequences_Prox-10_29-09-2017.fasta";
+		fastaFile += "sequences_withoutHomoplasies_27-03-18.fasta";
 		Sequence[] sequences = GeneticDistances.readFastaFile(fastaFile);
 		setIsolateNames(sequences);
 
@@ -110,12 +110,12 @@ public class ExamineCluster {
 
 		// Get the genetic distances to the MRCAs of each cluster
 		String newickFile = path + "vcfFiles/";
-		newickFile += "mlTree_12-02-18.tree";
+		newickFile += "mlTree_27-03-18.tree";
 		noteDistancesToMRCAsOfClusters(clusters, newickFile);
 
 		// Add in the sequencing quality information
 		String isolateGenomeCoverageFile = path + "vcfFiles/" + 
-				"IsolateVariantPositionCoverage_RESCUED_29-09-2017.txt";
+				"IsolateVariantPositionCoverage_RESCUED_24-03-2018.txt";
 		Hashtable<String, Double> isolateQuality = readIsolateQuality(isolateGenomeCoverageFile);
 		addIsolateSequencingQuality(clusters, isolateQuality);
 

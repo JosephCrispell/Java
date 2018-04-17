@@ -92,7 +92,7 @@ public class StateEstimationMethods {
 		calculateStateForceOfInfection(population, infectiousness, stateTransitionProbs);
 		
 		// Get a list of all individuals IDs in the population
-		int[] ids = ArrayMethods.range(0, population.getSize() - 1, 1);
+		int[] ids = ArrayMethods.seq(0, population.getSize() - 1, 1);
 				
 		// Initialise variable to store source information
 		int sourceIndex;
@@ -244,7 +244,7 @@ public class StateEstimationMethods {
 		population.initialiseListsForIndividualsInEachState(nStates);
 		
 		// Get the Ids of all the individuals in the population
-		int[] ids = ArrayMethods.range(0, population.getSize() - 1, 1);
+		int[] ids = ArrayMethods.seq(0, population.getSize() - 1, 1);
 		
 		// Randomly choose the individuals to be in each state
 		int nIndividualsInState;
@@ -303,10 +303,10 @@ public class StateEstimationMethods {
 			
 			// Early or late sampling?
 			if(temporalBiases[i].matches("early")){
-				timeSteps = ArrayMethods.range(0, (nTimeSteps / 2) - 1, 1);
+				timeSteps = ArrayMethods.seq(0, (nTimeSteps / 2) - 1, 1);
 				
 			}else if(temporalBiases[i].matches("late")){
-				timeSteps = ArrayMethods.range(nTimeSteps / 2, nTimeSteps - 1, 1);
+				timeSteps = ArrayMethods.seq(nTimeSteps / 2, nTimeSteps - 1, 1);
 			}else{
 				System.out.println("ERROR!: Incorrect option for temporal bias " + temporalBiases[i]);
 			}
@@ -332,7 +332,7 @@ public class StateEstimationMethods {
 		}
 		
 		// Randomly choose the timesteps to sample for each state
-		int[] timeSteps = ArrayMethods.range(0, nTimeSteps - 1, 1);
+		int[] timeSteps = ArrayMethods.seq(0, nTimeSteps - 1, 1);
 		int[] chosen;
 		for(int i = 0; i < proportionsForStateSampling.length; i++){
 			

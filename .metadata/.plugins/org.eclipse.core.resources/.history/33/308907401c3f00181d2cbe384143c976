@@ -1,0 +1,40 @@
+package ComparingGenomes;
+
+import java.util.Hashtable;
+
+public class AnnotationSet {
+
+	private String source;
+	private Hashtable<String, Annotation> annotations;
+	private String sequence;
+	
+	public AnnotationSet(String name){
+		
+		this.source = name;
+		this.annotations = new Annotation[1000];
+		this.pos = -1;
+	}
+	
+	// General methods
+	public void addAnnotation(Annotation annotation){
+		
+		this.pos++;
+		
+		if(this.pos < this.annotations.length){
+			this.annotations[this.pos] = annotation;
+		}else{
+			
+			Annotation[] newArray = new Annotation[this.annotations.length * 2];
+			for(int i = 0; i < this.annotations.length; i++){
+				newArray[i] = this.annotations[i];
+			}
+			newArray[this.pos] = annotation;
+			this.annotations = newArray;
+		}
+	}
+	
+	// Setting methods
+	public void setSequence(String sequence){
+		this.sequence = sequence;
+	}	
+}

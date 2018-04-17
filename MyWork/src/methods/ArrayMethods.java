@@ -19,6 +19,45 @@ public class ArrayMethods {
 	}
 	
 	// Methods
+	public static int[][] table(int[] array, boolean print){
+		
+		// Initialise a hashtable to record how many times each value appears
+		Hashtable<Integer, Integer> countsPerValue = new Hashtable<Integer, Integer>();
+		
+		// Count each time each value appears
+		for(int value : array){
+			
+			// Check if encountered
+			if(countsPerValue.get(value) != null){
+				countsPerValue.put(value, countsPerValue.get(value) + 1);
+			}else{
+				countsPerValue.put(value, 1);
+			}
+		}
+		
+		// Order the values
+		int[] values = sort(HashtableMethods.getKeysInt(countsPerValue));
+		
+		// Get the counts
+		int[] counts = new int[values.length];
+		for(int i = 0; i < values.length; i++){
+			counts[i] = countsPerValue.get(values[i]);
+		}
+		
+		// If requested print an R like summary
+		if(print == true){
+						
+			// Print the count for each value
+			System.out.println(ArrayMethods.toString(values, "\t"));
+			System.out.println(ArrayMethods.toString(counts, "\t"));
+		}
+		
+		// Build an output
+		int[][] output = {values, counts};
+		
+		return output;
+	}
+	
 	public static char[] deletePositions(char[] array, int[] positions){
 		
 		// Initialise a new array to store the sequence
@@ -647,7 +686,7 @@ public class ArrayMethods {
 	public static int[] getOrder(int[] array){
 		
 		int[] srtdArray = copy(array);
-		int[] orderedIndices = range(0, array.length - 1, 1);
+		int[] orderedIndices = seq(0, array.length - 1, 1);
 		
 		/**
 		 * This Method Uses the Bubble Sort Algorithm
@@ -1267,7 +1306,24 @@ public class ArrayMethods {
 		return array;
 	}
 	
-	public static int[] range(int start, int end, int step){
+	public static int[] range(int[] array){
+		
+		int[] output = {999999999, -999999999};
+		for(int value : array){
+			
+			if(value < output[0]){
+				output[0] = value;
+			}
+			
+			if(value > output[1]){
+				output[1] = value;
+			}
+		}
+		
+		return output;
+	}
+	
+	public static int[] seq(int start, int end, int step){
 		
 		int arrayLength = (end - start) / step; // Note automatically resolves to integer - using FLOOR - works out well in this method
 		int[] array = new int[arrayLength + 1]; // Note 1 bigger
@@ -1279,8 +1335,7 @@ public class ArrayMethods {
 		
 		return array;
 	}
-	
-	public static double[] range(double start, double end, double step){
+	public static double[] seq(double start, double end, double step){
 		
 		int arrayLength = (int) ((end - start) / step); // Note automatically resolves to integer - using FLOOR - works out well in this method
 		double[] array = new double[arrayLength + 1]; // Note 1 bigger
@@ -1339,7 +1394,7 @@ public class ArrayMethods {
 	public static int[] randomIndices(int length, int replacement, int n, Random random){
 				
 		// Create an array of indices
-		int[] indices = range(0, length - 1, 1);
+		int[] indices = seq(0, length - 1, 1);
 		
 		// Initialise an array to store the randomly chosen indices
 		int[] chosen = new int[n];
@@ -1485,6 +1540,15 @@ public class ArrayMethods {
 		System.out.println();
 	}
 
+	public static String toString(char[] array){
+		StringBuilder string = new StringBuilder();
+		
+		for(int i = 0; i < array.length; i++){
+			string.append(array[i]);
+		}
+		
+		return string.toString();
+	}
 	public static String toString(String[] array, String sep){
 		String string = array[0];
 		

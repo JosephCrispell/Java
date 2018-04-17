@@ -1,0 +1,57 @@
+package ComparingGenomes;
+
+import java.util.Hashtable;
+
+import methods.HashtableMethods;
+
+public class AnnotationSet {
+
+	private String source;
+	private Hashtable<String, Annotation> annotations;
+	private String sequence;
+	
+	public AnnotationSet(String name){
+		
+		this.source = name;
+		this.annotations = new Hashtable<String, Annotation>();
+	}
+	
+	// General methods
+	public void extractAnnotationSequences(){
+		
+		// Initialise a variable to store the annotation information
+		Annotation annotation;
+		char[] sequence;
+		
+		// Examine each of the annotations
+		for(String key : HashtableMethods.getKeysString(this.annotations)){
+			
+			// Extract the nucleotides for the current annotation
+			if(this.annotations.get(key).requiresCompliment() == false){
+				this.annotations.get(key).setSequence(this.sequence.substring(this.annotations.get(key).getStart(), this.annotations.get(key).getEnd()).toCharArray());
+			}
+		}
+	}
+	
+	public void addAnnotation(String coords, Annotation annotation){
+		
+		this.annotations.put(coords, annotation);
+	}
+	
+	public static AnnotationSet[] append(AnnotationSet[] array, AnnotationSet value){
+		
+		AnnotationSet[] newArray = new AnnotationSet[array.length + 1];
+		
+		for(int index = 0; index < array.length; index++){
+			newArray[index] = array[index];
+		}
+		newArray[newArray.length - 1] = value;
+		
+		return newArray;
+	}
+	
+	// Setting methods
+	public void setSequence(String sequence){
+		this.sequence = sequence;
+	}	
+}

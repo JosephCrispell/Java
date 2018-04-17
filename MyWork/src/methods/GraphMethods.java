@@ -29,7 +29,7 @@ public class GraphMethods {
 		int[] vertexIds = findUniqueVertices(edgeList);
 		
 		// Give Equivalent Vertex Ids
-		int[] newVertexIds = ArrayMethods.range(0, vertexIds.length - 1, 1);
+		int[] newVertexIds = ArrayMethods.seq(0, vertexIds.length - 1, 1);
 		
 		// Substitute in the Vertex Ids
 		for(int i = 0; i < edgeList.length; i++){
@@ -166,7 +166,7 @@ public class GraphMethods {
 			}
 		}
 		
-		return ArrayMethods.range(0, max, 1);
+		return ArrayMethods.seq(0, max, 1);
 	}
 
 	public static int vertexDegree(int[][] adjacencyMatrix, int vertex){

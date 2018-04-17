@@ -186,7 +186,7 @@ public class Population {
 		if(nMutations > 0){
 			
 			// Generate a list of the these mutations
-			int[] newEvents = ArrayMethods.range(Global.mutationEventNo + 1, Global.mutationEventNo + nMutations, 1);
+			int[] newEvents = ArrayMethods.seq(Global.mutationEventNo + 1, Global.mutationEventNo + nMutations, 1);
 
 			// Combine the new mutation events with the individuals current list
 			this.individuals[id].addMutationEvents(newEvents, timeStep);

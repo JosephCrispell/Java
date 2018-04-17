@@ -25,11 +25,11 @@ public class BuildConsolidatedCattleData {
 		String date = CalendarMethods.getCurrentDate("dd-MM-yyyy");
 		
 		// Set the path
-		String path = "C:/Users/Joseph Crisp/Desktop/UbuntuSharedFolder/Woodchester_CattleAndBadgers/NewAnalyses_13-07-17/";
+		String path = "C:/Users/Joseph Crisp/Desktop/UbuntuSharedFolder/Woodchester_CattleAndBadgers/NewAnalyses_22-03-18/";
 				
 		// Read in the Isolate data
 		String isolateInfo = path + "IsolateData/" +
-		"CattleIsolateInfo_LatLongs_plusID_outbreakSize_Coverage_AddedStrainIDs.csv";
+		"CattleIsolateInfo_AddedNew_TB1484-TB1490_22-03-18.csv";
 		Hashtable<String, IsolateData> isolateData = BuildCattleLifeHistories.getCattleIsolateData(
 				isolateInfo);
 				
@@ -50,7 +50,7 @@ public class BuildConsolidatedCattleData {
 		
 		// Examine the movements associated with each movement Id
 		String movementsFilePost2001Start = path + "CattleMovementData-Post2001/20160123_joe_cts_movements";
-		int[] yearsToExamine = ArrayMethods.range(2002, 2014, 1);
+		int[] yearsToExamine = ArrayMethods.seq(2002, 2014, 1);
 		Hashtable<String, Location> locations =  BuildCattleLifeHistories.findMovementsForIdsPost2001(
 				movementsFilePost2001Start, yearsToExamine, movementIds, isolateData, 99);
 		

@@ -29,7 +29,7 @@ public class FindAnimalsInHerdOnDate {
 		String movementsFilePrefix = "20160123_joe_cts_movements";
 		
 		// State the years (for the movements file) we're interested in
-		int[] yearsToExamine = ArrayMethods.range(2005, 2014, 1);
+		int[] yearsToExamine = ArrayMethods.seq(2005, 2014, 1);
 		
 		// Note the date of interest
 		int[] inputDateFormat = {0, 1, 2}; // Indices of Day, Month, Year

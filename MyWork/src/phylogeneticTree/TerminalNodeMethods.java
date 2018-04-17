@@ -33,7 +33,7 @@ public class TerminalNodeMethods {
 		TerminalNode[] newArray = new TerminalNode[array.length];
 		
 		// Create an Array of all the available indices in the new array
-		int[] indices = ArrayMethods.range(0, array.length - 1, 1);
+		int[] indices = ArrayMethods.seq(0, array.length - 1, 1);
 		
 		// Pick a random index for each of the Terminal nodes without replacement
 		int index;

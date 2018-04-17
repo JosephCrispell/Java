@@ -1,0 +1,118 @@
+package ComparingGenomes;
+
+import java.io.IOException;
+import java.util.Hashtable;
+
+import javax.swing.plaf.synth.SynthScrollBarUI;
+
+import methods.ArrayMethods;
+import methods.CalendarMethods;
+import methods.GeneralMethods;
+import methods.HashtableMethods;
+
+public class BuildAnnotatedElementDatabase {
+
+	public static void main(String[] args) throws IOException{
+		
+		// Set the path
+		String path = "C:/Users/Joseph Crisp/Desktop/UbuntuSharedFolder/ComparingReferenceGenomes_10-04-18/ncbi-genomes-2018-04-10/";
+				
+		// Get the current date
+		String date = CalendarMethods.getCurrentDate("dd-MM-yy");
+		
+		// Get an array of all the genbank files in the current directory
+		String[] genbankFiles = GeneralMethods.getAllFilesInDirectory(path, ".gbff");
+		
+		// Examine the annotations and their sequences present in each genbank file - store the unique ones
+		Hashtable<String, String[]> uniqueAnnotations = readGenbankFilesAndRecordUniqueAnnotations(genbankFiles, path, false);
+		
+		// Examine each unique annotation found
+		int[] counts = new int[uniqueAnnotations.size()];
+		int pos = -1;
+		for(String key : HashtableMethods.getKeysString(uniqueAnnotations)){
+			pos++;
+			
+			counts[pos] = uniqueAnnotations.get(key).length;
+		}
+		System.out.println("Found " + uniqueAnnotations.size() + " unique annotations.");
+		int[][] table = ArrayMethods.table(counts, true);
+		
+		System.out.println(table[1][0] + " annotations found once.");
+		int sum = 0;
+		for( int i = 1; i < table[0].length; i++){
+			sum += table[1][i];
+		}
+		System.out.println(sum + " annotations found multiple times.");
+		
+	}
+	
+	public static Hashtable<String, String[]> readGenbankFilesAndRecordUniqueAnnotations(String[] genbankFiles, String path, boolean verbose) throws IOException{
+		
+		// Make a note of the annotation types we're interested in
+		Hashtable<String, Integer> annotationTypes = new Hashtable<String, Integer>();
+		annotationTypes.put("gene", 1);
+		annotationTypes.put("CDS", 1);
+		annotationTypes.put("rRNA", 1);
+		annotationTypes.put("tRNA", 1);
+		annotationTypes.put("ncRNA", 1);
+		annotationTypes.put("repeat_region", 1);	
+		
+		// Initialise a hashtable to store the unique annotated sequences found across all the annotation files
+		Hashtable<String, String[]> uniqueAnnotations = new Hashtable<String, String[]>();
+		
+		// Examine each genbank file
+		for(int i = 0; i < genbankFiles.length; i++){
+			
+			if(verbose){
+				System.out.println("Reading " + genbankFiles[i] + " (" + (i + 1) + " of " + genbankFiles.length + ")");
+			}
+			
+			// Read and store the genbank file
+			GenbankFile genbank = new GenbankFile(path + genbankFiles[i], annotationTypes, verbose);
+			
+			// Check each of the annotated sequences - have they been found before?
+			addAnyAdditionalAnnotatedSequencesFound(genbank, uniqueAnnotations, genbankFiles[i]);
+		}
+		
+		return uniqueAnnotations;
+	}
+	
+	public static void addAnyAdditionalAnnotatedSequencesFound(GenbankFile genbank, Hashtable<String, String[]> uniqueAnnotations, String file){
+		
+		// Examine each of the annotation sets from the current file
+		for(int setIndex = 0; setIndex < genbank.getNumberAnnotationSets(); setIndex++){
+			
+			// Examine each of its annotations - store any ones we haven't encountered before
+			for(String coords : HashtableMethods.getKeysString(genbank.getAnnotationSet(setIndex).getAnnotations())){
+				
+				// Get the sequences for the current annotation
+				String sequence = genbank.getAnnotationSet(setIndex).getAnnotations().get(coords).getSequence();
+				String reverseCompliment = genbank.getAnnotationSet(setIndex).getAnnotations().get(coords).getReverseCompliment();
+				
+				// Build an annotation set identifier
+				String id = file + ":" + setIndex + ":" + 
+							genbank.getAnnotationSet(setIndex).getAnnotations().get(coords).getStart() + "-" +
+							genbank.getAnnotationSet(setIndex).getAnnotations().get(coords).getEnd();
+				
+				// Check if encountered key before
+				if(uniqueAnnotations.get(sequence + ":" + reverseCompliment) != null){
+					
+					// Append the annotation information
+					uniqueAnnotations.put(sequence + ":" + reverseCompliment, ArrayMethods.append(uniqueAnnotations.get(sequence + ":" + reverseCompliment), id));
+					
+				}else if(uniqueAnnotations.get(reverseCompliment + ":" + sequence) != null){
+					
+					// Append the annotation information
+					uniqueAnnotations.put(reverseCompliment + ":" + sequence, ArrayMethods.append(uniqueAnnotations.get(reverseCompliment + ":" + sequence), id));
+					
+				}else{
+					
+					// Create new unique annotation with information from current
+					String[] annotationIDs = {id};
+					uniqueAnnotations.put(sequence + ":" + reverseCompliment, annotationIDs);
+				}
+			}
+		}
+
+	}
+}

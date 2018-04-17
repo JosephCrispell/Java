@@ -1,0 +1,30 @@
+package ComparingGenomes;
+
+public class Annotation {
+
+	int[] coordinates;
+	boolean compliment = false;
+	
+	public Annotation(String coords){
+		
+		parseCoords(coords);
+		
+	}
+	
+	// General methods
+	public void parseCoords(String coords){
+		
+		// Remove ">" or "<" if present
+		coords.replace(">", "");
+		coords.replace("<", "");
+		
+		// Check if compliment required
+		if(coords.matches("complement(.*)") == true){
+			this.compliment = true;
+			
+			System.out.println(coords);
+		}
+		
+		
+	}
+}

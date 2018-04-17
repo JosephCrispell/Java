@@ -152,7 +152,7 @@ public class Methods {
 		int sourceIndex;
 		
 		// Get a list of all individuals IDs in the population
-		int[] ids = ArrayMethods.range(0, population.getSize() - 1, 1);
+		int[] ids = ArrayMethods.seq(0, population.getSize() - 1, 1);
 
 		// Examine each susceptible individual in turn
 		for(int id : susceptibles){

@@ -1,0 +1,68 @@
+package ComparingGenomes;
+
+import methods.ArrayMethods;
+import methods.GeneticMethods;
+
+public class Annotation {
+
+	String originalCoords;
+	int[] coordinates;
+	String type;
+	char[] sequence;
+	char[] reverseCompliment;
+	boolean compliment = false;
+	
+	public Annotation(String coords, String annotationType){
+		
+		this.type = annotationType;
+		this.originalCoords = coords;
+		parseCoords(coords);
+		
+	}
+	
+	// General methods
+	public void parseCoords(String coords){
+		
+		// Remove ">" or "<" if present
+		coords = coords.replace(">", "");
+		coords = coords.replace("<", "");
+		
+		// Check if compliment required
+		if(coords.matches("complement(.*)") == true){			
+			coords = coords.substring(11, coords.length() - 1);
+			compliment = true;
+		}
+		
+		// Check if join present
+		if(coords.matches("join(.*)") == true){
+			
+			coords = coords.substring(5, coords.length() - 1);
+			this.coordinates = ArrayMethods.range(ArrayMethods.convertToInteger(coords.split("\\.\\.|,")));			
+		}else{
+			this.coordinates = ArrayMethods.convertToInteger(coords.split("\\.\\."));
+		}		
+	}
+
+	// Getting methods
+	public int getStart(){
+		return this.coordinates[0];
+	}
+	public int getEnd(){
+		return this.coordinates[1];
+	}
+	public String getType(){
+		return this.type;
+	}
+	public char[] getSequence(){
+		return this.sequence;
+	}
+	public char[] getReverseCompliment(){
+		return this.reverseCompliment;
+	}
+	
+	// Setting methods
+	public void setSequence(char[] sequence){
+		this.sequence = sequence;
+		this.reverseCompliment = GeneticMethods.getReverseCompliment(this.sequence);
+	}
+}

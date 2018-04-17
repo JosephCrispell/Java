@@ -47,7 +47,7 @@ public class BuildCattleLifeHistories {
 		
 		// Examine the movements associated with each movement Id
 		String movementsFilePost2001Start = path + "CattleMovementData/20160123_joe_cts_movements";
-		int[] yearsToExamine = ArrayMethods.range(2002, 2014, 1);
+		int[] yearsToExamine = ArrayMethods.seq(2002, 2014, 1);
 		Hashtable<String, Location> locations = findMovementsForIdsPost2001(movementsFilePost2001Start,
 				yearsToExamine, movementIds, isolateData, 99);
 		
@@ -1400,6 +1400,7 @@ public class BuildCattleLifeHistories {
 		String line = null;
 		String[] cols;
 		int lineNo = 0;
+		String[] parts;
 										
 		// Begin reading the file
 		while(( line = reader.readLine()) != null){
@@ -1413,16 +1414,23 @@ public class BuildCattleLifeHistories {
 			// Split the line into its columns
 			cols = line.split(",", -1);
 			
-			// Get the date of the current isolate
+			// Get the date of the current isolate and CPHH from BreakdownID
 			cultureDate = CalendarMethods.parseDate(cols[3], "/", dateFormat, true);
-			breakdownDate = CalendarMethods.parseDate(cols[16].split("-", -1)[1], "/", dateFormat, true);
-			
-			// Get the CPHH
-			cphh = cols[16].split("-", -1)[0];
+			breakdownDate = cultureDate;
+			if(cols[16].matches("") == false){
+				breakdownDate = CalendarMethods.parseDate(cols[16].split("-", -1)[1], "/", dateFormat, true);
+				cphh = cols[16].split("-", -1)[0];
+			}else{
+				cphh = cols[15];
+			}			
 			
 			// Store the isolates information
 			info = new IsolateData(cols[35], cphh, cultureDate, cols[51], cols);
-			info.setCph(cphh.substring(0, cphh.length() - 2));
+			if(cols[16].matches("") == false){
+				info.setCph(cphh.substring(0, cphh.length() - 2));
+			}else{
+				info.setCph("NA");
+			}
 			info.setBreakdownDate(breakdownDate);
 			
 			// Add the isolate's info into the hashtable

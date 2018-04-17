@@ -42,12 +42,10 @@ public class HomoplasyFinder3 {
 		// Set the path
 		//String path = "C:/Users/Joseph Crisp/Desktop/UbuntuSharedFolder/Homoplasmy/";
 		String path = "C:/Users/Joseph Crisp/Desktop/UbuntuSharedFolder/Woodchester_CattleAndBadgers/NewAnalyses_22-03-18/vcfFiles/";
-		
-						
+								
 		// Get the current date
 		String date = CalendarMethods.getCurrentDate("dd-MM-yy");
-		
-		
+				
 		// Set verbose
 		boolean verbose = true;
 		
@@ -88,7 +86,7 @@ public class HomoplasyFinder3 {
 		 * - Found in all isolates above and not in any below node OR vice versa
 		 */
 		
-		// Assign alleles
+		// Assign alleles (CHECK R VERSION - COULD THIS BE WRITTEN FASTA USING ALLELES HASHTABLE ABOVE??)
 		assignAllelesToCurrentNode(tree, isolateSequences, HashtableMethods.getKeysString(isolateSequences), verbose);
 		
 		// Get the assigned alleles
@@ -102,7 +100,7 @@ public class HomoplasyFinder3 {
 		/**
 		 * Return a FASTA file without the homoplasy sites
 		 */
-		printFASTAWithoutHomoplasies(positions, path, date, sequences);
+		printFASTAWithoutHomoplasies(positions, path, date, sequences, verbose);
 	}
 	
 	// Methods section

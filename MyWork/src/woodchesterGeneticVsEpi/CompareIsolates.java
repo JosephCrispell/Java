@@ -34,10 +34,10 @@ public class CompareIsolates {
 		
 		// Get the date
 		String date = CalendarMethods.getCurrentDate("dd-MM-yyyy");
-		date = "28-09-2017"; // Override date
+		date = "04-04-2018"; // Override date
 				
 		// Read in the Isolate data
-		String path = "C:/Users/Joseph Crisp/Desktop/UbuntuSharedFolder/Woodchester_CattleAndBadgers/NewAnalyses_13-07-17/";
+		String path = "C:/Users/Joseph Crisp/Desktop/UbuntuSharedFolder/Woodchester_CattleAndBadgers/NewAnalyses_22-03-18/";
 				
 		// Read in the Cattle data
 		String consolidatedSampledAnimalInfo = path + "IsolateData/ConsolidatedCattleIsolateData_" + date + ".txt";
@@ -78,7 +78,7 @@ public class CompareIsolates {
 				findShortestPathsBetweenAllNodes(badgerIsolateLifeHistoryData.getGroupAdjacencyMatrix()));
 		
 		// Read in the isolate sequences from a FASTA file
-		String fastaFile = path + "vcfFiles/sequences_Prox-10_29-09-2017.fasta";
+		String fastaFile = path + "vcfFiles/sequences_withoutHomoplasies_27-03-18.fasta";
 		Sequence[] sequences = GeneticDistances.readFastaFile(fastaFile);
 		
 		// Remove reference
@@ -194,6 +194,8 @@ public class CompareIsolates {
 		IsolateData cow;
 		SampleInfo badger;
 		
+		Hashtable<String, Integer> foundMistake = new Hashtable<String, Integer>();
+		
 		for(int i = 0; i < sequences.length; i++){
 			
 			// Get the isolate information for isolate i
@@ -209,7 +211,11 @@ public class CompareIsolates {
 			
 			if(cattleI == null && badgerI == null){
 				
-				System.out.println("Weren't able to find Isolate data for: " + sequences[i].getName());
+				if(foundMistake.get(sequences[i].getName()) == null){
+					System.out.println("Weren't able to find Isolate data for: " + sequences[i].getName() + "\t" + sequences[i].getSpecies());
+					foundMistake.put(sequences[i].getName(), 1);
+				}
+				
 				continue;
 			}
 			
@@ -233,7 +239,10 @@ public class CompareIsolates {
 				
 				if(cattleJ == null && badgerJ == null){
 					
-					System.out.println("Weren't able to find Isolate data for: " + sequences[i].getName());
+					if(foundMistake.get(sequences[i].getName()) == null){
+						System.out.println("Weren't able to find Isolate data for: " + sequences[i].getName() + "\t" + sequences[i].getSpecies());
+						foundMistake.put(sequences[i].getName(), 1);
+					}					
 					continue;
 				}
 
@@ -350,7 +359,10 @@ public class CompareIsolates {
 		if(cow.getMainHerd() != null && cattleIsolateLifeHistoryData.getLocations().get(cow.getMainHerd()) != null){
 			cattleMainHerd = cattleIsolateLifeHistoryData.getLocations().get(cow.getMainHerd());
 		}
-		Location cattleSampledHerd = cattleIsolateLifeHistoryData.getLocations().get(cow.getLocationId());
+		Location cattleSampledHerd = null;
+		if(cow.getLocationId() != null){
+			cattleSampledHerd = cattleIsolateLifeHistoryData.getLocations().get(cow.getLocationId());
+		}
 		
 		//**** Make the comparison ****
 		
@@ -474,7 +486,10 @@ public class CompareIsolates {
 				a.getMainHerd().matches("") == false && b.getMainHerd().matches("") == false){
 				epiMetrics[9] = locationDistanceMatrix[locationInfo.get(a.getMainHerd()).getPosInAdjacencyMatrix()][locationInfo.get(b.getMainHerd()).getPosInAdjacencyMatrix()];
 		}
-		epiMetrics[10] = locationDistanceMatrix[locationInfo.get(a.getLocationId()).getPosInAdjacencyMatrix()][locationInfo.get(b.getLocationId()).getPosInAdjacencyMatrix()];
+		epiMetrics[10] = -1;
+		if(a.getLocationId() != null && b.getLocationId() != null){
+			epiMetrics[10] = locationDistanceMatrix[locationInfo.get(a.getLocationId()).getPosInAdjacencyMatrix()][locationInfo.get(b.getLocationId()).getPosInAdjacencyMatrix()];
+		}		
 		epiMetrics[11] = -1;
 		
 		// Note the number of movements linking the Main/Sampled/Infected herds
@@ -482,8 +497,11 @@ public class CompareIsolates {
 		if(a.getMainHerd() != null && b.getMainHerd() != null &&
 				a.getMainHerd().matches("") == false && b.getMainHerd().matches("") == false){
 			epiMetrics[12] = locationAdjacencyMatrix[locationInfo.get(a.getMainHerd()).getPosInAdjacencyMatrix()][locationInfo.get(b.getMainHerd()).getPosInAdjacencyMatrix()];
+		}
+		epiMetrics[13] = -1;
+		if(a.getLocationId() != null && b.getLocationId() != null){
+			epiMetrics[13] = locationAdjacencyMatrix[locationInfo.get(a.getLocationId()).getPosInAdjacencyMatrix()][locationInfo.get(b.getLocationId()).getPosInAdjacencyMatrix()];
 		}		
-		epiMetrics[13] = locationAdjacencyMatrix[locationInfo.get(a.getLocationId()).getPosInAdjacencyMatrix()][locationInfo.get(b.getLocationId()).getPosInAdjacencyMatrix()];
 		epiMetrics[14] = -1;
 		
 		// Are these isolates from the same animal?
@@ -505,7 +523,10 @@ public class CompareIsolates {
 			epiMetrics[17] = calculateMeanNMovementsOnEdgesOfShortestPath(indices, locationInfo.get(b.getMainHerd()).getPosInAdjacencyMatrix(), locationAdjacencyMatrix);
 		}
 		
-		indices = shortestPaths.get(locationInfo.get(a.getLocationId()).getPosInAdjacencyMatrix())[locationInfo.get(b.getLocationId()).getPosInAdjacencyMatrix()];
+		indices = new int[0];
+		if(a.getLocationId() != null && b.getLocationId() != null){
+			indices = shortestPaths.get(locationInfo.get(a.getLocationId()).getPosInAdjacencyMatrix())[locationInfo.get(b.getLocationId()).getPosInAdjacencyMatrix()];
+		}		
 		epiMetrics[18] = -1;
 		epiMetrics[19] = -1;
 		if(indices.length != 0){
@@ -521,8 +542,11 @@ public class CompareIsolates {
 		if(a.getMainHerd() != null && b.getMainHerd() != null &&
 				a.getMainHerd().matches("") == false && b.getMainHerd().matches("") == false){
 			epiMetrics[22] = nShared[locationInfo.get(a.getMainHerd()).getPosInAdjacencyMatrix()][locationInfo.get(b.getMainHerd()).getPosInAdjacencyMatrix()];
+		}
+		epiMetrics[23] = -1;
+		if(a.getLocationId() != null && b.getLocationId() != null){
+			epiMetrics[23] = nShared[locationInfo.get(a.getLocationId()).getPosInAdjacencyMatrix()][locationInfo.get(b.getLocationId()).getPosInAdjacencyMatrix()];
 		}		
-		epiMetrics[23] = nShared[locationInfo.get(a.getLocationId()).getPosInAdjacencyMatrix()][locationInfo.get(b.getLocationId()).getPosInAdjacencyMatrix()];
 		epiMetrics[24] = -1;
 		
 		// Look at shortest path between Main/Sampled/Infected herds/groups excluding certain premises types?
@@ -538,7 +562,10 @@ public class CompareIsolates {
 			epiMetrics[26] = calculateMeanNMovementsOnEdgesOfShortestPath(indices, locationInfo.get(b.getMainHerd()).getPosInAdjacencyMatrix(), locationAdjacencyMatrix);
 		}
 		
-		indices = shortestPaths.get(locationInfo.get(a.getLocationId()).getPosInAdjacencyMatrix())[locationInfo.get(b.getLocationId()).getPosInAdjacencyMatrix()];
+		indices = new int[0];
+		if(a.getLocationId() != null && b.getLocationId() != null){
+			indices = shortestPaths.get(locationInfo.get(a.getLocationId()).getPosInAdjacencyMatrix())[locationInfo.get(b.getLocationId()).getPosInAdjacencyMatrix()];
+		}		
 		epiMetrics[27] = -1;
 		epiMetrics[28] = -1;
 		if(indices.length != 0){
@@ -560,7 +587,8 @@ public class CompareIsolates {
 					locationInfo.get(b.getMainHerd()).getLandParcelCentroids());
 		}
 		epiMetrics[32] = -1;
-		if(locationInfo.get(a.getLocationId()).getLandParcelCentroids() != null &&
+		if(a.getLocationId() != null && b.getLocationId() != null &&
+		   locationInfo.get(a.getLocationId()).getLandParcelCentroids() != null &&
 		   locationInfo.get(b.getLocationId()).getLandParcelCentroids() != null){
 			
 			epiMetrics[32] = epiMetrics[31] = calculateMinDistanceBetweenCentroidArrays(
@@ -701,9 +729,9 @@ public class CompareIsolates {
 			sequences[i].setName(parts[0]);
 			
 			// Note what species this isolate was taken from
-			species = 'B';
-			if(parts[0].matches("TB(.*)") == true){
-				species = 'C';
+			species = 'C';
+			if(parts[0].matches("WB(.*)") == true){
+				species = 'B';
 			}
 			sequences[i].setSpecies(species);
 		}
