@@ -1,5 +1,6 @@
 package methods;
 
+import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Set;
 
@@ -130,6 +131,19 @@ public class HashtableMethods {
 			pos++;
 			
 			values[pos] = key;
+		}
+		
+		return values;
+		
+	}
+	public static ArrayList<String> getKeysStringAsArrayList(Hashtable table){
+		
+		Set<String> keys = table.keySet();
+		ArrayList<String> values = new ArrayList<String>();
+		
+		for(String key : keys){
+			
+			values.add(key);
 		}
 		
 		return values;

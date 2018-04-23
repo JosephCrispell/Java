@@ -30,7 +30,6 @@ public class Annotation {
 		// Check if compliment required
 		if(coords.matches("complement(.*)") == true){			
 			coords = coords.substring(11, coords.length() - 1);
-			compliment = true;
 		}
 		
 		// Check if join present
@@ -39,7 +38,7 @@ public class Annotation {
 			coords = coords.substring(5, coords.length() - 1);
 			this.coordinates = ArrayMethods.range(ArrayMethods.convertToInteger(coords.split("\\.\\.|,")));			
 		}else{
-			this.coordinates = ArrayMethods.convertToInteger(coords.split("\\.\\."));
+			this.coordinates = ArrayMethods.range(ArrayMethods.convertToInteger(coords.split("\\.\\.")));
 		}		
 	}
 
@@ -78,8 +77,8 @@ public class Annotation {
 	}
 	
 	// Setting methods
-	public void setSequence(String sequence){
+	public void setSequence(String sequence, boolean verbose){
 		this.sequence = sequence;
-		this.reverseCompliment = ArrayMethods.toString(GeneticMethods.getReverseCompliment(this.sequence.toCharArray()));
+		this.reverseCompliment = ArrayMethods.toString(GeneticMethods.getReverseCompliment(sequence.toCharArray(), verbose));
 	}
 }

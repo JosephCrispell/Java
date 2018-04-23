@@ -10,6 +10,7 @@
 <fullyQualifiedTypeName name="methods.GeneticMethods"/>
 <fullyQualifiedTypeName name="javax.swing.plaf.synth.SynthScrollBarUI"/>
 <fullyQualifiedTypeName name="methods.ArrayMethods"/>
-<fullyQualifiedTypeName name="methods.WriteToFile"/>
 <fullyQualifiedTypeName name="java.io.BufferedWriter"/>
+<fullyQualifiedTypeName name="javax.swing.plaf.synth.SynthSeparatorUI"/>
+<fullyQualifiedTypeName name="methods.WriteToFile"/>
 </qualifiedTypeNameHistroy>

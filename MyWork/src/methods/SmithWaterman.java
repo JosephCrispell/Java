@@ -2,51 +2,83 @@ package methods;
 
 import java.io.IOException;
 
+import javax.swing.plaf.synth.SynthSeparatorUI;
+
 public class SmithWaterman {
 
 	/**
 	 * An implementation of the Smith-Waterman local alignment algorithm
 	 * - Took all instructions from: https://en.wikipedia.org/wiki/Smith%E2%80%93Waterman_algorithm#Example
+	 * 
+	 * Extend to include gap extension
 	 */
 	
 	public static void main(String[] args) throws IOException{
-		
-		
-		
-		char[] a = "GTCGTCGCGTCGCTGCTCGCGGAGAGAGTCGATAGATGCGATAGCTAGCGAGCAGCGAGCAGCAGCTACGATCAGCGACTAGCATCGAGCAGCGATCAGCTAGCATCAGCTACGATCAGCTAGCATCGA".toCharArray();
-		char[] b = "GTCGTCGCGTCGCTGCTCGCGGAGATCGATAGATGCGATAGCTAGCGAGCAGCGAGCAGCAGCTACGATCAGCGACTGGCATCGAGCAGCGATCAGCTAGCATCAGCTACGATCTTGCTAGCATCGA".toCharArray();
+				
+		char[] a = "ACGTCTCAGCTACATC".toCharArray();
+		char[] b = "CTACATGCGG".toCharArray();
 		
 		int match = 3;
 		int misMatch = -3;
-		int gapPenalty = 1;
+		int gapPenalty = 2;
 		
 		int[][] scoringMatrix = new int[a.length + 1][b.length + 1];
+		printScoringMatrix(scoringMatrix, a, b);
+		System.out.println("\n\n");
 
 		int[][][] scoreSources = fillInScoringMatrix(scoringMatrix, a, b, match, misMatch, gapPenalty);
+		printScoringMatrix(scoringMatrix, a, b);
+		System.out.println("\n\n");
 		
-		constructAlignment(scoringMatrix, a, b, scoreSources);
+		char[][][] alignments = constructAlignments(scoringMatrix, a, b, scoreSources, true);
+
 	}
 	
-	public static void constructAlignment(int[][] scoringMatrix, char[] a, char[] b, int[][][] sources){
+	public static void printAlignment(char[] a, char[] b){
+		
+		System.out.println(ArrayMethods.toString(a));
+		for(int i = 0; i < b.length; i++){
+			if(a[i] == b[i]){
+				System.out.print("|");
+			}else{
+				System.out.print(" ");
+			}
+		}
+		System.out.println("\n" + ArrayMethods.toString(b));
+	}
+	
+	public static char[][][] constructAlignments(int[][] scoringMatrix, char[] a, char[] b, int[][][] sources, boolean print){
 		
 		// Find the max indices
 		int[][] maxIndices = findIndicesOfMaximums(scoringMatrix);
 		
+		// Initialise an array to store the alignments
+		char[][][] alignments = new char[maxIndices[0].length][2][0];
+		
 		// Reconstruct the alignment associated with each maximum found
 		for(int pos = 0; pos < maxIndices[0].length; pos++){
 			
+			// Get the current max's indices
 			int i = maxIndices[0][pos];
 			int j = maxIndices[1][pos];
 			
-			System.out.println("Alignment with maximum alignment score of " + scoringMatrix[i][j]);
-			
+			// Build the alignment		
 			StringBuffer alignedA = new StringBuffer();
 			StringBuffer alignedB = new StringBuffer();
 			addNextAlignedPair(scoringMatrix, sources, i, j, a, b, alignedA, alignedB);
+
+			// Store the alignment
+			alignments[pos][0] = alignedA.reverse().toString().toCharArray();
+			alignments[pos][1] = alignedB.reverse().toString().toCharArray();
 			
-			System.out.println(alignedA.reverse().toString());
-			System.out.println(alignedB.reverse().toString());
+			// Print alignment if requested
+			if(print){
+				System.out.println("Alignment score = " + scoringMatrix[i][j]);
+				printAlignment(alignments[pos][0], alignments[pos][1]);
+			}
 		}
+		
+		return alignments;
 	}
 	
 	public static void addNextAlignedPair(int[][] scoringMatrix, int[][][] sources, int i, int j, char[] a, char[] b, StringBuffer alignedA, StringBuffer alignedB){

@@ -22,14 +22,34 @@ public class BuildAnnotatedElementDatabase {
 		// Get the current date
 		String date = CalendarMethods.getCurrentDate("dd-MM-yy");
 		
+		// Set size range for the annotated elements of interest
+		int[] sizeRange = {50, 100000};
+		
 		// Get an array of all the genbank files in the current directory
 		String[] genbankFiles = GeneralMethods.getAllFilesInDirectory(path, ".gbff");
 		
 		// Examine the annotations and their sequences present in each genbank file - store the unique ones
-		Hashtable<String, String[]> uniqueAnnotations = readGenbankFilesAndRecordUniqueAnnotations(genbankFiles, path, true);
+		Hashtable<String, String[]> uniqueAnnotations = readGenbankFilesAndRecordUniqueAnnotations(genbankFiles, path, sizeRange, true);
+		
+		// TESTING
+		System.out.println("############################################################################################################");
+		System.out.println("############################################################################################################");
+		BufferedWriter bWriter = WriteToFile.openFile("C:/Users/Joseph Crisp/Desktop/UbuntuSharedFolder/ComparingReferenceGenomes_10-04-18/values.txt", false);
+		for(String key : HashtableMethods.getKeysString(uniqueAnnotations)){
+			
+			bWriter.write(uniqueAnnotations.get(key).length + "\t" + key.length() + "\n");
+			
+			if(key.length() > 100000){
+				System.out.println("\n\n" + ArrayMethods.toString(uniqueAnnotations.get(key), "\n"));
+			}
+		}
+		bWriter.close();
+		//TESTING
+		
+		System.out.println("Found " + uniqueAnnotations.size() + " unique annotations");
 		
 		// Print the information for each annotation found
-		writeUniqueAnnotationsToFile(uniqueAnnotations, path, date);
+		//writeUniqueAnnotationsToFile(uniqueAnnotations, path, date);
 	}
 	
 	public static void writeUniqueAnnotationsToFile(Hashtable<String, String[]> uniqueAnnotations, String path, String date) throws IOException{
@@ -101,7 +121,7 @@ public class BuildAnnotatedElementDatabase {
 		return output;
 	}
 	
-	public static Hashtable<String, String[]> readGenbankFilesAndRecordUniqueAnnotations(String[] genbankFiles, String path, boolean verbose) throws IOException{
+	public static Hashtable<String, String[]> readGenbankFilesAndRecordUniqueAnnotations(String[] genbankFiles, String path, int[] sizeRange, boolean verbose) throws IOException{
 		
 		// Make a note of the annotation types we're interested in
 		Hashtable<String, Integer> annotationTypes = new Hashtable<String, Integer>();
@@ -125,14 +145,21 @@ public class BuildAnnotatedElementDatabase {
 			// Read and store the genbank file
 			GenbankFile genbank = new GenbankFile(path + genbankFiles[i], annotationTypes, verbose);
 			
+			// Print sequence to file
+//			String outputFile = path + genbankFiles[i].replaceAll("gbff", "fasta");
+//			BufferedWriter bWriter = WriteToFile.openFile(outputFile, false);
+//			bWriter.write(">" + genbankFiles[i] + "\n");
+//			bWriter.write(genbank.getAnnotationSet(0).getSequence() + "\n");
+//			bWriter.close();
+			
 			// Check each of the annotated sequences - have they been found before?
-			addAnyAdditionalAnnotatedSequencesFound(genbank, uniqueAnnotations, genbankFiles[i]);
+			addAnyAdditionalAnnotatedSequencesFound(genbank, uniqueAnnotations, genbankFiles[i], sizeRange, verbose);
 		}
 		
 		return uniqueAnnotations;
 	}
 	
-	public static void addAnyAdditionalAnnotatedSequencesFound(GenbankFile genbank, Hashtable<String, String[]> uniqueAnnotations, String file){
+	public static void addAnyAdditionalAnnotatedSequencesFound(GenbankFile genbank, Hashtable<String, String[]> uniqueAnnotations, String file, int[] sizeRange, boolean verbose){
 		
 		// Examine each of the annotation sets from the current file
 		for(int setIndex = 0; setIndex < genbank.getNumberAnnotationSets(); setIndex++){
@@ -140,34 +167,44 @@ public class BuildAnnotatedElementDatabase {
 			// Examine each of its annotations - store any ones we haven't encountered before
 			for(String coords : HashtableMethods.getKeysString(genbank.getAnnotationSet(setIndex).getAnnotations())){
 				
+				// Get the start and end coordinates
+				int start = genbank.getAnnotationSet(setIndex).getAnnotations().get(coords).getStart();
+				int end = genbank.getAnnotationSet(setIndex).getAnnotations().get(coords).getEnd();
+				
+				// Skip annotated elements that are too small or too big
+				if(end - start < sizeRange[0] || end - start > sizeRange[1]){
+					
+					if(verbose){
+						System.out.println("Ignoring annotation in " + file + " as its size (" + (end - start) + ") is outside of range.");
+					}
+					continue;
+				}
+				
 				// Get the sequences for the current annotation
 				String sequence = genbank.getAnnotationSet(setIndex).getAnnotations().get(coords).getSequence();
 				String reverseCompliment = genbank.getAnnotationSet(setIndex).getAnnotations().get(coords).getReverseCompliment();
 				
 				// Build an annotation set identifier
-				String id = file + ":" + setIndex + ":" + 
-							genbank.getAnnotationSet(setIndex).getAnnotations().get(coords).getStart() + "-" +
-							genbank.getAnnotationSet(setIndex).getAnnotations().get(coords).getEnd();
+				String id = file + ":" + setIndex + ":" + start + "-" + end;
 				
 				// Check if encountered key before
-				if(uniqueAnnotations.get(sequence + ":" + reverseCompliment) != null){
+				if(uniqueAnnotations.get(sequence) != null){
 					
 					// Append the annotation information
-					uniqueAnnotations.put(sequence + ":" + reverseCompliment, ArrayMethods.append(uniqueAnnotations.get(sequence + ":" + reverseCompliment), id));
+					uniqueAnnotations.put(sequence, ArrayMethods.append(uniqueAnnotations.get(sequence), id));
 					
-				}else if(uniqueAnnotations.get(reverseCompliment + ":" + sequence) != null){
+				}else if(uniqueAnnotations.get(reverseCompliment) != null){
 					
 					// Append the annotation information
-					uniqueAnnotations.put(reverseCompliment + ":" + sequence, ArrayMethods.append(uniqueAnnotations.get(reverseCompliment + ":" + sequence), id));
+					uniqueAnnotations.put(reverseCompliment, ArrayMethods.append(uniqueAnnotations.get(reverseCompliment), id));
 					
 				}else{
 					
 					// Create new unique annotation with information from current
 					String[] annotationIDs = {id};
-					uniqueAnnotations.put(sequence + ":" + reverseCompliment, annotationIDs);
+					uniqueAnnotations.put(sequence, annotationIDs);
 				}
 			}
 		}
-
 	}
 }

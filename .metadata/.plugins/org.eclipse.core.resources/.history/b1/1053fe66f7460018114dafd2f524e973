@@ -1,0 +1,37 @@
+package methods;
+
+import java.util.ArrayList;
+
+public class ArrayListMethods {
+
+	public static void main(String[] args){
+		
+		
+	}
+	
+	public static ArrayList<String> copy(ArrayList<String> array){
+		
+		ArrayList<String> copy = new ArrayList<String>();
+		for(String value : array){
+			copy.add(value);
+		}
+		
+		return copy;
+	}
+	
+	public static void remove(ArrayList<String> array, String value){
+		
+		int index = array.indexOf(value);
+		if(index != -1){
+			array.remove(index);
+		}
+	}
+	
+	public static void remove(ArrayList<String> array, ArrayList<String> values){
+		
+		for(String value : values){
+			
+			remove(array, value);
+		}
+	}
+}

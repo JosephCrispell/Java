@@ -40,8 +40,7 @@ public class HomoplasyFinder3 {
 //		String date = fasta.split("_")[1].split("\\.")[0];
 		
 		// Set the path
-		//String path = "C:/Users/Joseph Crisp/Desktop/UbuntuSharedFolder/Homoplasmy/";
-		String path = "C:/Users/Joseph Crisp/Desktop/UbuntuSharedFolder/Woodchester_CattleAndBadgers/NewAnalyses_22-03-18/vcfFiles/";
+		String path = "C:/Users/Joseph Crisp/Desktop/UbuntuSharedFolder/Homoplasy/";
 								
 		// Get the current date
 		String date = CalendarMethods.getCurrentDate("dd-MM-yy");
@@ -64,10 +63,11 @@ public class HomoplasyFinder3 {
 		// Read in the FASTA file
 		String fasta = path + "sequences_Prox-10_24-03-2018.fasta";
 		Sequence[] sequences = GeneticMethods.readFastaFile(fasta, verbose);
-		Hashtable<String, char[]> isolateSequencesPriorToParsingIDs = storeSequencesInHashtable(sequences);
+		//Hashtable<String, char[]> isolateSequencesPriorToParsingIDs = storeSequencesInHashtable(sequences);
+		Hashtable<String, char[]> isolateSequences = storeSequencesInHashtable(sequences);
 		
 		// Parse New Zealand sequence IDs - don't match those used in tree
-		Hashtable<String, char[]> isolateSequences = new Hashtable<String, char[]>();
+/*		Hashtable<String, char[]> isolateSequences = new Hashtable<String, char[]>();
 		for(String key : HashtableMethods.getKeysString(isolateSequencesPriorToParsingIDs)){
 			
 			String[] parts = key.split("_");
@@ -77,7 +77,7 @@ public class HomoplasyFinder3 {
 			}
 			isolateSequences.put(newKey, isolateSequencesPriorToParsingIDs.get(key));
 		}
-				
+			*/	
 		// Get the alleles in the population and the isolates they are associated with
 		Hashtable<String, String[]> alleles = noteAllelesInPopulation(isolateSequences, verbose);
 		

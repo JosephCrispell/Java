@@ -33,7 +33,7 @@ public class FindAnimalsInHerdOnDate {
 		
 		// Note the date of interest
 		int[] inputDateFormat = {0, 1, 2}; // Indices of Day, Month, Year
-		Calendar date = CalendarMethods.parseDate("23/02/1999", "/", inputDateFormat);
+		Calendar date = CalendarMethods.parseDate("23/02/1999", "/", inputDateFormat, true);
 		
 		// Note the CPH
 		String CPHH = "14082000501"; // 14/082/0005-01
@@ -263,7 +263,7 @@ public class FindAnimalsInHerdOnDate {
 		if(line.matches("(.*)," + CPH + ",(.*)") == true && cols[4].equals("t") == true){
 			
 			// Get the date for the current movement
-			movementDate = CalendarMethods.parseDate(cols[2], "-", dateFormat);
+			movementDate = CalendarMethods.parseDate(cols[2], "-", dateFormat, true);
 			
 			// Is this a ON movement before or on the date?
 			if(cols[6].matches(CPH) == true && movementDate.compareTo(date) <= 0){
