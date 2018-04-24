@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Hashtable;
 
+import javax.swing.JTextArea;
+
 import geneticDistances.Sequence;
 import methods.ArrayListMethods;
 import methods.ArrayMethods;
@@ -21,41 +23,42 @@ public class HomoplasyFinder4 {
 	
 	public static void main(String[] args) throws IOException{
 		
-//		if(args[0].equals("-help") || args[0].equals("") || args[0].equals("-h") || args[0].equals("help")){
-//			System.out.println("HomoplasyFinder: a tool to identify homoplasies within a phylogenetic tree and alignment");
-//			System.out.println("\nCommand Line Structure:");
-//			System.out.println("\tjava -jar homoplasyFinder_DATE.jar verbose path sequences.fasta newick.tree\n");
-//			System.out.println("\t\tverbose\tDetailed output [0] or none [1]");
-//			System.out.println("\t\tsequences.fasta\tFASTA file containing alignment");
-//			System.out.println("\t\tnewick.tree\tNewick formatted tree file");
-//			System.out.println("\nNotes:");
-//			System.out.println("First line of input FASTA file contains the number of isolates and sites in the file");
-//
-//			System.exit(0);
-//		}
-//
-//		// Get the command line arguments
-//		boolean verbose = args[0].matches("1");
-//		String fasta = args[1];
-//		String treeFile = args[2];
-//		String path = "";
-//		String date = fasta.split("_")[1].split("\\.")[0];
+		if(args[0].equals("-help") || args[0].equals("") || args[0].equals("-h") || args[0].equals("help")){
+			System.out.println("HomoplasyFinder: a tool to identify homoplasies within a phylogenetic tree and alignment");
+			System.out.println("\nCommand Line Structure:");
+			System.out.println("\tjava -jar homoplasyFinder_DATE.jar verbose path sequences.fasta newick.tree\n");
+			System.out.println("\t\tverbose\tDetailed output [0] or none [1]");
+			System.out.println("\t\tsequences.fasta\tFASTA file containing alignment");
+			System.out.println("\t\tnewick.tree\tNewick formatted tree file");
+			System.out.println("\nNotes:");
+			System.out.println("First line of input FASTA file contains the number of isolates and sites in the file");
+
+			System.exit(0);
+		}
+
+		// Get the command line arguments
+		boolean verbose = args[0].matches("1");
+		String fasta = args[1];
+		String treeFile = args[2];
+		String path = "";
+		String date = fasta.split("_")[1].split("\\.")[0];
 		
 		// Set the path
-		String path = "C:/Users/Joseph Crisp/Desktop/UbuntuSharedFolder/Homoplasy/";
+		//String path = "C:/Users/Joseph Crisp/Desktop/UbuntuSharedFolder/Homoplasy/";
 								
 		// Get the current date
-		String date = CalendarMethods.getCurrentDate("dd-MM-yy");
+		//String date = CalendarMethods.getCurrentDate("dd-MM-yy");
 				
 		// Set verbose
-		boolean verbose = true;
+		//boolean verbose = true;
 		
 		/**
 		 * Read in the phylogeny
 		 */
-
-		String treeFile = path + "mlTree_27-03-18.tree";
-		//String treeFile = path + "example-AFTER_09-04-18.tree";
+		
+		//String treeFile = path + "mlTree_withRef_14-06-16_NZ.tree"; // NZ
+		//String treeFile = path + "mlTree_27-03-18_WP.tree"; // WP
+		//String treeFile = path + "example-AFTER_09-04-18.tree"; // EXAMPLE
 		Node tree = readNewickTree(treeFile, verbose);
 		
 		/**
@@ -63,8 +66,9 @@ public class HomoplasyFinder4 {
 		 */
 		
 		// Read in the FASTA file
-		String fasta = path + "sequences_Prox-10_24-03-2018.fasta";
-		//String fasta = path + "example_09-04-18.fasta";
+		//String fasta = path + "sequences_withRef_Prox-10_14-06-16_NZ.fasta"; // NZ
+		//String fasta = path + "sequences_Prox-10_24-03-2018_WP.fasta"; // WP
+		//String fasta = path + "example_09-04-18.fasta"; // EXAMPLE
 		Sequence[] sequences = GeneticMethods.readFastaFile(fasta, verbose);
 		
 		// Get the alleles in the population and the isolates they are associated with
@@ -83,22 +87,25 @@ public class HomoplasyFinder4 {
 		/**
 		 * Examine the un-assigned alleles - these are potential homoplasies
 		 */
-		int[] homoplasyPositions = examineUnAssignedAlleles(assigned, alleles, verbose, path, date);
+		int[] homoplasyPositions = examineUnAssignedAlleles(assigned, alleles, verbose, path, null, date, null);
 
 		/**
 		 * Return a FASTA file without the homoplasy sites
 		 */
-		printFASTAWithoutHomoplasies(homoplasyPositions, path, date, sequences, verbose);
+		printFASTAWithoutHomoplasies(homoplasyPositions, path, null, date, sequences, verbose);
 	}
 	
-	public static void printFASTAWithoutHomoplasies(int[] positions, String path, String date, Sequence[] sequences, boolean verbose) throws IOException{
+	public static void printFASTAWithoutHomoplasies(int[] positions, String path, String fileName, String date, Sequence[] sequences, boolean verbose) throws IOException{
 		
 		if(verbose == true){
 			System.out.println("Writing sequences (without homoplasy sites) to file...");
 		}
 		
 		// Open an output file
-		BufferedWriter bWriter = WriteToFile.openFile(path + "sequences_withoutHomoplasies_" + date + ".fasta", false);
+		if(fileName == null){
+			fileName = "sequences_withoutHomoplasies_" + date + ".fasta";
+		}
+		BufferedWriter bWriter = WriteToFile.openFile(path + fileName, false);
 		
 		// Print out the number of isolates and sites in FASTA
 		WriteToFile.writeLn(bWriter, sequences.length + " " + (sequences[0].getSequence().length - positions.length));
@@ -119,9 +126,12 @@ public class HomoplasyFinder4 {
 		WriteToFile.close(bWriter);
 	}
 	
-	public static BufferedWriter buildOutputFile(String date, String path) throws IOException{
+	public static BufferedWriter buildOutputFile(String date, String reportFile, String path) throws IOException{
 		
 		String outputFile = path + "homoplasyReport_" + date + ".txt";
+		if(reportFile != null){
+			outputFile = path + reportFile;
+		}
 		BufferedWriter bWriter = WriteToFile.openFile(outputFile, false);
 		WriteToFile.writeLn(bWriter, "Position\tAlleles\tIsolatesForAlleles");
 				
@@ -129,15 +139,17 @@ public class HomoplasyFinder4 {
 	}
 	
 	public static int[] examineUnAssignedAlleles(Hashtable<String, Integer> assigned, Hashtable<String, ArrayList<String>> alleles, boolean verbose,
-			String path, String date) throws IOException{
+			String path, String reportFile, String date, JTextArea guiTextArea) throws IOException{
 		
 		// Print progress information
 		if(verbose == true){
 			System.out.println("Identifying potential homoplasies...");
+		}else if(guiTextArea != null){
+			guiTextArea.setText("Found homoplasies at: \n");
 		}
 		
 		// Build an output file
-		BufferedWriter bWriter = buildOutputFile(date, path);
+		BufferedWriter bWriter = buildOutputFile(date, reportFile, path);
 		
 		// Note the unassigned alleles
 		ArrayList<String> homoplasies = new ArrayList<String>();
@@ -180,6 +192,9 @@ public class HomoplasyFinder4 {
 				System.out.println("---------------------------------------------------------------------------");
 				System.out.println("Potential homoplasy identified at position: " + (allelePosition + 1) + " with alleles " + 
 						ArrayMethods.toString(homoplasyPositions.get(allelePosition), ", "));
+			}else if(guiTextArea != null){
+				guiTextArea.append("Position: " + (allelePosition + 1) + " with alleles " + 
+						ArrayMethods.toString(homoplasyPositions.get(allelePosition), ", ") + "\n");
 			}
 			
 			WriteToFile.write(bWriter, (allelePosition + 1) + "\t" + ArrayMethods.toString(homoplasyPositions.get(allelePosition), ",") + "\t");

@@ -1,0 +1,107 @@
+package identifyingHomoplasies;
+
+import java.awt.BorderLayout;
+import java.awt.EventQueue;
+
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.border.EmptyBorder;
+import javax.swing.JToolBar;
+import javax.swing.JMenuBar;
+import javax.swing.JMenu;
+import javax.swing.JMenuItem;
+import javax.swing.JSpinner;
+import javax.swing.JButton;
+import java.awt.GridLayout;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import javax.swing.JFileChooser;
+import javax.swing.JProgressBar;
+import java.awt.FlowLayout;
+import javax.swing.BoxLayout;
+import javax.swing.GroupLayout;
+import javax.swing.GroupLayout.Alignment;
+import javax.swing.JTextField;
+import javax.swing.LayoutStyle.ComponentPlacement;
+import javax.swing.SpringLayout;
+import javax.swing.JLabel;
+import javax.swing.JTextArea;
+
+public class HomoplasyFinderGUI extends JFrame {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	public String treeFile = "File Selected";
+
+	/**
+	 * Launch the application.
+	 */
+	public static void main(String[] args) {
+		EventQueue.invokeLater(new Runnable() {
+			public void run() {
+				try {
+					HomoplasyFinderGUI frame = new HomoplasyFinderGUI();
+					frame.setVisible(true);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
+	}
+
+	/**
+	 * Create the frame.
+	 */
+	public HomoplasyFinderGUI() {
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setBounds(100, 100, 450, 300);
+		SpringLayout springLayout = new SpringLayout();
+		getContentPane().setLayout(springLayout);
+		
+		JButton btnFindTreeFile = new JButton("Find Tree File");
+		btnFindTreeFile.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				
+			}
+		});
+		getContentPane().add(btnFindTreeFile);
+		
+		JButton btnFindFastaFile = new JButton("Find FASTA File");
+		springLayout.putConstraint(SpringLayout.WEST, btnFindTreeFile, 0, SpringLayout.WEST, btnFindFastaFile);
+		springLayout.putConstraint(SpringLayout.SOUTH, btnFindTreeFile, -6, SpringLayout.NORTH, btnFindFastaFile);
+		springLayout.putConstraint(SpringLayout.EAST, btnFindTreeFile, 0, SpringLayout.EAST, btnFindFastaFile);
+		springLayout.putConstraint(SpringLayout.NORTH, btnFindFastaFile, 39, SpringLayout.NORTH, getContentPane());
+		springLayout.putConstraint(SpringLayout.WEST, btnFindFastaFile, 10, SpringLayout.WEST, getContentPane());
+		getContentPane().add(btnFindFastaFile);
+		
+		JLabel lblFastaFileSelected = new JLabel(treeFile);
+		springLayout.putConstraint(SpringLayout.NORTH, lblFastaFileSelected, 14, SpringLayout.NORTH, getContentPane());
+		springLayout.putConstraint(SpringLayout.WEST, lblFastaFileSelected, 6, SpringLayout.EAST, btnFindTreeFile);
+		springLayout.putConstraint(SpringLayout.SOUTH, lblFastaFileSelected, -5, SpringLayout.SOUTH, btnFindTreeFile);
+		springLayout.putConstraint(SpringLayout.EAST, lblFastaFileSelected, 307, SpringLayout.EAST, btnFindTreeFile);
+		getContentPane().add(lblFastaFileSelected);
+		
+		JLabel label = new JLabel("File Selected");
+		springLayout.putConstraint(SpringLayout.NORTH, label, 15, SpringLayout.SOUTH, lblFastaFileSelected);
+		springLayout.putConstraint(SpringLayout.WEST, label, 6, SpringLayout.EAST, btnFindFastaFile);
+		springLayout.putConstraint(SpringLayout.EAST, label, 0, SpringLayout.EAST, lblFastaFileSelected);
+		getContentPane().add(label);
+		
+		JButton btnRun = new JButton("Run");
+		springLayout.putConstraint(SpringLayout.EAST, btnRun, -189, SpringLayout.EAST, getContentPane());
+		getContentPane().add(btnRun);
+		
+		JTextArea txtrOutput = new JTextArea();
+		springLayout.putConstraint(SpringLayout.NORTH, txtrOutput, 104, SpringLayout.NORTH, getContentPane());
+		springLayout.putConstraint(SpringLayout.SOUTH, txtrOutput, -10, SpringLayout.SOUTH, getContentPane());
+		springLayout.putConstraint(SpringLayout.SOUTH, btnRun, -8, SpringLayout.NORTH, txtrOutput);
+		txtrOutput.setText("Output...");
+		txtrOutput.setToolTipText("");
+		springLayout.putConstraint(SpringLayout.WEST, txtrOutput, 10, SpringLayout.WEST, getContentPane());
+		springLayout.putConstraint(SpringLayout.EAST, txtrOutput, 0, SpringLayout.EAST, lblFastaFileSelected);
+		getContentPane().add(txtrOutput);
+	}
+}

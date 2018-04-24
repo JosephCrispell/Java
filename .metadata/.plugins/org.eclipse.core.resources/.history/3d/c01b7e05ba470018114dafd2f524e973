@@ -1,0 +1,141 @@
+package identifyingHomoplasies;
+
+import java.awt.BorderLayout;
+import java.awt.EventQueue;
+
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.border.EmptyBorder;
+import javax.swing.JToolBar;
+import javax.swing.JMenuBar;
+import javax.swing.JMenu;
+import javax.swing.JMenuItem;
+import javax.swing.JSpinner;
+import javax.swing.JButton;
+import java.awt.GridLayout;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.io.File;
+
+import javax.swing.JFileChooser;
+import javax.swing.JProgressBar;
+import java.awt.FlowLayout;
+import javax.swing.BoxLayout;
+import javax.swing.GroupLayout;
+import javax.swing.GroupLayout.Alignment;
+import javax.swing.JTextField;
+import javax.swing.LayoutStyle.ComponentPlacement;
+import javax.swing.SpringLayout;
+import javax.swing.JLabel;
+import javax.swing.JTextArea;
+
+public class HomoplasyFinderGUI extends JFrame {
+
+	/**
+	 * Create public variables - accessible throughout class
+	 */
+	
+	// Weird variable to avoid error in GUI
+	private static final long serialVersionUID = 1L;
+	
+	// Create two variables to record the tree and FASTA files selected
+	public String treeFile = "File Selected";
+	public String fastaFile = "File Selected";
+	
+	// Create matching labels that will record to the user the tree and FASTA file selected
+	public JLabel lblTreeFileSelected;
+	public JLabel lblFastaFileSelected;
+	
+	// Set the directory that the file browsers will opne into - starts with home but will be updated to the previous directory opened
+	public File directory = new File(System.getProperty("user.home"));
+	
+	/**
+	 * Launch the application.
+	 */
+	public static void main(String[] args) {
+		EventQueue.invokeLater(new Runnable() {
+			public void run() {
+				try {
+					HomoplasyFinderGUI frame = new HomoplasyFinderGUI();
+					frame.setVisible(true);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
+	}
+
+	/**
+	 * Create the frame.
+	 */
+	public HomoplasyFinderGUI() {
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setBounds(100, 100, 589, 343);
+		SpringLayout springLayout = new SpringLayout();
+		getContentPane().setLayout(springLayout);
+		
+		// Create a label for the tree file - located beside button and will update once tree file found
+		lblTreeFileSelected = new JLabel(treeFile);
+		springLayout.putConstraint(SpringLayout.NORTH, lblTreeFileSelected, 14, SpringLayout.NORTH, getContentPane());
+		springLayout.putConstraint(SpringLayout.WEST, lblTreeFileSelected, 176, SpringLayout.WEST, getContentPane());
+		springLayout.putConstraint(SpringLayout.EAST, lblTreeFileSelected, -10, SpringLayout.EAST, getContentPane());
+		getContentPane().add(lblTreeFileSelected);
+		
+		// Create browse button for tree file
+		JButton btnTreeFile = new JButton("Find Tree File");
+		springLayout.putConstraint(SpringLayout.WEST, btnTreeFile, 10, SpringLayout.WEST, getContentPane());
+		springLayout.putConstraint(SpringLayout.EAST, btnTreeFile, -38, SpringLayout.WEST, lblTreeFileSelected);
+		btnTreeFile.addMouseListener(new MouseAdapter() {
+			
+			// Add mouse listener that will open file chooser when tree file button clicked
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				
+				JFileChooser fileChooser = new JFileChooser();
+				fileChooser.setCurrentDirectory(directory);
+				int result = fileChooser.showOpenDialog(null);
+				if(result == JFileChooser.APPROVE_OPTION){
+					File selectedFile = fileChooser.getSelectedFile();
+					treeFile = selectedFile.getAbsolutePath();
+					directory = selectedFile.getParentFile();
+					lblTreeFileSelected.setText(selectedFile.getName());
+					
+				}				
+			}
+		});
+		springLayout.putConstraint(SpringLayout.NORTH, btnTreeFile, 10, SpringLayout.NORTH, getContentPane());
+		getContentPane().add(btnTreeFile);
+		
+		// Create a label for the FASTA file - located beside button and will update once FASTA file found
+		lblFastaFileSelected = new JLabel("File Selected");
+		springLayout.putConstraint(SpringLayout.NORTH, lblFastaFileSelected, 21, SpringLayout.SOUTH, lblTreeFileSelected);
+		springLayout.putConstraint(SpringLayout.EAST, lblFastaFileSelected, -10, SpringLayout.EAST, getContentPane());
+		getContentPane().add(lblFastaFileSelected);
+		
+		// Create browse button for FASTA file
+		JButton btbFastaFile = new JButton("Find FASTA File");
+		springLayout.putConstraint(SpringLayout.WEST, lblFastaFileSelected, 38, SpringLayout.EAST, btbFastaFile);
+		springLayout.putConstraint(SpringLayout.NORTH, btbFastaFile, 12, SpringLayout.SOUTH, btnTreeFile);
+		springLayout.putConstraint(SpringLayout.EAST, btbFastaFile, 0, SpringLayout.EAST, btnTreeFile);
+		springLayout.putConstraint(SpringLayout.WEST, btbFastaFile, 10, SpringLayout.WEST, getContentPane());
+		btbFastaFile.addMouseListener(new MouseAdapter() {
+			
+			// Add mouse listener that will open file chooser when FASTA file button clicked
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				
+				JFileChooser fileChooser = new JFileChooser();
+				fileChooser.setCurrentDirectory(directory);
+				int result = fileChooser.showOpenDialog(null);
+				if(result == JFileChooser.APPROVE_OPTION){
+					File selectedFile = fileChooser.getSelectedFile();
+					treeFile = selectedFile.getAbsolutePath();
+					directory = selectedFile.getParentFile();
+					lblFastaFileSelected.setText(selectedFile.getName());
+					
+				}				
+			}
+		});
+		getContentPane().add(btbFastaFile);
+	}
+}
