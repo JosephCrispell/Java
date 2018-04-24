@@ -7,17 +7,7 @@ public class ArrayListMethods {
 
 	public static void main(String[] args){
 		
-		ArrayList<String> array = new ArrayList<String>();
-		array.add("a");
-		array.add("b");
-		array.add("c");
-		array.add("d");
-		
-		System.out.println(toString(array, ", ") + "\t" + array.size());
-		
-		remove(array, "a");
-		
-		System.out.println(toString(array, ", ") + "\t" + array.size());
+		System.out.println(System.getProperty("os.name"));
 	}
 	
 	public static String toString(ArrayList<String> array, String sep){

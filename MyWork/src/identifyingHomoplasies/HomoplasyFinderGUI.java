@@ -292,6 +292,14 @@ public class HomoplasyFinderGUI extends JFrame {
 	
 	public void runHomoplasyFinder() throws IOException{
 		
+		// Note the path to directory
+		String path = directory.getAbsolutePath();
+		if(System.getProperty("os.name").matches("(.*)Windows(.*)") == true){
+			path += "\\";
+		}else{
+			path += "/";
+		}
+		
 		// Read in tree
 		Node tree = HomoplasyFinder4.readNewickTree(treeFile, false);
 		
@@ -306,11 +314,11 @@ public class HomoplasyFinderGUI extends JFrame {
 		Hashtable<String, Integer> assigned = new Hashtable<String, Integer>();
 		HomoplasyFinder4.assignAllelesToCurrentNode(tree, alleles, positions, assigned,  HomoplasyFinder4.getSequenceIDs(sequences), false);
 		
-		int[] homoplasyPositions = HomoplasyFinder4.examineUnAssignedAlleles(assigned, alleles, false, directory.getAbsolutePath() + "\\", reportFile, date, textArea);
+		int[] homoplasyPositions = HomoplasyFinder4.examineUnAssignedAlleles(assigned, alleles, false, path, reportFile, date, textArea);
 		
 		/**
 		 * Return a FASTA file without the homoplasy sites
 		 */
-		HomoplasyFinder4.printFASTAWithoutHomoplasies(homoplasyPositions, directory.getAbsolutePath() + "\\", outputFastaFile, date, sequences, false);
+		HomoplasyFinder4.printFASTAWithoutHomoplasies(homoplasyPositions, path, outputFastaFile, date, sequences, false);
 	}
 }
