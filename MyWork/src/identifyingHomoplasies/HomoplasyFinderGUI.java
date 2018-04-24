@@ -1,6 +1,5 @@
 package identifyingHomoplasies;
 
-import java.awt.BorderLayout;
 import java.awt.EventQueue;
 
 import javax.swing.JFrame;
@@ -74,23 +73,22 @@ public class HomoplasyFinderGUI extends JFrame {
 	 * Create the frame.
 	 */
 	public HomoplasyFinderGUI() {
+		
+		// Set the characteristics of the frame
 		setResizable(false);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 589, 496);
-		SpringLayout springLayout = new SpringLayout();
-		getContentPane().setLayout(springLayout);
 		setTitle("HomoplasyFinder v. 1.0");
+		getContentPane().setLayout(null);
 		
 		// Create a label for the tree file - located beside button and will update once tree file found
 		lblTreeFileSelected = new JLabel(treeFile);
-		springLayout.putConstraint(SpringLayout.NORTH, lblTreeFileSelected, 14, SpringLayout.NORTH, getContentPane());
-		springLayout.putConstraint(SpringLayout.WEST, lblTreeFileSelected, 270, SpringLayout.WEST, getContentPane());
-		springLayout.putConstraint(SpringLayout.EAST, lblTreeFileSelected, -10, SpringLayout.EAST, getContentPane());
+		lblTreeFileSelected.setBounds(270, 14, 303, 14);
 		getContentPane().add(lblTreeFileSelected);
 		
 		// Create browse button for tree file
 		JButton buttonTreeFile = new JButton("Find tree file");
-		springLayout.putConstraint(SpringLayout.WEST, buttonTreeFile, 10, SpringLayout.WEST, getContentPane());
+		buttonTreeFile.setBounds(10, 10, 236, 23);
 		buttonTreeFile.setToolTipText("Select Newick formatted phylogenetic tree file");
 		
 		// Add mouse listener that will open file chooser when tree file button clicked
@@ -99,40 +97,20 @@ public class HomoplasyFinderGUI extends JFrame {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				
-				// Start a file browser
-				JFileChooser fileChooser = new JFileChooser();
-				fileChooser.setCurrentDirectory(directory);
-				int result = fileChooser.showOpenDialog(null);
-				
-				// Wait for file selection
-				if(result == JFileChooser.APPROVE_OPTION){
-					
-					// Record the file selected - update the associated tree label
-					File selectedFile = fileChooser.getSelectedFile();
-					treeFile = selectedFile.getAbsolutePath();
-					lblTreeFileSelected.setText(selectedFile.getName());
-					
-					// Update the directory to open browser into
-					directory = selectedFile.getParentFile();					
-				}				
+				treeFile = findFile(lblTreeFileSelected, "open");
 			}
 		});
-		springLayout.putConstraint(SpringLayout.NORTH, buttonTreeFile, 10, SpringLayout.NORTH, getContentPane());
 		getContentPane().add(buttonTreeFile);
 		
 		// Create a label for the FASTA file - located beside button and will update once FASTA file found
 		lblFastaFileSelected = new JLabel(fastaFile);
-		springLayout.putConstraint(SpringLayout.NORTH, lblFastaFileSelected, 15, SpringLayout.SOUTH, lblTreeFileSelected);
-		springLayout.putConstraint(SpringLayout.EAST, lblFastaFileSelected, -10, SpringLayout.EAST, getContentPane());
+		lblFastaFileSelected.setBounds(270, 43, 303, 14);
 		getContentPane().add(lblFastaFileSelected);
 		
 		// Create browse button for FASTA file
 		JButton buttonFastaFile = new JButton("Find FASTA file");
-		springLayout.putConstraint(SpringLayout.NORTH, buttonFastaFile, 6, SpringLayout.SOUTH, buttonTreeFile);
-		springLayout.putConstraint(SpringLayout.EAST, buttonTreeFile, 0, SpringLayout.EAST, buttonFastaFile);
-		springLayout.putConstraint(SpringLayout.WEST, lblFastaFileSelected, 24, SpringLayout.EAST, buttonFastaFile);
-		springLayout.putConstraint(SpringLayout.WEST, buttonFastaFile, 10, SpringLayout.WEST, getContentPane());
-		buttonFastaFile.setToolTipText("Select FASTA file containing nucleotide alignment");
+		buttonFastaFile.setBounds(10, 39, 236, 23);
+		buttonFastaFile.setToolTipText("Select FASTA formatted file containing nucleotide alignment");
 		
 		// Add mouse listener that will open file chooser when FASTA file button clicked
 		buttonFastaFile.addMouseListener(new MouseAdapter() {
@@ -140,38 +118,19 @@ public class HomoplasyFinderGUI extends JFrame {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				
-				// Start a file browser
-				JFileChooser fileChooser = new JFileChooser();
-				fileChooser.setCurrentDirectory(directory);
-				int result = fileChooser.showOpenDialog(null);
-				
-				// Wait for file selection
-				if(result == JFileChooser.APPROVE_OPTION){
-					
-					// Record the file selected - update the associated tree label
-					File selectedFile = fileChooser.getSelectedFile();
-					fastaFile = selectedFile.getAbsolutePath();
-					lblFastaFileSelected.setText(selectedFile.getName());
-					
-					// Update the directory to open browser into
-					directory = selectedFile.getParentFile();					
-				}				
+				fastaFile = findFile(lblFastaFileSelected, "open");
 			}
 		});
 		getContentPane().add(buttonFastaFile);
 		
 		// Create a label for the Report file - located beside button and will update if file changed
 		lblReportFileSelected = new JLabel(reportFile);
-		springLayout.putConstraint(SpringLayout.NORTH, lblReportFileSelected, 15, SpringLayout.SOUTH, lblFastaFileSelected);
-		springLayout.putConstraint(SpringLayout.WEST, lblReportFileSelected, 0, SpringLayout.WEST, lblTreeFileSelected);
-		springLayout.putConstraint(SpringLayout.EAST, lblReportFileSelected, -10, SpringLayout.EAST, getContentPane());
+		lblReportFileSelected.setBounds(270, 72, 303, 14);
 		getContentPane().add(lblReportFileSelected);
 		
 		// Create browse button for Report file
 		JButton buttonReportFile = new JButton("Change report file");
-		springLayout.putConstraint(SpringLayout.NORTH, buttonReportFile, 6, SpringLayout.SOUTH, buttonFastaFile);
-		springLayout.putConstraint(SpringLayout.EAST, buttonFastaFile, 0, SpringLayout.EAST, buttonReportFile);
-		springLayout.putConstraint(SpringLayout.WEST, buttonReportFile, 10, SpringLayout.WEST, getContentPane());
+		buttonReportFile.setBounds(10, 68, 236, 23);
 		buttonReportFile.setToolTipText("Select file to save homoplasyFinder report to");
 		
 		// Add mouse listener that will open file chooser when report file button clicked
@@ -180,41 +139,22 @@ public class HomoplasyFinderGUI extends JFrame {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				
-				// Start a file browser
-				JFileChooser fileChooser = new JFileChooser();
-				fileChooser.setCurrentDirectory(directory);
-				int result = fileChooser.showSaveDialog(null);
-				
-				// Wait for file selection
-				if(result == JFileChooser.APPROVE_OPTION){
-					
-					// Record the file selected - update the associated report label
-					File selectedFile = fileChooser.getSelectedFile();
-					reportFile = selectedFile.getName();
-					lblReportFileSelected.setText(selectedFile.getName());
-					
-					// Update the directory to open browser into
-					directory = selectedFile.getParentFile();					
-				}				
+				reportFile = findFile(lblReportFileSelected, "save");
 			}
 		});
 		getContentPane().add(buttonReportFile);
 		
 		// Add text area to print progress out to
 		textArea = new JTextArea();
-		textArea.setText("Console");
+		textArea.setText(details());
 		textArea.setEditable(false);
 		JScrollPane scrollPane = new JScrollPane(textArea);
-		springLayout.putConstraint(SpringLayout.NORTH, scrollPane, -252, SpringLayout.SOUTH, getContentPane());
-		springLayout.putConstraint(SpringLayout.WEST, scrollPane, 10, SpringLayout.WEST, getContentPane());
-		springLayout.putConstraint(SpringLayout.SOUTH, scrollPane, -10, SpringLayout.SOUTH, getContentPane());
-		springLayout.putConstraint(SpringLayout.EAST, scrollPane, 0, SpringLayout.EAST, lblTreeFileSelected);
+		scrollPane.setBounds(10, 216, 563, 242);
 		getContentPane().add(scrollPane);
 		
 		// Add run button to run homoplasyFinder
 		JButton buttonRun = new JButton("Run");
-		springLayout.putConstraint(SpringLayout.SOUTH, buttonRun, -33, SpringLayout.NORTH, scrollPane);
-		springLayout.putConstraint(SpringLayout.EAST, buttonRun, -262, SpringLayout.EAST, getContentPane());
+		buttonRun.setBounds(264, 160, 67, 23);
 		buttonRun.setToolTipText("Run homoplasyFinder on the selected tree and FASTA file");
 		buttonRun.addMouseListener(new MouseAdapter() {
 			
@@ -244,18 +184,13 @@ public class HomoplasyFinderGUI extends JFrame {
 		
 		// Create a label indicating the chosen output fasta file
 		lblOutputFastaFileSelected = new JLabel(outputFastaFile);
-		springLayout.putConstraint(SpringLayout.NORTH, lblOutputFastaFileSelected, 15, SpringLayout.SOUTH, lblReportFileSelected);
-		springLayout.putConstraint(SpringLayout.WEST, lblOutputFastaFileSelected, 0, SpringLayout.WEST, lblTreeFileSelected);
-		springLayout.putConstraint(SpringLayout.EAST, lblOutputFastaFileSelected, -10, SpringLayout.EAST, getContentPane());
+		lblOutputFastaFileSelected.setBounds(270, 101, 303, 14);
 		getContentPane().add(lblOutputFastaFileSelected);
 		
 		// Create a label to choose the output FASTA file
 		JButton buttonOutputFastaFile = new JButton("Change output sequences file");
+		buttonOutputFastaFile.setBounds(10, 97, 236, 23);
 		buttonOutputFastaFile.setToolTipText("Select the file to print the sequences without homoplasies into");
-		springLayout.putConstraint(SpringLayout.NORTH, buttonOutputFastaFile, 6, SpringLayout.SOUTH, buttonReportFile);
-		springLayout.putConstraint(SpringLayout.WEST, buttonOutputFastaFile, 10, SpringLayout.WEST, getContentPane());
-		springLayout.putConstraint(SpringLayout.EAST, buttonOutputFastaFile, -24, SpringLayout.WEST, lblOutputFastaFileSelected);
-		springLayout.putConstraint(SpringLayout.EAST, buttonReportFile, 0, SpringLayout.EAST, buttonOutputFastaFile);
 		
 		// Add mouse listener that will open file chooser when report file button clicked
 		buttonOutputFastaFile.addMouseListener(new MouseAdapter() {
@@ -263,22 +198,7 @@ public class HomoplasyFinderGUI extends JFrame {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				
-				// Start a file browser
-				JFileChooser fileChooser = new JFileChooser();
-				fileChooser.setCurrentDirectory(directory);
-				int result = fileChooser.showSaveDialog(null);
-				
-				// Wait for file selection
-				if(result == JFileChooser.APPROVE_OPTION){
-					
-					// Record the file selected - update the associated report label
-					File selectedFile = fileChooser.getSelectedFile();
-					outputFastaFile = selectedFile.getName();
-					lblOutputFastaFileSelected.setText(selectedFile.getName());
-					
-					// Update the directory to open browser into
-					directory = selectedFile.getParentFile();					
-				}				
+				outputFastaFile = findFile(lblOutputFastaFileSelected, "save");
 			}
 		});
 		getContentPane().add(buttonOutputFastaFile);
@@ -290,9 +210,57 @@ public class HomoplasyFinderGUI extends JFrame {
 	 * @throws IOException 
 	 */
 	
+	public String details(){
+		
+		String homoplasyFinderDetails = "";
+		homoplasyFinderDetails += "HomoplasyFinder\n";
+		homoplasyFinderDetails += "Version: 1.0\n";
+		homoplasyFinderDetails += "Author: Joseph Crispell\n";
+		homoplasyFinderDetails += "Date created: 24-02-18\n";
+		homoplasyFinderDetails += "Licence: GPL 3.0\n\n";
+		
+		homoplasyFinderDetails += "A tool to identify homoplasies present on a phylogenetic tree.";
+		
+		return homoplasyFinderDetails;
+	}
+	
+	public String findFile(JLabel label, String task){
+		
+		// Initialise a variable to store the file name selected
+		String fileName = "";
+		
+		// Start a file browser
+		JFileChooser fileChooser = new JFileChooser();
+		fileChooser.setCurrentDirectory(directory);
+		
+		int result;
+		if(task.matches("save")){
+			result = fileChooser.showSaveDialog(null);
+		}else{
+			result = fileChooser.showOpenDialog(null);
+		}
+		
+		// Wait for file selection
+		if(result == JFileChooser.APPROVE_OPTION){
+			
+			// Record the file selected - update the associated report label
+			File selectedFile = fileChooser.getSelectedFile();
+			fileName = selectedFile.getAbsolutePath();
+			if(task.matches("save")){
+				fileName = selectedFile.getName();
+			}
+			label.setText(selectedFile.getName());
+			
+			// Update the directory to open browser into
+			directory = selectedFile.getParentFile();					
+		}
+		
+		return fileName;
+	}
+	
 	public void runHomoplasyFinder() throws IOException{
 		
-		// Note the path to directory
+		// Edit the path according to the operating system
 		String path = directory.getAbsolutePath();
 		if(System.getProperty("os.name").matches("(.*)Windows(.*)") == true){
 			path += "\\";
