@@ -41,16 +41,15 @@ public class HomoplasyFinder4 {
 		String fasta = args[1];
 		String treeFile = args[2];
 		String path = "";
-		String date = fasta.split("_")[1].split("\\.")[0];
 		
 		// Set the path
-		//String path = "C:/Users/Joseph Crisp/Desktop/UbuntuSharedFolder/Homoplasy/";
+//		String path = "C:/Users/Joseph Crisp/Desktop/UbuntuSharedFolder/Homoplasy/DataForTesting/";
 								
 		// Get the current date
-		//String date = CalendarMethods.getCurrentDate("dd-MM-yy");
+		String date = CalendarMethods.getCurrentDate("dd-MM-yy");
 				
 		// Set verbose
-		//boolean verbose = true;
+//		boolean verbose = true;
 		
 		/**
 		 * Read in the phylogeny
@@ -58,7 +57,7 @@ public class HomoplasyFinder4 {
 		
 		//String treeFile = path + "mlTree_withRef_14-06-16_NZ.tree"; // NZ
 		//String treeFile = path + "mlTree_27-03-18_WP.tree"; // WP
-		//String treeFile = path + "example-AFTER_09-04-18.tree"; // EXAMPLE
+//		String treeFile = path + "example-AFTER_09-04-18.tree"; // EXAMPLE
 		Node tree = readNewickTree(treeFile, verbose);
 		
 		/**
@@ -68,12 +67,15 @@ public class HomoplasyFinder4 {
 		// Read in the FASTA file
 		//String fasta = path + "sequences_withRef_Prox-10_14-06-16_NZ.fasta"; // NZ
 		//String fasta = path + "sequences_Prox-10_24-03-2018_WP.fasta"; // WP
-		//String fasta = path + "example_09-04-18.fasta"; // EXAMPLE
+//		String fasta = path + "example_09-04-18.fasta"; // EXAMPLE
 		Sequence[] sequences = GeneticMethods.readFastaFile(fasta, verbose);
 		
 		// Get the alleles in the population and the isolates they are associated with
 		Hashtable<String, ArrayList<String>> alleles = noteAllelesInPopulation(sequences, verbose);
 		ArrayList<String> positions = getAllelePositions(alleles);
+		
+		// Remove positions with only one allele present
+		removeConstantPositions(positions, alleles, verbose);
 		
 		/**
 		 * Assign allele to node in phylogeny if:
@@ -93,6 +95,55 @@ public class HomoplasyFinder4 {
 		 * Return a FASTA file without the homoplasy sites
 		 */
 		printFASTAWithoutHomoplasies(homoplasyPositions, path, null, date, sequences, verbose);
+	}
+	
+	public static void removeConstantPositions(ArrayList<String> positions, Hashtable<String, ArrayList<String>> alleles, boolean verbose){
+		
+		// Initialise an array of nucleotides
+		char[] nucleotides = {'A', 'C', 'G', 'T'};
+		
+		// Initialise counters
+		int count = 0;
+		
+		// Initialise an array to store the indices of the positions to remove
+		int nPositionsRemoved = 0;
+		
+		// Examine each position
+		for(String position : ArrayListMethods.copy(positions)){
+			
+			// Count the number of alleles present at the current position
+			count = 0;
+			for(char nucleotide : nucleotides){
+				if(alleles.get(position + ":" + nucleotide) != null){
+					count++;
+				}
+			}
+			
+			// If only one nucleotide found at the current position - remove allele
+			if(count == 1){
+				
+				nPositionsRemoved++;
+				
+				// Remove N site if present
+				if(alleles.get(positions + ":" + "N") != null){
+					alleles.remove(positions + ":" + "N");
+				}
+				
+				// Find and remove allele
+				for(char nucleotide : nucleotides){
+					if(alleles.get(position + ":" + nucleotide) != null){
+						alleles.remove(position + ":" + nucleotide);
+					}
+				}
+				
+				// Remove position
+				positions.remove(positions.indexOf(position));
+			}
+		}
+		
+		if(verbose){
+			System.out.println("Removed " + nPositionsRemoved + " constant site(s).");
+		}
 	}
 	
 	public static void printFASTAWithoutHomoplasies(int[] positions, String path, String fileName, String date, Sequence[] sequences, boolean verbose) throws IOException{
@@ -206,9 +257,9 @@ public class HomoplasyFinder4 {
 							ArrayListMethods.toString(alleles.get(allelePosition + ":" + allelesForHomoplasy[i]), ", "));
 				}
 				if(i == 0){
-					WriteToFile.write(bWriter, ArrayListMethods.toString(alleles.get(allelePosition + ":" + allelesForHomoplasy[i]), "-"));
+					WriteToFile.write(bWriter, ArrayListMethods.toString(alleles.get(allelePosition + ":" + allelesForHomoplasy[i]), ":"));
 				}else{
-					WriteToFile.write(bWriter, "," + ArrayListMethods.toString(alleles.get(allelePosition + ":" + allelesForHomoplasy[i]), "-"));
+					WriteToFile.write(bWriter, "," + ArrayListMethods.toString(alleles.get(allelePosition + ":" + allelesForHomoplasy[i]), ":"));
 				}				
 			}
 			WriteToFile.write(bWriter, "\n");

@@ -213,13 +213,19 @@ public class HomoplasyFinderGUI extends JFrame {
 	public String details(){
 		
 		String homoplasyFinderDetails = "";
-		homoplasyFinderDetails += "HomoplasyFinder\n";
+		
+		homoplasyFinderDetails += "HomoplasyFinder - a tool to identify homoplasies present on a phylogenetic tree\n";
 		homoplasyFinderDetails += "Version: 1.0\n";
 		homoplasyFinderDetails += "Author: Joseph Crispell\n";
 		homoplasyFinderDetails += "Date created: 24-02-18\n";
 		homoplasyFinderDetails += "Licence: GPL 3.0\n\n";
 		
-		homoplasyFinderDetails += "A tool to identify homoplasies present on a phylogenetic tree.";
+		homoplasyFinderDetails += "Results table structure:\n";
+		homoplasyFinderDetails += "Position\tAlleles\tIsolatesForAlleles\n";
+		homoplasyFinderDetails += "10\tA,G\tisolateA-isolateB-isolateC,isolateD-isolateE\n\n";
+		homoplasyFinderDetails += "Position: in the FASTA nucleotide alignment\n";
+		homoplasyFinderDetails += "Alleles: nucleotides found at position\n";
+		homoplasyFinderDetails += "IsolatesForAlleles: isolates (\":\" separated) found with each allele separated by a \",\"\n";
 		
 		return homoplasyFinderDetails;
 	}
@@ -277,6 +283,9 @@ public class HomoplasyFinderGUI extends JFrame {
 		// Get the alleles in the population and the isolates they are associated with
 		Hashtable<String, ArrayList<String>> alleles = HomoplasyFinder4.noteAllelesInPopulation(sequences, false);
 		ArrayList<String> positions = HomoplasyFinder4.getAllelePositions(alleles);
+		
+		// Remove constant sites
+		HomoplasyFinder4.removeConstantPositions(positions, alleles, false);
 		
 		// Assign alleles
 		Hashtable<String, Integer> assigned = new Hashtable<String, Integer>();
