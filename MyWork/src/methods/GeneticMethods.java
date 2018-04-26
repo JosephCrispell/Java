@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.Hashtable;
 
 import geneticDistances.GeneticDistances;
@@ -171,10 +172,10 @@ public class GeneticMethods {
     	// Initialise Variables to Store the Sequence Information
     	String isolateName = "";
     	String sequence = "";
-    	Sequence[] sequences = new Sequence[0];
+    	Sequence[] sequences = new Sequence[999];
     	int pos = -1;
     	
-    	int noSamples;
+    	int noSamples = -1;
     	int noNucleotides = -1;
     	
     	// Begin Reading the Fasta File
@@ -198,7 +199,7 @@ public class GeneticMethods {
     			if(isolateName != ""){
     				
     				pos++;
-    				sequences[pos] = new Sequence(isolateName, sequence.toCharArray());
+    				Sequence.append(sequences, pos, new Sequence(isolateName, sequence.toCharArray()));
     			}
     			
     			// Get the current isolates Information
@@ -215,9 +216,13 @@ public class GeneticMethods {
 		
 		// Store the last isolate
 		pos++;
-		sequences[pos] = new Sequence(isolateName, sequence.toCharArray()); 
+		Sequence.append(sequences, pos, new Sequence(isolateName, sequence.toCharArray()));
 		
-		return Sequence.subset(sequences, 0, pos);
+		if(noSamples == -1){
+			sequences = Sequence.subset(sequences, 0, pos);
+		}
+		
+		return sequences;
 	}
 	
 	public static int calculateNumberDifferencesBetweenSequences(char[] a, char[] b, boolean[] informative){

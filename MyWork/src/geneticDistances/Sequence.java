@@ -37,6 +37,20 @@ public class Sequence {
 	}
 	
 	// General methods
+	public static void append(Sequence[] sequences, int pos, Sequence sequence){
+		
+		if(pos < sequences.length){
+			sequences[pos] = sequence;
+		}else{
+			Sequence[] newSequences = new Sequence[sequences.length * 2];
+			for(int i = 0; i < sequences.length; i++){
+				newSequences[i] = sequences[i];
+			}
+			newSequences[pos] = sequence;
+			sequences = newSequences;
+		}  
+	}
+	
 	public static Sequence[] remove(Sequence[] array, Hashtable indicesToRemove){
 		
 		// Create a new array to store the sequences
