@@ -1,4 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<session version="1.0">
-<refactoring comment="Rename local variable &apos;sequence&apos; in &apos;methods.ArrayMethods.deletePositions(...)&apos; to &apos;array&apos;&#x0D;&#x0A;- Original project: &apos;MyWork&apos;&#x0D;&#x0A;- Original element: &apos;methods.ArrayMethods.deletePositions(char[], int[]).sequence&apos;&#x0D;&#x0A;- Renamed element: &apos;sequence&apos;&#x0D;&#x0A;- Update references to refactored element" description="Rename local variable &apos;sequence&apos;" id="org.eclipse.jdt.ui.rename.local.variable" input="/src&lt;methods{ArrayMethods.java[ArrayMethods~deletePositions~\[C~\[I@sequence!501!515!508!515!\[C!0!true" name="array" references="true" stamp="1522153946539" version="1.0"/>
-</session>
