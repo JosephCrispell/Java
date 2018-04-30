@@ -569,7 +569,7 @@ public class HomoplasyFinder {
 		Node[] subNodesOfAncestor = node.getParentNode().getSubNodes();
 		
 		// Note the variant position alleles present at terminal node
-		String[] nodeVariantPositionAlleles = node.getCommonAlleles();
+		String[] nodeVariantPositionAlleles = node.getCommonVariantPositionAlleles();
 		
 		// Initialise an array of falses relating to these alleles
 		boolean[] found = ArrayMethods.repeat(false, nodeVariantPositionAlleles.length);
@@ -584,7 +584,7 @@ public class HomoplasyFinder {
 			
 			for(int i = 0; i < nodeVariantPositionAlleles.length; i++){
 				if(found[i] == false){
-					found[i] = ArrayMethods.in(subNode.getCommonAlleles(), 
+					found[i] = ArrayMethods.in(subNode.getCommonVariantPositionAlleles(), 
 							nodeVariantPositionAlleles[i]);
 				}
 			}
@@ -610,7 +610,7 @@ public class HomoplasyFinder {
 		Node[] subNodesOfAncestor = terminalNode.getParentNode().getSubNodes();
 		
 		// Note the variant position alleles present at terminal node
-		String[] terminalNodeVariantPositionAlleles = terminalNode.getCommonAlleles();
+		String[] terminalNodeVariantPositionAlleles = terminalNode.getCommonVariantPositionAlleles();
 		
 		// Initialise an array of falses relating to these alleles
 		boolean[] found = ArrayMethods.repeat(false, terminalNodeVariantPositionAlleles.length);
@@ -625,7 +625,7 @@ public class HomoplasyFinder {
 			
 			for(int i = 0; i < terminalNodeVariantPositionAlleles.length; i++){
 				if(found[i] == false){
-					found[i] = ArrayMethods.in(subNode.getCommonAlleles(), 
+					found[i] = ArrayMethods.in(subNode.getCommonVariantPositionAlleles(), 
 							terminalNodeVariantPositionAlleles[i]);
 				}
 			}
@@ -668,7 +668,7 @@ public class HomoplasyFinder {
 		int found = -1;
 		for(int i = node.getPathToRoot().length - 1; i >= 0; i--){
 			
-			if(ArrayMethods.in(node.getPathToRoot()[i].getCommonAlleles(), vpAllele) == true){
+			if(ArrayMethods.in(node.getPathToRoot()[i].getCommonVariantPositionAlleles(), vpAllele) == true){
 				found = node.getPathToRoot().length - i;
 				break;
 			}
@@ -746,7 +746,7 @@ public class HomoplasyFinder {
 		// Examine each node on the path to the root - note last node on path will be current node
 		for(int i = 0; i < nodesOnPathToRoot.length - 1; i++){
 			
-			for(String vpAllele : nodesOnPathToRoot[i].getCommonAlleles()){
+			for(String vpAllele : nodesOnPathToRoot[i].getCommonVariantPositionAlleles()){
 				
 				if(commonSNPsOnPathToRoot.get(vpAllele) == null){
 					commonSNPsOnPathToRoot.put(vpAllele, 1);

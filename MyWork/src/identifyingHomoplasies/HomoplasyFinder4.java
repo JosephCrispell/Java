@@ -23,41 +23,43 @@ public class HomoplasyFinder4 {
 	
 	public static void main(String[] args) throws IOException{
 		
-		if(args[0].equals("-help") || args[0].equals("") || args[0].equals("-h") || args[0].equals("help")){
-			System.out.println("HomoplasyFinder: a tool to identify homoplasies within a phylogenetic tree and alignment");
-			System.out.println("\nCommand Line Structure:");
-			System.out.println("\tjava -jar homoplasyFinder_DATE.jar verbose path sequences.fasta newick.tree\n");
-			System.out.println("\t\tverbose\tDetailed output [0] or none [1]");
-			System.out.println("\t\tsequences.fasta\tFASTA file containing alignment");
-			System.out.println("\t\tnewick.tree\tNewick formatted tree file");
-			System.out.println("\nNotes:");
-			System.out.println("First line of input FASTA file contains the number of isolates and sites in the file");
-
-			System.exit(0);
-		}
-
-		// Get the command line arguments
-		boolean verbose = args[0].matches("1");
-		String fasta = args[1];
-		String treeFile = args[2];
-		String path = "";
+//		if(args[0].equals("-help") || args[0].equals("") || args[0].equals("-h") || args[0].equals("help")){
+//			System.out.println("HomoplasyFinder: a tool to identify homoplasies within a phylogenetic tree and alignment");
+//			System.out.println("\nCommand Line Structure:");
+//			System.out.println("\tjava -jar homoplasyFinder_DATE.jar verbose path sequences.fasta newick.tree\n");
+//			System.out.println("\t\tverbose\tDetailed output [0] or none [1]");
+//			System.out.println("\t\tsequences.fasta\tFASTA file containing alignment");
+//			System.out.println("\t\tnewick.tree\tNewick formatted tree file");
+//			System.out.println("\nNotes:");
+//			System.out.println("First line of input FASTA file contains the number of isolates and sites in the file");
+//
+//			System.exit(0);
+//		}
+//
+//		// Get the command line arguments
+//		boolean verbose = args[0].matches("1");
+//		String fasta = args[1];
+//		String treeFile = args[2];
+//		String path = "";
+		
+		long startTime = System.nanoTime();
 		
 		// Set the path
-//		String path = "C:/Users/Joseph Crisp/Desktop/UbuntuSharedFolder/Homoplasy/DataForTesting/";
+		String path = "C:/Users/Joseph Crisp/Desktop/UbuntuSharedFolder/Homoplasy/DataForTesting/";
 								
 		// Get the current date
 		String date = CalendarMethods.getCurrentDate("dd-MM-yy");
 				
 		// Set verbose
-//		boolean verbose = true;
+		boolean verbose = false;
 		
 		/**
 		 * Read in the phylogeny
 		 */
 		
 		//String treeFile = path + "mlTree_withRef_14-06-16_NZ.tree"; // NZ
-		//String treeFile = path + "mlTree_27-03-18_WP.tree"; // WP
-//		String treeFile = path + "example-AFTER_09-04-18.tree"; // EXAMPLE
+		String treeFile = path + "mlTree_27-03-18_WP.tree"; // WP
+		//String treeFile = path + "example-AFTER_09-04-18.tree"; // EXAMPLE
 		Node tree = readNewickTree(treeFile, verbose);
 		
 		/**
@@ -66,12 +68,14 @@ public class HomoplasyFinder4 {
 		
 		// Read in the FASTA file
 		//String fasta = path + "sequences_withRef_Prox-10_14-06-16_NZ.fasta"; // NZ
-		//String fasta = path + "sequences_Prox-10_24-03-2018_WP.fasta"; // WP
-//		String fasta = path + "example_09-04-18.fasta"; // EXAMPLE
+		String fasta = path + "sequences_Prox-10_24-03-2018_WP.fasta"; // WP
+		//String fasta = path + "example_09-04-18.fasta"; // EXAMPLE
 		Sequence[] sequences = GeneticMethods.readFastaFile(fasta, verbose);
 		
 		// Get the alleles in the population and the isolates they are associated with
+		
 		Hashtable<String, ArrayList<String>> alleles = noteAllelesInPopulation(sequences, verbose);
+
 		ArrayList<String> positions = getAllelePositions(alleles);
 		
 		// Remove positions with only one allele present
@@ -95,6 +99,11 @@ public class HomoplasyFinder4 {
 		 * Return a FASTA file without the homoplasy sites
 		 */
 		printFASTAWithoutHomoplasies(homoplasyPositions, path, null, date, sequences, verbose);
+		
+		long endTime = System.nanoTime();
+		
+		System.out.println("Time taken: " + (endTime - startTime));
+
 	}
 	
 	public static void removeConstantPositions(ArrayList<String> positions, Hashtable<String, ArrayList<String>> alleles, boolean verbose){

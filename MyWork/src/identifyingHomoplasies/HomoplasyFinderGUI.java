@@ -82,9 +82,9 @@ public class HomoplasyFinderGUI extends JFrame {
 		getContentPane().setLayout(null);
 		
 		// Create a label for the tree file - located beside button and will update once tree file found
-		lblTreeFileSelected = new JLabel(treeFile);
-		lblTreeFileSelected.setBounds(270, 14, 303, 14);
-		getContentPane().add(lblTreeFileSelected);
+		this.lblTreeFileSelected = new JLabel(this.treeFile);
+		this.lblTreeFileSelected.setBounds(270, 14, 303, 14);
+		getContentPane().add(this.lblTreeFileSelected);
 		
 		// Create browse button for tree file
 		JButton buttonTreeFile = new JButton("Find tree file");
@@ -103,9 +103,9 @@ public class HomoplasyFinderGUI extends JFrame {
 		getContentPane().add(buttonTreeFile);
 		
 		// Create a label for the FASTA file - located beside button and will update once FASTA file found
-		lblFastaFileSelected = new JLabel(fastaFile);
-		lblFastaFileSelected.setBounds(270, 43, 303, 14);
-		getContentPane().add(lblFastaFileSelected);
+		this.lblFastaFileSelected = new JLabel(this.fastaFile);
+		this.lblFastaFileSelected.setBounds(270, 43, 303, 14);
+		getContentPane().add(this.lblFastaFileSelected);
 		
 		// Create browse button for FASTA file
 		JButton buttonFastaFile = new JButton("Find FASTA file");
@@ -124,9 +124,9 @@ public class HomoplasyFinderGUI extends JFrame {
 		getContentPane().add(buttonFastaFile);
 		
 		// Create a label for the Report file - located beside button and will update if file changed
-		lblReportFileSelected = new JLabel(reportFile);
-		lblReportFileSelected.setBounds(270, 72, 303, 14);
-		getContentPane().add(lblReportFileSelected);
+		this.lblReportFileSelected = new JLabel(this.reportFile);
+		this.lblReportFileSelected.setBounds(270, 72, 303, 14);
+		getContentPane().add(this.lblReportFileSelected);
 		
 		// Create browse button for Report file
 		JButton buttonReportFile = new JButton("Change report file");
@@ -145,10 +145,10 @@ public class HomoplasyFinderGUI extends JFrame {
 		getContentPane().add(buttonReportFile);
 		
 		// Add text area to print progress out to
-		textArea = new JTextArea();
-		textArea.setText(details());
-		textArea.setEditable(false);
-		JScrollPane scrollPane = new JScrollPane(textArea);
+		this.textArea = new JTextArea();
+		this.textArea.setText(details());
+		this.textArea.setEditable(false);
+		JScrollPane scrollPane = new JScrollPane(this.textArea);
 		scrollPane.setBounds(10, 216, 563, 242);
 		getContentPane().add(scrollPane);
 		
@@ -177,15 +177,18 @@ public class HomoplasyFinderGUI extends JFrame {
 					}
 				} catch (IOException e1) {
 					e1.printStackTrace();
+				} catch (InterruptedException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
 				}
 			}
 		});
 		getContentPane().add(buttonRun);
 		
 		// Create a label indicating the chosen output fasta file
-		lblOutputFastaFileSelected = new JLabel(outputFastaFile);
-		lblOutputFastaFileSelected.setBounds(270, 101, 303, 14);
-		getContentPane().add(lblOutputFastaFileSelected);
+		this.lblOutputFastaFileSelected = new JLabel(this.outputFastaFile);
+		this.lblOutputFastaFileSelected.setBounds(270, 101, 303, 14);
+		getContentPane().add(this.lblOutputFastaFileSelected);
 		
 		// Create a label to choose the output FASTA file
 		JButton buttonOutputFastaFile = new JButton("Change output sequences file");
@@ -237,7 +240,7 @@ public class HomoplasyFinderGUI extends JFrame {
 		
 		// Start a file browser
 		JFileChooser fileChooser = new JFileChooser();
-		fileChooser.setCurrentDirectory(directory);
+		fileChooser.setCurrentDirectory(this.directory);
 		
 		int result;
 		if(task.matches("save")){
@@ -258,16 +261,16 @@ public class HomoplasyFinderGUI extends JFrame {
 			label.setText(selectedFile.getName());
 			
 			// Update the directory to open browser into
-			directory = selectedFile.getParentFile();					
+			this.directory = selectedFile.getParentFile();					
 		}
 		
 		return fileName;
 	}
 	
-	public void runHomoplasyFinder() throws IOException{
+	public void runHomoplasyFinder() throws IOException, InterruptedException{
 		
 		// Edit the path according to the operating system
-		String path = directory.getAbsolutePath();
+		String path = this.directory.getAbsolutePath();
 		if(System.getProperty("os.name").matches("(.*)Windows(.*)") == true){
 			path += "\\";
 		}else{
@@ -275,27 +278,24 @@ public class HomoplasyFinderGUI extends JFrame {
 		}
 		
 		// Read in tree
-		Node tree = HomoplasyFinder4.readNewickTree(treeFile, false);
+		Node tree = HomoplasyFinder6.readNewickTree(this.treeFile, false);
 		
 		// Read in the FASTA file
-		Sequence[] sequences = GeneticMethods.readFastaFile(fastaFile, false);
+		Sequence[] sequences = GeneticMethods.readFastaFile(this.fastaFile, false);
 		
 		// Get the alleles in the population and the isolates they are associated with
-		Hashtable<String, ArrayList<String>> alleles = HomoplasyFinder4.noteAllelesInPopulation(sequences, false);
-		ArrayList<String> positions = HomoplasyFinder4.getAllelePositions(alleles);
-		
-		// Remove constant sites
-		HomoplasyFinder4.removeConstantPositions(positions, alleles, false);
+		Hashtable<String, ArrayList<String>> alleles = HomoplasyFinder6.noteAllelesInPopulation(sequences, false);
+		ArrayList<String> positions = HomoplasyFinder5.getAllelePositions(alleles);
 		
 		// Assign alleles
-		Hashtable<String, Integer> assigned = new Hashtable<String, Integer>();
-		HomoplasyFinder4.assignAllelesToCurrentNode(tree, alleles, positions, assigned,  HomoplasyFinder4.getSequenceIDs(sequences), false);
+		ArrayList<String> unassigned = HomoplasyFinder6.assignAllelesToNodes(alleles, positions, tree, HomoplasyFinder6.getSequenceIDs(sequences));
 		
-		int[] homoplasyPositions = HomoplasyFinder4.examineUnAssignedAlleles(assigned, alleles, false, path, reportFile, date, textArea);
+		// Examine the homoplasies
+		int[] homoplasyPositions = HomoplasyFinder6.examineUnAssignedAlleles(unassigned, alleles, false, path, this.reportFile, this.date, this.textArea);
 		
 		/**
 		 * Return a FASTA file without the homoplasy sites
 		 */
-		HomoplasyFinder4.printFASTAWithoutHomoplasies(homoplasyPositions, path, outputFastaFile, date, sequences, false);
+		HomoplasyFinder6.printFASTAWithoutHomoplasies(homoplasyPositions, path, this.outputFastaFile, this.date, sequences, false);
 	}
 }

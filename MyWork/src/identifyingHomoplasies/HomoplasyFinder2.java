@@ -221,7 +221,7 @@ public class HomoplasyFinder2 {
 			
 			// Find and store the common alleles for these isolates
 			commonAlleles = findCommonAlleles(idsBelowNode, sequences, ancestralAlleles);
-			subNodes[i].setCommonAlleles(commonAlleles);
+			subNodes[i].setCommonVariantPositionAlleles(commonAlleles);
 			
 			// Record that each of the common alleles were assigned to branch preceding the current sub-node
 			for(String allele : commonAlleles){

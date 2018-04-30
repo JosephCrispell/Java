@@ -78,4 +78,15 @@ public class ArrayListMethods {
 			remove(array, value);
 		}
 	}
+	
+	public static ArrayList<String> subset(ArrayList<String> array, int start, int end){
+		ArrayList<String> part = new ArrayList<String>();
+
+		for(int index = start; index <= end; index++){
+			
+			part.add(array.get(index));
+		}
+		
+		return part;
+	}
 }

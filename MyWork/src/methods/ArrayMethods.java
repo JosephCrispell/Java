@@ -9,16 +9,35 @@ public class ArrayMethods {
 	public static void main(String[] args) {
 		// Method Testing Area
 		
+		int nCores = 3;
+		int seqLength = 40001;
+		int nPositions = (int) Math.ceil((double) seqLength / (double) nCores);
 		
+		for(int i = 0; i < nCores; i++){
+			
+			int start = i * nPositions;
+			int end = (start + nPositions) - 1;
+			if(end > seqLength - 1){
+				end = seqLength - 1;
+			}
+			
+			System.out.println(start + "\t" + end + "\t" + (end - start) + "\t" + (seqLength - 1));
+		}
 		
-		char[] sequence = {'A', 'G', 'C', 'T', 'G', 'C'};
-		int[] positions = {3,5};
-		
-		System.out.println(toString(deletePositions(sequence, positions), ""));
+
 		// 
 	}
 	
 	// Methods
+	public static boolean[] initialise(int size, boolean value){
+		boolean[] array = new boolean[size];
+		for(int i = 0; i < array.length; i++){
+			array[i] = value;
+		}
+		
+		return array;
+	}
+	
 	public static int[][] table(int[] array, boolean print){
 		
 		// Initialise a hashtable to record how many times each value appears

@@ -1,5 +1,6 @@
 package phylogeneticTree;
 
+import java.util.ArrayList;
 import java.util.Hashtable;
 
 public class Node {
@@ -7,6 +8,7 @@ public class Node {
 	public NodeInfo nodeInfo;
 	public Node[] subNodes;
 	public Node parentNode;
+	public ArrayList<String> tips;
 	
 	public Node[] pathToRoot;
 	public String[] commonVariantPositionAlleles;
@@ -31,8 +33,11 @@ public class Node {
     public void setPathToRoot(Node[] nodes){
     	this.pathToRoot = nodes;
     }
-    public void setCommonAlleles(String[] snps){
+    public void setCommonVariantPositionAlleles(String[] snps){
     	this.commonVariantPositionAlleles = snps;
+    }
+    public void setTips(ArrayList<String> nodes){
+    	this.tips = nodes;
     }
     
     // Methods for Getting
@@ -48,8 +53,11 @@ public class Node {
     public Node[] getPathToRoot(){
     	return this.pathToRoot;
     }
-    public String[] getCommonAlleles(){
+    public String[] getCommonVariantPositionAlleles(){
     	return this.commonVariantPositionAlleles;
+    }
+    public ArrayList<String> getTips(){
+    	return this.tips;
     }
     
     // General Methods
