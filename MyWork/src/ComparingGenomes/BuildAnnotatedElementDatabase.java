@@ -11,6 +11,8 @@ import methods.CalendarMethods;
 import methods.GeneralMethods;
 import methods.HashtableMethods;
 import methods.WriteToFile;
+import smithWatermanAlignment.Alignment;
+import smithWatermanAlignment.SmithWaterman;
 
 public class BuildAnnotatedElementDatabase {
 
@@ -34,16 +36,32 @@ public class BuildAnnotatedElementDatabase {
 		// TESTING
 		System.out.println("############################################################################################################");
 		System.out.println("############################################################################################################");
-		BufferedWriter bWriter = WriteToFile.openFile("C:/Users/Joseph Crisp/Desktop/UbuntuSharedFolder/ComparingReferenceGenomes_10-04-18/values.txt", false);
-		for(String key : HashtableMethods.getKeysString(uniqueAnnotations)){
+		String[] sequences = HashtableMethods.getKeysString(uniqueAnnotations);
+		for(int i = 0; i < sequences.length; i++){
 			
-			bWriter.write(uniqueAnnotations.get(key).length + "\t" + key.length() + "\n");
+			System.out.print(".");
 			
-			if(key.length() > 100000){
-				System.out.println("\n\n" + ArrayMethods.toString(uniqueAnnotations.get(key), "\n"));
+			for(int j = 0; j < sequences.length; j++){
+				
+				if(i >= j){
+					continue;
+				}
+
+				if(sequences[i].length() == sequences[j].length()){
+					
+					char[] a = sequences[i].toCharArray();
+					char[] b = sequences[j].toCharArray();
+					
+					Alignment alignment = SmithWaterman.align(a, b, 2, -2, -2, false, false)[0];
+					
+					if(alignment.getScore() / (double) a.length > 1){
+						System.out.println("--------------------------------------------------------------------------------------------------------------------------");
+						alignment.print();
+					}
+					
+				}
 			}
 		}
-		bWriter.close();
 		//TESTING
 		
 		System.out.println("Found " + uniqueAnnotations.size() + " unique annotations");

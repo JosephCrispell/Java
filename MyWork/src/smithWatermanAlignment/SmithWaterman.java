@@ -1,8 +1,10 @@
-package methods;
+package smithWatermanAlignment;
 
 import java.io.IOException;
 
 import javax.swing.plaf.synth.SynthSeparatorUI;
+
+import methods.ArrayMethods;
 
 public class SmithWaterman {
 
@@ -14,49 +16,54 @@ public class SmithWaterman {
 	 */
 	
 	public static void main(String[] args) throws IOException{
-				
-		char[] a = "ACGTCTCAGCTACATC".toCharArray();
-		char[] b = "CTACATGCGG".toCharArray();
 		
-		int match = 3;
-		int misMatch = -3;
-		int gapPenalty = 2;
+		char[] a = "I wonder how well you can align these two sentences?".toCharArray();
+		char[] b = "I don't think you'll be able to align them very well at all".toCharArray();
+		
+		int match = 2;
+		int misMatch = -1;
+		int gap = -1;
 		
 		int[][] scoringMatrix = new int[a.length + 1][b.length + 1];
 		printScoringMatrix(scoringMatrix, a, b);
 		System.out.println("\n\n");
 
-		int[][][] scoreSources = fillInScoringMatrix(scoringMatrix, a, b, match, misMatch, gapPenalty);
+		int[][][] scoreSources = fillInScoringMatrix(scoringMatrix, a, b, match, misMatch, gap);
 		printScoringMatrix(scoringMatrix, a, b);
 		System.out.println("\n\n");
 		
-		char[][][] alignments = constructAlignments(scoringMatrix, a, b, scoreSources, true);
+		Alignment[] alignments = constructAlignments(scoringMatrix, a, b, scoreSources, true, true);
 
 	}
 	
-	public static void printAlignment(char[] a, char[] b){
+	public static Alignment[] align(char[] a, char[] b, int match, int misMatch, int gap, boolean returnAll, boolean print){
 		
-		System.out.println(ArrayMethods.toString(a));
-		for(int i = 0; i < b.length; i++){
-			if(a[i] == b[i]){
-				System.out.print("|");
-			}else{
-				System.out.print(" ");
-			}
-		}
-		System.out.println("\n" + ArrayMethods.toString(b));
+		// Initialise the scoring matrix
+		int[][] scoringMatrix = new int[a.length + 1][b.length + 1];
+
+		// Fill the scoring matrix
+		int[][][] scoreSources = fillInScoringMatrix(scoringMatrix, a, b, match, misMatch, gap);
+		
+		// Find the best alignment(s)
+		Alignment[] alignments = constructAlignments(scoringMatrix, a, b, scoreSources, print, returnAll);
+		
+		return alignments;
 	}
 	
-	public static char[][][] constructAlignments(int[][] scoringMatrix, char[] a, char[] b, int[][][] sources, boolean print){
+	public static Alignment[] constructAlignments(int[][] scoringMatrix, char[] a, char[] b, int[][][] sources, boolean print, boolean all){
 		
 		// Find the max indices
 		int[][] maxIndices = findIndicesOfMaximums(scoringMatrix);
 		
 		// Initialise an array to store the alignments
-		char[][][] alignments = new char[maxIndices[0].length][2][0];
+		Alignment[] alignments = new Alignment[maxIndices[0].length];
 		
 		// Reconstruct the alignment associated with each maximum found
-		for(int pos = 0; pos < maxIndices[0].length; pos++){
+		int nAlignmentsToRecord = maxIndices[0].length;
+		if(all == false){
+			nAlignmentsToRecord = 1;
+		}
+		for(int pos = 0; pos < nAlignmentsToRecord; pos++){
 			
 			// Get the current max's indices
 			int i = maxIndices[0][pos];
@@ -68,13 +75,11 @@ public class SmithWaterman {
 			addNextAlignedPair(scoringMatrix, sources, i, j, a, b, alignedA, alignedB);
 
 			// Store the alignment
-			alignments[pos][0] = alignedA.reverse().toString().toCharArray();
-			alignments[pos][1] = alignedB.reverse().toString().toCharArray();
+			alignments[pos] = new Alignment(alignedA.reverse().toString().toCharArray(), alignedB.reverse().toString().toCharArray(), scoringMatrix[i][j]);
 			
 			// Print alignment if requested
 			if(print){
-				System.out.println("Alignment score = " + scoringMatrix[i][j]);
-				printAlignment(alignments[pos][0], alignments[pos][1]);
+				alignments[pos].print();
 			}
 		}
 		
@@ -144,7 +149,7 @@ public class SmithWaterman {
 		return output;
 	}
 	
-	public static int[][][] fillInScoringMatrix(int[][] scoringMatrix, char[] a, char[] b, int match, int misMatch, int gapPenalty){
+	public static int[][][] fillInScoringMatrix(int[][] scoringMatrix, char[] a, char[] b, int match, int misMatch, int gap){
 		
 		// Initialise a matrix to store the coordinates of the source
 		int[][][] sources = new int[scoringMatrix.length][scoringMatrix[0].length][2];
@@ -166,10 +171,10 @@ public class SmithWaterman {
 				scores[0] = scoringMatrix[i-1][j-1] + compareNucleotides(a[i-1], b[j-1], match, misMatch);
 				
 				// Calculate the horizontal score
-				scores[1] = scoringMatrix[i][j-1] - gapPenalty;
+				scores[1] = scoringMatrix[i][j-1] + gap;
 				
 				// Calculate the vertical score
-				scores[2] = scoringMatrix[i-1][j] - gapPenalty;
+				scores[2] = scoringMatrix[i-1][j] + gap;
 				
 				// Find the maximum index in the scores
 				maxIndex = ArrayMethods.findMaxs(scores)[0];

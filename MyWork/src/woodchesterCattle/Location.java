@@ -1,10 +1,12 @@
 package woodchesterCattle;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Hashtable;
 
 import methods.ArrayMethods;
 import methods.CalendarMethods;
+import methods.HashtableMethods;
 
 public class Location {
 
@@ -26,6 +28,11 @@ public class Location {
 	public Hashtable[] animalsInhabited = new Hashtable[2]; // Pre and post
 	
 	public double[][] landParcelCentroids;
+	
+	// Caluclating herd size variables
+	public Hashtable<String, Integer> animals = new Hashtable<String, Integer>();
+	public Hashtable<String, Calendar[]> animalsON = new Hashtable<String, Calendar[]>(); // Calculating herd size
+	public Hashtable<String, Calendar[]> animalsOFF = new Hashtable<String, Calendar[]>(); // Calculating herd size
 	
 	public Location(String id){
 		this.locationId = id;
@@ -146,6 +153,26 @@ public class Location {
 		
 		this.landParcelCentroids = newArray;
 	}
+	public void addInhabitant(String id, Calendar date, boolean onMovement){
+		
+		if(onMovement){
+			if(this.animalsON.containsKey(id) == false){
+				this.animals.put(id, 1);
+				Calendar[] dates = {date};
+				this.animalsON.put(id, dates);
+			}else{
+				this.animalsON.put(id, CalendarMethods.append(animalsON.get(id), date));
+			}			
+		}else{
+			if(this.animalsOFF.containsKey(id) == false){
+				this.animals.put(id, 1);
+				Calendar[] dates = {date};
+				this.animalsOFF.put(id, dates);
+			}else{
+				this.animalsOFF.put(id, CalendarMethods.append(animalsOFF.get(id), date));
+			}			
+		}
+	}
 	
 	// Getting Methods
 	public String getLocationId(){
@@ -189,5 +216,14 @@ public class Location {
 	}
 	public double[][] getLandParcelCentroids(){
 		return this.landParcelCentroids;
+	}
+	public Hashtable<String, Calendar[]> getAnimalsOnMovementDates(){
+		return this.animalsON;
+	}
+	public Hashtable<String, Calendar[]> getAnimalsOffMovementDates(){
+		return this.animalsOFF;
+	}
+	public String[] getInhabitantIds(){
+		return HashtableMethods.getKeysString(this.animals);
 	}
 }
