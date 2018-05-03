@@ -41,10 +41,12 @@ public class MultiThreadAssignment extends Thread {
 			boolean[] assigned = ArrayMethods.initialise(allelesAtPosition.size(), false);
 			
 			// Examine each node
+			boolean allAssigned = false;
 			for(Node node : this.nodes){
 				
 				// Check if all alleles assigned
 				if(HomoplasyFinder6.checkIfAllAssigned(assigned)){
+					allAssigned = true;
 					break;
 				}
 				
@@ -72,9 +74,11 @@ public class MultiThreadAssignment extends Thread {
 			}
 			
 			// Note the unassigned alleles if any present
-			for(int i = 0; i < allelesAtPosition.size(); i++){
-				if(assigned[i] == false){
-					this.unassigned.add(allelesAtPosition.get(i));
+			if(allAssigned == false){
+				for(int i = 0; i < allelesAtPosition.size(); i++){
+					if(assigned[i] == false){
+						this.unassigned.add(allelesAtPosition.get(i));
+					}
 				}
 			}
 		}

@@ -117,7 +117,6 @@ public class FindAnimalsInHerdOnDate {
 						}
 					}
 				}
-
 			}
 			
 			bWriter.write(locationId + "\t" + locations.get(locationId).getCph() + "\t" + ArrayMethods.toString(herdSizes, "\t") + "\t" + locations.get(locationId).getHerdType() + "\t" + locations.get(locationId).getPremisesType() + "\n");
@@ -284,5 +283,4 @@ public class FindAnimalsInHerdOnDate {
 		
 		return locations;
 	}
-
 }

@@ -29,7 +29,7 @@ public class Location {
 	
 	public double[][] landParcelCentroids;
 	
-	// Caluclating herd size variables
+	// Calculating herd size variables
 	public Hashtable<String, Integer> animals = new Hashtable<String, Integer>();
 	public Hashtable<String, Calendar[]> animalsON = new Hashtable<String, Calendar[]>(); // Calculating herd size
 	public Hashtable<String, Calendar[]> animalsOFF = new Hashtable<String, Calendar[]>(); // Calculating herd size
