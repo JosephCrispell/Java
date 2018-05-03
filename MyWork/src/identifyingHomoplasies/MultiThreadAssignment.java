@@ -102,4 +102,25 @@ public class MultiThreadAssignment extends Thread {
 		
 		return notAssigned;
 	}
+
+	public static boolean finished(MultiThreadAssignment[] threads){
+		
+		boolean finished = true;
+		for(MultiThreadAssignment thread : threads){
+			if(thread.isAlive() == true){
+				finished = false;
+				break;
+			}
+		}
+		
+		return finished;
+	}
+	
+	public static void waitUntilAllFinished(MultiThreadAssignment[] threads){
+		
+		boolean finished = false;
+		while(finished == false){
+			finished = finished(threads);
+		}
+	}
 }

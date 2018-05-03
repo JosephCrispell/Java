@@ -49,7 +49,7 @@ public class HomoplasyFinder6 {
 		String date = CalendarMethods.getCurrentDate("dd-MM-yy");
 				
 		// Set verbose
-//		boolean verbose = false;
+//		boolean verbose = true;
 		
 		/**
 		 * Read in the phylogeny
@@ -127,8 +127,10 @@ public class HomoplasyFinder6 {
 			// Create the thread and start it
 			threads[i] = new MultiThreadAssignment(positions.get(i), alleles, nodes, ids);
 			threads[i].start();
-			//threads[i].join(); // This means that won't move onto collect until all threads finished
 		}
+		
+		// Wait until all threads finished
+		MultiThreadAssignment.waitUntilAllFinished(threads);
 
 		// Collect the results from each thread
 		ArrayList<String> unassigned = MultiThreadAssignment.collect(threads);
@@ -359,6 +361,9 @@ public class HomoplasyFinder6 {
 			threads[position] = new MultiThreadPositions(position, sequences);
 			threads[position].start();
 		}
+		
+		// Wait until all threads finished
+		MultiThreadPositions.waitUntilAllFinished(threads);		
 		
 		// Combine the outputs from each thread
 		Hashtable<String, ArrayList<String>> alleles = MultiThreadPositions.collect(threads);

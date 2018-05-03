@@ -31,7 +31,7 @@ public class MultiThreadPositions extends Thread{
 			String allele = this.position + ":" + sequence.getSequence()[this.position];
 						
 			// Check if we have encountered the current allele before - note each sequence allele found in
-			if(this.alleles.get(allele) != null){
+			if(this.alleles.containsKey(allele) == true){
 				this.alleles.get(allele).add(sequence.getName());
 			}else{
 							
@@ -64,5 +64,26 @@ public class MultiThreadPositions extends Thread{
 		}
 		
 		return isolatesForEachAllele;
+	}
+
+	public static boolean finished(MultiThreadPositions[] threads){
+		
+		boolean finished = true;
+		for(MultiThreadPositions thread : threads){
+			if(thread.isAlive() == true){
+				finished = false;
+				break;
+			}
+		}
+		
+		return finished;
+	}
+	
+	public static void waitUntilAllFinished(MultiThreadPositions[] threads){
+		
+		boolean finished = false;
+		while(finished == false){
+			finished = finished(threads);
+		}
 	}
 }
