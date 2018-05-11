@@ -33,7 +33,7 @@ public class FindAnimalsInHerdOnDate {
 		String locationsTable = path + "20160314_joe_cts_locations.csv";
 		double threshold = 15000;
 		Hashtable<String, Location> locations = readLocationsTablePost2001SelectHerdsCloseToWP(locationsTable, badgerCentre, threshold);
-				
+
 		// Remove locations types that we aren't interested in
 		String[] premisesTypesToIgnore = {"SR", "CC", "SW", "EX"};
 		removeLocationsOfTypes(locations, premisesTypesToIgnore);

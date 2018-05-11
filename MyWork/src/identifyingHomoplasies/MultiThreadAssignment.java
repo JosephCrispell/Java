@@ -36,6 +36,10 @@ public class MultiThreadAssignment extends Thread {
 						
 			// Get an array of the isolates with an N at the current position
 			ArrayList<String> isolatesWithN = this.alleles.get(position + ":N");
+//			int nIsolatesWithN = 0;
+//			if(isolatesWithN != null){
+//				nIsolatesWithN = isolatesWithN.size();
+//			}
 			
 			// Initialise which alleles are assigned to nodes
 			boolean[] assigned = ArrayMethods.initialise(allelesAtPosition.size(), false);
@@ -64,7 +68,7 @@ public class MultiThreadAssignment extends Thread {
 				
 				// Examine each allele
 				for(int i = 0; i < allelesAtPosition.size(); i++){
-									
+					
 					// Check if either the isolates above or below match those associated with the current allele
 					if(ArrayListMethods.compare(alleles.get(allelesAtPosition.get(i)), idsAbove) == true || 
 							ArrayListMethods.compare(alleles.get(allelesAtPosition.get(i)), idsBelow) == true){

@@ -7,7 +7,22 @@ public class ArrayListMethods {
 
 	public static void main(String[] args){
 		
-		System.out.println(System.getProperty("os.name"));
+		ArrayList<String> a = new ArrayList<String>();
+		a.add("1:A");
+		a.add("1:C");
+		a.add("2:T");
+		a.add("2:G");
+		a.add("3:A");
+		a.add("3:C");
+		
+		ArrayList<String> b = new ArrayList<String>();
+		b.add("1:A");
+		b.add("1:C");
+		b.add("2:T");
+		b.add("2:G");
+		b.add("3:A");
+		
+		System.out.println(toString(intersect(a, b), ", "));
 	}
 	
 	public static String toString(ArrayList<String> array, String sep){
@@ -20,6 +35,22 @@ public class ArrayListMethods {
 		return string;
 	}
 
+	
+	public static ArrayList<String> intersect(ArrayList<String> a, ArrayList<String> b){
+		
+		// Initialise an array list to store the elements found in both a and b
+		ArrayList<String> intersect = new ArrayList<String>();
+		
+		// Examine every element in a and check if in b
+		for(String element : a){
+			
+			if(b.contains(element)){
+				intersect.add(element);
+			}
+		}
+		
+		return intersect;
+	}
 	
 	public static boolean compare(ArrayList<String> a, ArrayList<String> b){
 		
