@@ -23,40 +23,40 @@ public class HomoplasyFinder6 {
 	
 	public static void main(String[] args) throws IOException, InterruptedException{
 		
-//		if(args[0].equals("-help") || args[0].equals("") || args[0].equals("-h") || args[0].equals("help")){
-//			System.out.println("HomoplasyFinder: a tool to identify homoplasies within a phylogenetic tree and alignment");
-//			System.out.println("\nCommand Line Structure:");
-//			System.out.println("\tjava -jar homoplasyFinder_DATE.jar verbose path sequences.fasta newick.tree\n");
-//			System.out.println("\t\tverbose\tDetailed output [0] or none [1]");
-//			System.out.println("\t\tsequences.fasta\tFASTA file containing alignment");
-//			System.out.println("\t\tnewick.tree\tNewick formatted tree file");
-//			System.out.println("\nNotes:");
-//			System.out.println("First line of input FASTA file contains the number of isolates and sites in the file");
-//
-//			System.exit(0);
-//		}
-//
-//		// Get the command line arguments
-//		boolean verbose = args[0].matches("1");
-//		String fasta = args[1];
-//		String treeFile = args[2];
-//		String path = "";
+		if(args[0].equals("-help") || args[0].equals("") || args[0].equals("-h") || args[0].equals("help")){
+			System.out.println("HomoplasyFinder: a tool to identify homoplasies within a phylogenetic tree and alignment");
+			System.out.println("\nCommand Line Structure:");
+			System.out.println("\tjava -jar homoplasyFinder_DATE.jar verbose sequences.fasta newick.tree\n");
+			System.out.println("\t\tverbose\tDetailed output [0] or none [1]");
+			System.out.println("\t\tsequences.fasta\tFASTA file containing alignment");
+			System.out.println("\t\tnewick.tree\tNewick formatted tree file");
+			System.out.println("\nNotes:");
+			System.out.println("First line of input FASTA file contains the number of isolates and sites in the file");
+
+			System.exit(0);
+		}
+
+		// Get the command line arguments
+		boolean verbose = args[0].matches("1");
+		String fasta = args[1];
+		String treeFile = args[2];
+		String path = "";
 
 		// Set the path
-		String path = "C:/Users/Joseph Crisp/Desktop/UbuntuSharedFolder/Homoplasy/DataForTesting/";
+//		String path = "C:/Users/Joseph Crisp/Desktop/UbuntuSharedFolder/Homoplasy/DataForTesting/";
 								
 		// Get the current date
 		String date = CalendarMethods.getCurrentDate("dd-MM-yy");
 				
 		// Set verbose
-		boolean verbose = true;
+//		boolean verbose = true;
 		
 		/**
 		 * Read in the phylogeny
 		 */
 		
 		//String treeFile = path + "mlTree_withRef_14-06-16_NZ.tree"; // NZ
-		String treeFile = path + "mlTree_27-03-18_WP.tree"; // WP
+//		String treeFile = path + "mlTree_27-03-18_WP.tree"; // WP
 		//String treeFile = path + "example-AFTER_09-04-18.tree"; // EXAMPLE
 		Node tree = readNewickTree(treeFile, verbose);
 		
@@ -66,7 +66,7 @@ public class HomoplasyFinder6 {
 		
 		// Read in the FASTA file
 		//String fasta = path + "sequences_withRef_Prox-10_14-06-16_NZ.fasta"; // NZ
-		String fasta = path + "sequences_Prox-10_24-03-2018_WP.fasta"; // WP
+//		String fasta = path + "sequences_Prox-10_24-03-2018_WP.fasta"; // WP
 		//String fasta = path + "example_09-04-18.fasta"; // EXAMPLE
 		Sequence[] sequences = GeneticMethods.readFastaFile(fasta, verbose);
 		
