@@ -85,10 +85,7 @@ public class HomoplasyFinder6 {
 		/**
 		 * Examine the un-assigned alleles - these are potential homoplasies
 		 */
-		long startTime = System.nanoTime();
 		int[] homoplasyPositions = examineUnAssignedAlleles(unassigned, alleles, verbose, path, null, date, null);
-		long endTime = System.nanoTime();
-		System.out.println("Time taken: " + (endTime - startTime));
 		
 		/**
 		 * Return a FASTA file without the homoplasy sites
