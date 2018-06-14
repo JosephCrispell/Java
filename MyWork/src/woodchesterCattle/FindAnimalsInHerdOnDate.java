@@ -32,7 +32,7 @@ public class FindAnimalsInHerdOnDate {
 		// Read in the cattle locations table - keep information for those within X metres from badger centre
 		double[] badgerCentre = {381761.7, 200964.3};
 		String locationsTable = path + "20160314_joe_cts_locations.csv";
-		double threshold = 15000;
+		double threshold = 10000;
 		Hashtable<String, Location> locations = readLocationsTablePost2001SelectHerdsCloseToWP(locationsTable, badgerCentre, threshold);
 
 		// Remove locations types that we aren't interested in
