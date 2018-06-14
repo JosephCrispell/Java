@@ -230,12 +230,25 @@ public class CalendarMethods {
 		
 		return date;
 	}
+	public static Calendar createDate(int year, int monthZeroBased, int day){
+		Calendar date = new GregorianCalendar(); // If time not changed, it will be the current time!
+		
+		date.set(Calendar.YEAR, year);
+		date.set(Calendar.MONTH, monthZeroBased);
+		date.set(Calendar.DAY_OF_MONTH, day);
+		date.set(Calendar.HOUR, 0);
+		date.set(Calendar.MINUTE, 0);
+		date.set(Calendar.SECOND, 0);
+		date.set(Calendar.MILLISECOND, 1);
+		
+		return date;
+	}
 	public static Calendar dateForYearStart(int year){
 		Calendar date = new GregorianCalendar(); // If time not changed, it will be the current time!
 		
 		date.set(Calendar.YEAR, year);
-		date.set(Calendar.MONTH, 1); // Set to half way through year
-		date.set(Calendar.DAY_OF_MONTH, 1); // Set to half way through month
+		date.set(Calendar.MONTH, 0); // Set to January (Months zero-based)
+		date.set(Calendar.DAY_OF_MONTH, 1); // Set to first day of month
 		date.set(Calendar.HOUR, 12);
 		date.set(Calendar.MINUTE, 0);
 		date.set(Calendar.SECOND, 0);
@@ -247,8 +260,8 @@ public class CalendarMethods {
 		Calendar date = new GregorianCalendar(); // If time not changed, it will be the current time!
 		
 		date.set(Calendar.YEAR, year);
-		date.set(Calendar.MONTH, 12); // Set to half way through year
-		date.set(Calendar.DAY_OF_MONTH, 31); // Set to half way through month
+		date.set(Calendar.MONTH, 11); // Set to December
+		date.set(Calendar.DAY_OF_MONTH, 31); // Set to last day of December
 		date.set(Calendar.HOUR, 23);
 		date.set(Calendar.MINUTE, 59);
 		date.set(Calendar.SECOND, 59);
