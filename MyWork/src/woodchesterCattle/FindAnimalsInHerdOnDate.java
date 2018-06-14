@@ -67,10 +67,40 @@ public class FindAnimalsInHerdOnDate {
 		// Examine each location
 		for(String locationId : HashtableMethods.getKeysString(locations)){
 			
+			// Initialise an array to store the sizes of the current herd on the dates of interest
 			int[] herdSizes = new int[datesOfInterest.length];
 			
 			// Examine each animal associated with the current herd
 			for(String animalId : locations.get(locationId).getInhabitantIds()){
+				
+				/**
+				* Dealing with periods of time spent on herd
+				* 
+				* Things to consider:
+				* A  --           ----|---	-----         Paired ON and OFF dates				onDates.length = offDates.length & offDates[0] > onDates[1]
+				* B                 --|--------------    "										"
+				* 
+				* C-------------------|-                 Missing first ON date 				offDates.length > onDates.length							offDates[0] after DOI
+				* D--- -----   ----  -|- ------- ------  "										"															remove(offDates[0])
+				* E------     --------|-                 "										"															remove(offDates[0])
+				* F-------------------|--- -------       "										"															offDates[0] after DOI
+				* 
+				* G                  -|------------------Missing last OFF date					onDates.length > offDates.length							onDates[-1] before DOI
+				* H  --------- -------|- ----------------"										"															remove(onDates[-1])
+				* I                ---|----- ------------"										"															remove(onDates[-1])
+				* J   ---    ----   --|------------------"										"															onDates[-1] before DOI
+				* 
+				* K----  --------   --|-        ---------Missing 1st ON date and lst OFF date	onDates.length = offDates.length & offDates[0] < onDates[1]	remove(offDates[0]) & remove(onDates[-1])
+				* L---     -----------|------------------"										"															onDates[-1] before DOI
+				* M-------------------|----         -----"										"															offDates[0] after DOI
+				* 
+				* N-------------------|------------------No dates! No way we can find this
+				* O                   |                  "
+				* 
+				* date.compareTo(argument) == 0	date == argument
+				* date.compareTo(argument) < 0		date before argument
+				* date.compareTo(argument) > 0		date after argument
+				*/
 				
 				// Get the ON and OFF dates for the current animal
 				Calendar[] onDates = new Calendar[0];
@@ -98,7 +128,7 @@ public class FindAnimalsInHerdOnDate {
 				// Check if we are missing the first ON and last OFF [K-M]
 				if(onDates.length == offDates.length && offDates[0].compareTo(onDates[0]) < 0) {
 					
-					// Add first ON as first day of the first year of interest
+					// Add first ON as first day of the first year of interest - note months are record as 0 to 11
 					onDates = CalendarMethods.appendToFront(onDates, CalendarMethods.createDate(yearsToExamine[0], 0, 1));
 					
 					// Add last OFF as last day of the last year of interest
@@ -128,7 +158,10 @@ public class FindAnimalsInHerdOnDate {
 						// Check that OFF isn't before ON
 						if(offDates[movementDateIndex].compareTo(onDates[movementDateIndex]) < 0) {
 							
+							// Create a key so the same error isn't reported multiple times
 							String key = offDates[movementDateIndex] + ":" + CalendarMethods.toString(onDates[movementDateIndex], "-") + ":" + locationId + ":" + animalId;
+							
+							// Check if error has already been reported, if it hasn't print a message
 							if(reported.contains(key) == false) {
 								reported.put(key, 1);
 								System.out.println("ERROR!: OFF date (" + CalendarMethods.toString(offDates[movementDateIndex], "-") + ") is before the ON date (" + 
@@ -147,9 +180,11 @@ public class FindAnimalsInHerdOnDate {
 				}
 			}
 			
+			// Write the location information and herd sizes for the current herd to file
 			bWriter.write(locationId + "\t" + locations.get(locationId).getCph() + "\t" + ArrayMethods.toString(herdSizes, "\t") + "\t" + locations.get(locationId).getHerdType() + "\t" + locations.get(locationId).getPremisesType() + "\n");
 		}
 		
+		// Close the output file
 		bWriter.close();		
 	}
 	
