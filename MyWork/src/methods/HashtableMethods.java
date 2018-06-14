@@ -1,6 +1,7 @@
 package methods;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Hashtable;
 import java.util.Set;
 
@@ -112,6 +113,22 @@ public class HashtableMethods {
 		
 		int pos = -1;
 		for(int key : keys){
+			pos++;
+			
+			values[pos] = key;
+		}
+		
+		return values;
+		
+	}
+	
+	public static Calendar[] getKeysCalendar(Hashtable table){
+		
+		Set<Calendar> keys = table.keySet();
+		Calendar[] values = new Calendar[table.size()];
+		
+		int pos = -1;
+		for(Calendar key : keys){
 			pos++;
 			
 			values[pos] = key;

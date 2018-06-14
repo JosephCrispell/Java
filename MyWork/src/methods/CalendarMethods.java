@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.Hashtable;
 
 public class CalendarMethods {
 
@@ -30,6 +31,32 @@ public class CalendarMethods {
 			currentDate.add(Calendar.DATE, 1);
 			System.out.println(toString(currentDate, "-") + "\t" + counts[i]);
 		}
+	}
+	
+	public static int getLength(Calendar[] dates) {
+		int length = 0;
+		if(dates != null) {
+			length = dates.length;
+		}
+		return length;
+	}
+	
+	public static Calendar[] removeDuplicates(Calendar[] dates) {
+		
+		// Initialise a hashtable to store the unique dates
+		Hashtable<Calendar, Integer> uniqueDates = new Hashtable<Calendar, Integer>();
+		
+		// Examine each date
+		for(Calendar date : dates) {
+			
+			// Check if we have encountered this date before
+			if(uniqueDates.contains(date) == false) {
+				uniqueDates.put(date, 1);
+			}
+		}
+		
+		// Return the unique dates - note that the array is shuffled!!!
+		return(HashtableMethods.getKeysCalendar(uniqueDates));
 	}
 	
 	public static Calendar parseDateWithMonthInText(String dateString, String sep, int[] dayMonthYear, int monthLength,
@@ -197,7 +224,34 @@ public class CalendarMethods {
 		date.set(Calendar.MONTH, 5); // Set to half way through year
 		date.set(Calendar.DAY_OF_MONTH, 15); // Set to half way through month
 		date.set(Calendar.HOUR, 0);
+		date.set(Calendar.MINUTE, 0);
 		date.set(Calendar.SECOND, 0);
+		date.set(Calendar.MILLISECOND, 1);
+		
+		return date;
+	}
+	public static Calendar dateForYearStart(int year){
+		Calendar date = new GregorianCalendar(); // If time not changed, it will be the current time!
+		
+		date.set(Calendar.YEAR, year);
+		date.set(Calendar.MONTH, 1); // Set to half way through year
+		date.set(Calendar.DAY_OF_MONTH, 1); // Set to half way through month
+		date.set(Calendar.HOUR, 12);
+		date.set(Calendar.MINUTE, 0);
+		date.set(Calendar.SECOND, 0);
+		date.set(Calendar.MILLISECOND, 1);
+		
+		return date;
+	}
+	public static Calendar dateForYearEnd(int year){
+		Calendar date = new GregorianCalendar(); // If time not changed, it will be the current time!
+		
+		date.set(Calendar.YEAR, year);
+		date.set(Calendar.MONTH, 12); // Set to half way through year
+		date.set(Calendar.DAY_OF_MONTH, 31); // Set to half way through month
+		date.set(Calendar.HOUR, 23);
+		date.set(Calendar.MINUTE, 59);
+		date.set(Calendar.SECOND, 59);
 		date.set(Calendar.MILLISECOND, 1);
 		
 		return date;
@@ -206,11 +260,11 @@ public class CalendarMethods {
 	public static String toString(Calendar[] array, String dateSep, String sep){
 		
 		// Convert first date to string
-		String output = CalendarMethods.toString(array[0], dateSep);
+		String output = toString(array[0], dateSep);
 		
 		// Convert the rest
 		for(int i = 1; i < array.length; i++){
-			output = output + sep + CalendarMethods.toString(array[i], dateSep);
+			output = output + sep + toString(array[i], dateSep);
 		}
 		
 		return output;
@@ -386,6 +440,16 @@ public class CalendarMethods {
 		
 		return newArray;
 	}
+	public static Calendar[] appendToFront(Calendar[] array, Calendar value){
+		Calendar[] newArray = new Calendar[array.length + 1];
+		
+		newArray[0] = copy(value);
+		for(int index = 0; index < array.length; index++){
+			newArray[index + 1] = copy(array[index]);
+		}	
+		
+		return newArray;
+	}
 	
 	public static Calendar[] subset(Calendar[] array, int start, int end){
 		Calendar[] part = new Calendar[end - start + 1];
@@ -402,4 +466,17 @@ public class CalendarMethods {
 		return part;
 	}
 
+	public static Calendar[] deletePosition(Calendar[] array, int position){
+		Calendar[] newArray = new Calendar[array.length - 1];
+		
+		int pos = -1;
+		for(int index = 0; index < array.length; index++){
+			if(index != position){
+				pos++;
+				newArray[pos] = array[index];
+			}
+		}
+		
+		return newArray;
+	}
 }
