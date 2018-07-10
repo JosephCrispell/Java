@@ -55,15 +55,16 @@ public class MergeVcfFiles {
 			System.out.println("merged_" + date + ".txt\t\t\tVCF-like file containing variant site quality information for all isolates.");
 			System.out.println("genomeCoverage_" + date + ".txt\t\tRead depth of each isolate at each site on reference genome.");
 			System.out.println("constantSiteCounts_" + date + ".txt\tAlelle counts for each site on the genome that was constant among the isolates or ignored.");
+			System.out.println("heterozygousSiteCount_" + date + ".txt\tThe number of heterozygous sites (where high quality bases support both the reference and alternate alleles) for each isolate.");
 			System.out.println();
 			System.out.println("Beginning to merge VCF files. May take several minutes!");
 			
 			// Get the path to the directory
-			//String path = "C:/Users/Joseph Crisp/Desktop/UbuntuSharedFolder/TestingPipeline/FASTQs/vcfFiles/";
+//			String path = "/home/josephcrispell/Desktop/Research/RepublicOfIreland/Fastqs/vcfFiles/Testing/";
 			String path = args[0];
 			
 			// Open the genome annotation file
-			//String annotationFile = "C:/Users/Joseph Crisp/Desktop/UbuntuSharedFolder/TestingPipeline/Reference/UpdatedReference_Malone2017/LT708304.1_AF2122-97_annotations.gff3";
+//			String annotationFile = "/home/josephcrispell/Desktop/Research/Reference/TransferAnnotations_23-05-18/UpdatedMaloneAnnotations_FINAL_25-05-18.gff";
 			String annotationFile = args[1];
 			
 			// Note the regions of the genome that we want to ignore
@@ -84,19 +85,19 @@ public class MergeVcfFiles {
 			 *  	Variant sites are sites where at least one of the isolates shows variation		 *  
 			 */
 		
-			//String mergedVCFsFile = "C:/Users/Joseph Crisp/Desktop/UbuntuSharedFolder/Woodchester_CattleAndBadgers/AllVCFS/mergedVCFs_12-01-16.txt";
+//			String mergedVCFsFile = "/home/josephcrispell/Desktop/Research/RepublicOfIreland/Fastqs/vcfFiles/Testing/mergedVCFs_10-07-18.txt";
 			String mergedVCFsFile = "merged_" + date + ".txt";
 			
-			//String coverageFile = "C:/Users/Joseph Crisp/Desktop/UbuntuSharedFolder/Woodchester_CattleAndBadgers/AllVCFS/coverageVCFs_18-01-16.txt";
+//			String coverageFile = "/home/josephcrispell/Desktop/Research/RepublicOfIreland/Fastqs/vcfFiles/Testing/coverageVCFs_10-07-18.txt";
 			String coverageFile = "genomeCoverage_" + date + ".txt";
 			String constantSiteCounts = "constantSiteCounts_" + date + ".txt";
 			combineVCFFiles(vcfFiles, mergedVCFsFile, regionsToIgnore, coverageFile, constantSiteCounts);
 			
-//			/**
-//			 * Note the heterozygous site count of each VCF file
-//			 */
-//			String heterozygousSiteCountFile = "heterozygousSiteCount_" + date + ".txt";
-//			printHeterozygousSiteCountsOfVCF(heterozygousSiteCountFile, vcfFiles);
+			/**
+			 * Note the heterozygous site count of each VCF file
+			 */
+			String heterozygousSiteCountFile = "heterozygousSiteCount_" + date + ".txt";
+			printHeterozygousSiteCountsOfVCF(heterozygousSiteCountFile, vcfFiles);
 			
 			/**
 			 * Close all of the opened VCF files

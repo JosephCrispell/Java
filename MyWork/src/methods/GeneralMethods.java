@@ -16,6 +16,13 @@ public class GeneralMethods {
 	 */
 	public static void main(String[] args) throws IOException {
 		
+		double[] badgerCentre = {381761.7, 200964.3};
+		double[] coords = {382387, 191105};
+		
+		double distance = calculateEuclideanDistance(badgerCentre, coords);
+		
+		System.out.println(distance);
+		
 	}
 	
 	public static String[] getAllFilesInDirectory(String directory, String extension){

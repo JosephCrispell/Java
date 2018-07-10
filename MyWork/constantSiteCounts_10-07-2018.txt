@@ -1,0 +1,3 @@
+
+ Constant Site Counts: A, C, G, T
+745903	1427739	1421863	746789

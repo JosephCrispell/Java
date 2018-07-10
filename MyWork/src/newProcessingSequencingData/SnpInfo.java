@@ -196,18 +196,15 @@ public class SnpInfo {
 		char[] alternateAlleles = ArrayMethods.toChar(col.split(","));
 		allele = alternateAlleles[0];
 		
-		// Run heterozygosity check - not just when multiple alternate alles found allows for 0/1
-		if(format.get("GT") != null){
-			int[] genotype = ArrayMethods.convertDouble2Int(format.get("GT"));
-			
-			if(genotype[0] != genotype[1]){
+		// Run heterozygosity check - Check if high quality bases supporting both the reference and alternate are present
+		double[] highQualityBaseCounts = info.get("DP4");
+		if(highQualityBaseCounts[0] + highQualityBaseCounts[1] > 0 && highQualityBaseCounts[2] + highQualityBaseCounts[3] > 0){
 				
-				// Store information about the current Heterozygous site
-				hetSiteInfo = new HeterozygousSite(snpPos, refAllele, alternateAlleles, quality, info, format);
-				file.addToHeterozygousSiteCount(hetSiteInfo);
-			}
+			// Store information about the current Heterozygous site
+			hetSiteInfo = new HeterozygousSite(snpPos, refAllele, alternateAlleles, quality, info, format);
+			file.addToHeterozygousSiteCount(hetSiteInfo);
 		}
-		
+				
 		// If only one allele present, then don't need to do anything
 		if(alternateAlleles.length > 1){
 			

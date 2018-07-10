@@ -109,6 +109,9 @@ public class GenbankFile {
 	}
 	
 	// Getting methods
+	public String getFileName() {
+		return this.fileName;
+	}
 	public AnnotationSet getAnnotationSet(int index){
 		return this.annotationSets[index];
 	}
