@@ -78,8 +78,18 @@ public class SnpInfo {
 	}
 	
 	// General Methods
-	public static Hashtable<String, double[]> getInfoColInfo(String lineCol){
+	public static double parseDoubleFromString(String value) {
 		
+		double output = 0;
+		if(value.matches("\\.") == false) {
+			output = Double.parseDouble(value);
+		}
+		
+		return(output);
+	}
+	
+	public static Hashtable<String, double[]> getInfoColInfo(String lineCol){
+
 		// Initialise a Hashtable to store the variables and their values
 		Hashtable<String, double[]> infoCol = new Hashtable<String, double[]>();
 		
@@ -104,9 +114,8 @@ public class SnpInfo {
 			
 			// Convert each value string into double
 			values = new double[stringValues.length];
-			
 			for(int i = 0; i < stringValues.length; i++){
-				values[i] = Double.parseDouble(stringValues[i]);
+				values[i] = parseDoubleFromString(stringValues[i]);				
 			}
 			
 			// Store the variable information
@@ -152,7 +161,7 @@ public class SnpInfo {
 			values = new double[stringValues.length];
 			
 			for(int x = 0; x < stringValues.length; x++){
-				values[x] = Double.parseDouble(stringValues[x]);
+				values[x] = parseDoubleFromString(stringValues[x]);
 			}
 			
 			// Store the field information

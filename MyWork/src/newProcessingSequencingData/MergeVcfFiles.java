@@ -30,7 +30,7 @@ public class MergeVcfFiles {
 		if(args[0].equals("-help") || args[0].equals("")){
 			System.out.println("Java Tool to summarise and combine a set of VCF files into a single Merged file.");
 			System.out.println("\nCommand Line Structure:");
-			System.out.println("\tjava -jar mergingTool.jar path2Directory genomeAnnotation.gff\n");
+			System.out.println("\tjava -jar mergingTool.jar pathToDirectory genomeAnnotation.gff\n");
 			System.out.println("\t\tpath2Directory\t\tProvide path to directory containing vcf files");
 			System.out.println("\t\tgenomeAnnotation.gff\tProvide path to M. bovis genome annotation file if you would like to ignore repeat/PE/PPE regions, otherwise enter false");
 			System.out.println("\nNotes:");
@@ -41,6 +41,7 @@ public class MergeVcfFiles {
 			System.out.println("\tFQ\n\tReference and Alternate Alleles - RefAlt");
 			System.out.println("\nThe above Information is stored in the following Format:");
 			System.out.println("\tDP;HQDP;MQ;QUAL;FQ;RefAlt");
+			System.out.println("\n*** Currently skipping any INDELS observed in the VCF files");
 		}else{
 			
 			// Get the current date
@@ -60,11 +61,11 @@ public class MergeVcfFiles {
 			System.out.println("Beginning to merge VCF files. May take several minutes!");
 			
 			// Get the path to the directory
-//			String path = "/home/josephcrispell/Desktop/Research/RepublicOfIreland/Fastqs/vcfFiles/Testing/";
+//			String path = "/home/josephcrispell/Desktop/Research/RepublicOfIreland/Fastqs_MAP/Testing/vcfFiles/";
 			String path = args[0];
 			
 			// Open the genome annotation file
-//			String annotationFile = "/home/josephcrispell/Desktop/Research/Reference/TransferAnnotations_23-05-18/UpdatedMaloneAnnotations_FINAL_25-05-18.gff";
+//			String annotationFile = "/home/josephcrispell/Desktop/Research/Reference_MAP/GCF_000007865.1_ASM786v1_genomic.gff";
 			String annotationFile = args[1];
 			
 			// Note the regions of the genome that we want to ignore
@@ -85,13 +86,15 @@ public class MergeVcfFiles {
 			 *  	Variant sites are sites where at least one of the isolates shows variation		 *  
 			 */
 		
-//			String mergedVCFsFile = "/home/josephcrispell/Desktop/Research/RepublicOfIreland/Fastqs/vcfFiles/Testing/mergedVCFs_10-07-18.txt";
+//			String mergedVCFsFile = "/home/josephcrispell/Desktop/Research/RepublicOfIreland/Fastqs_MAP/Testing/vcfFiles/mergedVCFs_16-07-18.txt";
 			String mergedVCFsFile = "merged_" + date + ".txt";
 			
-//			String coverageFile = "/home/josephcrispell/Desktop/Research/RepublicOfIreland/Fastqs/vcfFiles/Testing/coverageVCFs_10-07-18.txt";
+//			String coverageFile = "/home/josephcrispell/Desktop/Research/RepublicOfIreland/Fastqs_MAP/Testing/vcfFiles/coverageVCFs_16-07-18.txt";
+//			String constantSiteCounts = "/home/josephcrispell/Desktop/Research/RepublicOfIreland/Fastqs_MAP/Testing/vcfFiles/constantSiteCounts_16-07-18.txt";
 			String coverageFile = "genomeCoverage_" + date + ".txt";
 			String constantSiteCounts = "constantSiteCounts_" + date + ".txt";
-			combineVCFFiles(vcfFiles, mergedVCFsFile, regionsToIgnore, coverageFile, constantSiteCounts);
+			boolean skipIndels = true;
+			combineVCFFiles(vcfFiles, mergedVCFsFile, regionsToIgnore, coverageFile, constantSiteCounts, skipIndels);
 			
 			/**
 			 * Note the heterozygous site count of each VCF file
@@ -328,7 +331,7 @@ public class MergeVcfFiles {
 		return infoSummary;
 	}
 	
-	public static String[] returnNextLineFromEachFile(VcfFile[] readers, String[] previousLinesInfo) throws IOException{
+	public static String[] returnNextLineFromEachFile(VcfFile[] readers, String[] previousLinesInfo, boolean skipIndels) throws IOException{
 		
 		/**
 		 * Getting the next set of lines from the VCF files
@@ -338,7 +341,8 @@ public class MergeVcfFiles {
 		
 		// Initialise an Array to store the next set of file lines
 		String[] linesInfo = new String[readers.length];
-		String line;
+		String line = null;
+		boolean indelFound;
 		
 		// Examine each of the BufferedReaders (within in their object) 
 		for(int i = 0; i < readers.length; i++){
@@ -346,8 +350,21 @@ public class MergeVcfFiles {
 			// If shift = 1 mean that we are meant to move to the next line for the current BufferedReader
 			if(readers[i].getShift() == 1){
 				
-				// Store the next file line from the current BufferedReader (VCF file)
-				line = readers[i].getBfReader().readLine();
+				// Store the next file line from the current BufferedReader (VCF file) - skip INDELS
+				if(skipIndels) {
+					indelFound = true;
+					while(indelFound) {
+						line = readers[i].getBfReader().readLine();
+						if(line != null) {
+							indelFound = line.matches("(.*)INDEL(.*)");
+						}else {
+							indelFound = false;
+						}						
+					}
+					
+				}else {
+					line = readers[i].getBfReader().readLine();
+				}							
 				
 				// Check that haven't just reach end of the VCF file
 				if(line != null){
@@ -622,7 +639,7 @@ public class MergeVcfFiles {
 	}
 	
 	public static void combineVCFFiles(VcfFile[] vcfFiles, String mergedVCFsFile, int[][] coordsOfRegionsToIgnore,
-			String coverageFile, String constantSiteCountsFile) throws IOException{
+			String coverageFile, String constantSiteCountsFile, boolean skipIndels) throws IOException{
 		
 		// Open the output merged VCFs File
 		BufferedWriter outputMerged = WriteToFile.openFile(mergedVCFsFile, false);
@@ -631,7 +648,7 @@ public class MergeVcfFiles {
 		BufferedWriter outputCoverage = WriteToFile.openFile(coverageFile, false);
 		
 		// Get the first set of SNP Information lines
-		String[] lines = returnNextLineFromEachFile(vcfFiles, new String[vcfFiles.length]);
+		String[] lines = returnNextLineFromEachFile(vcfFiles, new String[vcfFiles.length], skipIndels);
 		String[] outputLines = new String[2];
 		int snp;
 		int result;
@@ -689,7 +706,7 @@ public class MergeVcfFiles {
 			}
 			
 			// Get the next set of lines from the merged.txt lines
-			lines = returnNextLineFromEachFile(vcfFiles, lines);
+			lines = returnNextLineFromEachFile(vcfFiles, lines, skipIndels);
 			
 			// Print a progress dot every x lines
 			if(lineNo % 10000 == 0){

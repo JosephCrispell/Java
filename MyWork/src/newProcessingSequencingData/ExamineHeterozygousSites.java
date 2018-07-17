@@ -23,7 +23,7 @@ public class ExamineHeterozygousSites {
 		String date = CalendarMethods.getCurrentDate("dd-MM-yyyy");
 		
 		// Set the path variable
-		String path = "C:/Users/Joseph Crisp/Desktop/UbuntuSharedFolder/TestingPipeline/FASTQs/vcfFiles/";
+		String path = "/home/josephcrispell/Desktop/Research/RepublicOfIreland/Fastqs/vcfFiles/";
 		
 		// Find the VCF Files
 		String[] vcfFileNames = MergeVcfFiles.findVcfFilesInDirectory(path);
@@ -73,6 +73,8 @@ public class ExamineHeterozygousSites {
 		 * 		2	2nd ALT
 		 * 		...
 		 * 
+		 * NOTE THAT BELOW DESCRIBES IF VARIANTS CALLED FOR DIPLOID. RECENT UPDATE TO BCFTOOLS MEANS HAPLOID CAN BE
+		 * SPECIFIED. IN WHICH CASE ONLY ONE NUMBER WILL BE PRESENT.
 		 * 	GT	0/0	homozygous REF
 		 * 	GT	0/1 heterozygous REF and ALT (diploid)
 		 * 	GT 	1/1 homozygous ALT
@@ -109,29 +111,24 @@ public class ExamineHeterozygousSites {
 			// Check if genotype information exists
 			if(line.matches("(.*)\tGT:(.*)") == true){
 				
-				// Get the format column
-				format = SnpInfo.getFormatColInfo(cols[8], cols[9]);
+				// Get the info column
+				info = SnpInfo.getInfoColInfo(cols[7]);
 				
-				genotype = ArrayMethods.convertDouble2Int(format.get("GT"));
+				// Get the high quality base counts
+				highQualityBaseCounts = info.get("DP4");
 				
-				if(genotype[0] != genotype[1]){
+				// Check if there are high quality bases supporting both the ref and alt on forward and reverse reads
+				if(highQualityBaseCounts[0] > 0 &&
+				   highQualityBaseCounts[1] > 0 && 
+				   highQualityBaseCounts[2] > 0 &&
+				   highQualityBaseCounts[3] > 0){
 					
-					// Get the info column
-					info = SnpInfo.getInfoColInfo(cols[7]);
-					
-					// Get the DP4 information from the info column
-					altSupport = 0;
-					sum = 0;
-					if(info.get("DP4") != null){
-						highQualityBaseCounts = info.get("DP4");
-						
-						// Calculate the proportion of High quality bases supporting the alternate allele
-						sum = ArrayMethods.sum(highQualityBaseCounts);
-						altSupport = (highQualityBaseCounts[2] + highQualityBaseCounts[3]) / sum;
-					}
-										
-					WriteToFile.writeLn(bWriter, cols[1] + "\t" + ArrayMethods.toString(genotype, "/") + "\t" + altSupport + 
-							"\t" + sum);
+					// Calculate the proportion of High quality bases supporting the alternate allele
+					sum = ArrayMethods.sum(highQualityBaseCounts);
+					altSupport = (highQualityBaseCounts[2] + highQualityBaseCounts[3]) / sum;
+															
+					WriteToFile.writeLn(bWriter, cols[1] + "\t" + ArrayMethods.toString(highQualityBaseCounts, ",") + 
+							"\t" + altSupport + "\t" + sum);
 				}
 			}
 		}
