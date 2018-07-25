@@ -25,7 +25,7 @@ public class SummariseClusters {
 	public static void main(String[] args) throws IOException{
 		
 		// Set the path
-		String path = "C:/Users/Joseph Crisp/Desktop/UbuntuSharedFolder/Woodchester_CattleAndBadgers/NewAnalyses_22-03-18/";
+		String path = "/home/josephcrispell/Desktop/Research/Woodchester_CattleAndBadgers/NewAnalyses_22-03-18/";
 		
 		// Get the current date
 		String date = CalendarMethods.getCurrentDate("dd-MM-yyyy");
@@ -131,7 +131,7 @@ public class SummariseClusters {
 		ClusterSummary randomCluster;
 		
 		// Ignore the final cluster - involving all sampled animals
-		int[] clustersToExamine = {0, 1, 2, 3};
+		int[] clustersToExamine = {0, 1, 2, 3, 4};
 		
 		// Initialise an array to store the summary metrics describing the original and randomly created clusters
 		ClusterSummaryMetrics[] clusterSummaries = new ClusterSummaryMetrics[clustersToExamine.length];
@@ -479,10 +479,10 @@ public class SummariseClusters {
 			
 			// Build a line combining the summary metrics for the current cluster
 			line = i + "\t";
-			line += clusterSummaries[i].getMeanDistanceOfIsolatesToRef(0) + "\t";
-			line += clusterSummaries[i].getMeanDistanceOfIsolatesToRef(1) + "\t";
-			line += clusterSummaries[i].getMeanSequenceQualityOfIsolates(0) + "\t";
-			line += clusterSummaries[i].getMeanSequenceQualityOfIsolates(1) + "\t";
+			line += ArrayMethods.toString(clusterSummaries[i].getMeanDistanceOfIsolatesToRef(0), ",") + "\t";
+			line += ArrayMethods.toString(clusterSummaries[i].getMeanDistanceOfIsolatesToRef(1), ",") + "\t";
+			line += ArrayMethods.toString(clusterSummaries[i].getMeanSequenceQualityOfIsolates(0), ",") + "\t";
+			line += ArrayMethods.toString(clusterSummaries[i].getMeanSequenceQualityOfIsolates(1), ",") + "\t";
 			
 			line += ArrayMethods.toString(clusterSummaries[i].getNSampled(0), ",") + "\t";
 			line += ArrayMethods.toString(clusterSummaries[i].getNSampled(1), ",") + "\t";

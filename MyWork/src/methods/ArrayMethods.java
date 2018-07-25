@@ -9,20 +9,7 @@ public class ArrayMethods {
 	public static void main(String[] args) {
 		// Method Testing Area
 		
-		int nCores = 3;
-		int seqLength = 40001;
-		int nPositions = (int) Math.ceil((double) seqLength / (double) nCores);
-		
-		for(int i = 0; i < nCores; i++){
-			
-			int start = i * nPositions;
-			int end = (start + nPositions) - 1;
-			if(end > seqLength - 1){
-				end = seqLength - 1;
-			}
-			
-			System.out.println(start + "\t" + end + "\t" + (end - start) + "\t" + (seqLength - 1));
-		}
+		double[] numbers = {1,2,3,2,3,23,2,2,34,4,4,5,3,3,45,3,45,4,4};
 		
 
 		// 
@@ -1207,6 +1194,71 @@ public class ArrayMethods {
 		}
 		
 		return minPositions;
+	}
+	
+	public static double[] findMinMaxAndMean(double[] array) {
+		
+		// Initialise variables for recording the min, max and mean
+		double min = array[0];
+		double max = array[0];
+		double sum = array[0];
+		
+		// Examine each number
+		for(int i = 1; i < array.length; i++) {
+			
+			// Check for new min
+			if(array[i] < min) {
+				min = array[i];
+			}
+			
+			// Check for new max
+			if(array[i] > max) {
+				max = array[i];
+			}
+			
+			// Continue calculating sum
+			sum += array[i];
+		}
+		
+		// Finish calculating mean
+		double mean = sum / (double) array.length;
+		
+		// Create the output
+		double[] output = {min, mean, max};
+		
+		return output;
+	}
+	public static double[] findMinMaxAndMean(int[] array) {
+		
+		// Initialise variables for recording the min, max and mean
+		double min = array[0];
+		double max = array[0];
+		double sum = array[0];
+		
+		// Examine each number
+		for(int i = 1; i < array.length; i++) {
+			
+			// Check for new min
+			if(array[i] < min) {
+				min = array[i];
+			}
+			
+			// Check for new max
+			if(array[i] > max) {
+				max = array[i];
+			}
+			
+			// Continue calculating sum
+			sum += array[i];
+		}
+		
+		// Finish calculating mean
+		double mean = sum / (double) array.length;
+		
+		// Create the output
+		double[] output = {min, mean, max};
+		
+		return output;
 	}
 	
 	public static int[] findMaxs(int[] array){

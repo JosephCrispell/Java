@@ -110,6 +110,16 @@ public class ArrayListMethods {
 		}
 	}
 	
+	public static ArrayList<Character> toArrayList(char[] array){
+		
+		ArrayList<Character> arrayList = new ArrayList<Character>();
+		for(char value : array) {
+			arrayList.add(value);
+		}
+		
+		return arrayList;
+	}
+	
 	public static ArrayList<String> subset(ArrayList<String> array, int start, int end){
 		ArrayList<String> part = new ArrayList<String>();
 

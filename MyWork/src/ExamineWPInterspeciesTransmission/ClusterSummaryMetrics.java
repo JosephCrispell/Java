@@ -8,8 +8,8 @@ public class ClusterSummaryMetrics {
 
 	int id;
 	
-	double[] meanDistanceToRef;
-	double[] meanSequenceQuality;
+	double[][] meanDistanceToRef;
+	double[][] meanSequenceQuality;
 	
 	int[][] nSampled;
 	int[][] nUnSampledDetected;
@@ -34,12 +34,12 @@ public class ClusterSummaryMetrics {
 
 		this.id = cluster.getId();
 		
-		this.meanDistanceToRef = new double[2];
-		this.meanDistanceToRef[0] = ArrayMethods.mean(cluster.getDistancesToRefBadgers());
-		this.meanDistanceToRef[1] = ArrayMethods.mean(cluster.getDistancesToRefCattle());
-		this.meanSequenceQuality = new double[2];
-		this.meanSequenceQuality[0] = ArrayMethods.mean(cluster.getSequencingQualityForIsolatesBadgers());
-		this.meanSequenceQuality[1] = ArrayMethods.mean(cluster.getSequencingQualityForIsolatesCattle());
+		this.meanDistanceToRef = new double[2][3];
+		this.meanDistanceToRef[0] = ArrayMethods.findMinMaxAndMean(cluster.getDistancesToRefBadgers());
+		this.meanDistanceToRef[1] = ArrayMethods.findMinMaxAndMean(cluster.getDistancesToRefCattle());
+		this.meanSequenceQuality = new double[2][3];
+		this.meanSequenceQuality[0] = ArrayMethods.findMinMaxAndMean(cluster.getSequencingQualityForIsolatesBadgers());
+		this.meanSequenceQuality[1] = ArrayMethods.findMinMaxAndMean(cluster.getSequencingQualityForIsolatesCattle());
 		
 		this.nSampled = new int[nRepeats + 1][2];
 		this.nSampled[this.index][0] = cluster.getNSampledBadgers();
@@ -109,11 +109,11 @@ public class ClusterSummaryMetrics {
 		return this.id;
 	}
 	
-	public double getMeanDistanceOfIsolatesToRef(int index){
+	public double[] getMeanDistanceOfIsolatesToRef(int index){
 		
 		return this.meanDistanceToRef[index];
 	}
-	public double getMeanSequenceQualityOfIsolates(int index){
+	public double[] getMeanSequenceQualityOfIsolates(int index){
 
 		return this.meanSequenceQuality[index];
 	}
