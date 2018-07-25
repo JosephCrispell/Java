@@ -17,8 +17,8 @@ public class SmithWaterman {
 	
 	public static void main(String[] args) throws IOException{
 		
-		char[] a = "I wonder how well you can align these two sentences?".toCharArray();
-		char[] b = "I don't think you'll be able to align them very well at all".toCharArray();
+		char[] a = "ACTGCTCG".toCharArray();
+		char[] b = "ACTGCCTCT".toCharArray();
 		
 		int match = 2;
 		int misMatch = -1;

@@ -26,13 +26,32 @@ public class ArrayListMethods {
 	}
 	
 	public static String toString(ArrayList<String> array, String sep){
-		String string = array.get(0);
+		StringBuffer string = new StringBuffer(array.get(0));
 		
 		for(int i = 1; i < array.size(); i++){
-			string = string + sep + array.get(i);
+			string.append(sep);
+			string.append(array.get(i));
 		}
 		
-		return string;
+		return string.toString();
+	}
+	public static String toStringStr(ArrayList<String> array){
+		StringBuffer string = new StringBuffer(array.get(0));
+		
+		for(int i = 1; i < array.size(); i++){
+			string.append(array.get(i));
+		}
+		
+		return string.toString();
+	}
+	public static String toStringChar(ArrayList<Character> array){
+		StringBuffer string = new StringBuffer(array.get(0));
+		
+		for(int i = 1; i < array.size(); i++){
+			string.append(array.get(i));
+		}
+		
+		return string.toString();
 	}
 
 	public static int find(ArrayList<Character> array, char value){
@@ -91,7 +110,7 @@ public class ArrayListMethods {
 		return result;
 	}
 	
-	public static ArrayList<String> copy(ArrayList<String> array){
+	public static ArrayList<String> copyString(ArrayList<String> array){
 		
 		ArrayList<String> copy = new ArrayList<String>();
 		for(String value : array){
@@ -100,9 +119,27 @@ public class ArrayListMethods {
 		
 		return copy;
 	}
+	public static ArrayList<Character> copyChar(ArrayList<Character> array){
+		
+		ArrayList<Character> copy = new ArrayList<Character>();
+		for(char value : array){
+			copy.add(value);
+		}
+		
+		return copy;
+	}
+	public static ArrayList<Double> copyDouble(ArrayList<Double> array){
+		
+		ArrayList<Double> copy = new ArrayList<Double>();
+		for(double value : array){
+			copy.add(value);
+		}
+		
+		return copy;
+	}
 	
 	public static ArrayList<String> getUncommon(ArrayList<String> a, ArrayList<String> b){
-		ArrayList<String> output = copy(a);
+		ArrayList<String> output = copyString(a);
 		remove(output, b);
 		
 		return output;
