@@ -11,25 +11,37 @@ import java.util.Hashtable;
 
 import methods.ArrayListMethods;
 import methods.ArrayMethods;
-import phylogeneticTree.Node;
-import phylogeneticTree.NodeInfo;
 
 public class Tree {
 
-	ArrayList<Node> tips;
-	ArrayList<Node> internalNodes;
+	public ArrayList<Node> tips = new ArrayList<Node>();
+	public ArrayList<Node> internalNodes = new ArrayList<Node>();
 	
 	public Tree(String fileName) throws IOException {
 		
 		// Get newick string
-		StringBuffer newickTree = readNewickFile(fileName);
+		ArrayList<Character> newickTree = readNewickFile(fileName);
 		
 		// Store as traversable nodes
 		readNewickNode(newickTree, null);
 	}
 	
 	// Class specific methods
-	private StringBuffer readNewickFile(String fileName) throws IOException{
+	private int findNodeInfoStart(ArrayList<Character> array){
+		
+		int index = -1;
+		for(int i = 0; i < array.size(); i++) {
+
+			if(array.get(i) == ':' || array.get(i) == '[') {
+				index = i;
+				break;
+			}
+		}
+		
+		return index;
+	}
+
+	private ArrayList<Character> readNewickFile(String fileName) throws IOException{
 		
 		// Open the animals table file
 		InputStream input = new FileInputStream(fileName);
@@ -49,10 +61,13 @@ public class Tree {
 		input.close();
 		reader.close();
 		
-		return tree;
+		// Convert the newickNode to a character array
+		ArrayList<Character> treeAsCharacters = ArrayListMethods.toArrayList(tree.toString().toCharArray());
+		
+		return treeAsCharacters;
 	}
 
-	private ArrayList<ArrayList<Character>> findNewickSubNodes(ArrayList<Character> newickNode){
+	private ArrayList<ArrayList<Character>> findNewickSubNodes(ArrayList<Character> newickNode, Node node){
 		
 		// Initialise a variable to store each character
 		char current;
@@ -84,7 +99,10 @@ public class Tree {
 				if(openBracket == 0){
 					
 					// Store the latest Newick Node
-					newickNodes.add(new ArrayList<Character>(newickNode.subList(nodeStartIndex, i)));
+					newickNodes.add(ArrayListMethods.subsetChar(newickNode, nodeStartIndex, i));
+					
+					// Extract the node information from the input node (found after all the subNodes)
+					extractNodeInformation(newickNode, node, i);
 					
 					// Finish
 					break;
@@ -95,7 +113,7 @@ public class Tree {
 			}else if(current == ',' && openBracket == 1){
 				
 				// Store the newick sub node
-				newickNodes.add(new ArrayList<Character>(newickNode.subList(nodeStartIndex, i)));
+				newickNodes.add(ArrayListMethods.subsetChar(newickNode, nodeStartIndex, i));
 				
 				// Move the nodeStartIndex on
 				nodeStartIndex = i + 1;
@@ -119,13 +137,13 @@ public class Tree {
 		return parts[parts.length - 1];
 	}
 	
-	private NodeInfo extractNodeInformation(String newickNode, boolean internal){
+	private void extractNodeInformation(ArrayList<Character> newickNode, Node node, int lastBracketIndex){
 		/**
 		 * Newick Node Information is stored in a variable format:
 		 *  	Terminal Node: 
 		 *  		NodeID[&NodeInfo]:[&BranchInfo]BranchLength
 		 *  	Internal Node:
-		 *  		(SubkNodes)[&NodeInfo]:[&BranchInfo]BranchLength
+		 *  		(SubNodes)[&NodeInfo]:[&BranchInfo]BranchLength
 		 *  	
 		 *  
 		 *  It is only necessary for the NodeID and BranchLength to be present the rest is optional
@@ -136,36 +154,32 @@ public class Tree {
 		 *  Variable information can have multiple values, in addition the values could be strings e.g. species="BOVINE", species.set={"BOVINE", "POSSUM"}
 		 */
 		
-		// If this is an internal node - need to remove the subNode Info
-		if(internal){
-			newickNode = removeSubNodeInfo(newickNode);
+		// If this is a terminal node, no last bracket index will be available - need to identify when info begins
+		if(lastBracketIndex == -1){
+			lastBracketIndex = findNodeInfoStart(newickNode);
 		}
 		
-		// Convert the Newick Node into a character array
-		char[] chars = newickNode.toCharArray();
-		char current = 'Z';
+		// Subset the characters associated with the node information
+		ArrayList<Character> nodeInfoCharacters = ArrayListMethods.subsetChar(newickNode, lastBracketIndex + 1, newickNode.size() - 1);
 		
 		// Initialise variables to store the Information for the current Newick Node
-		String nodeId = "NA";
-		double branchLength = -99;
-		Hashtable<String, double[]> nodeInfo = new Hashtable();
-		Hashtable<String, double[]> branchInfo = new Hashtable();
+		Hashtable<String, ArrayList<Double>> nodeInfo = new Hashtable();
+		Hashtable<String, ArrayList<Double>> branchInfo = new Hashtable();
 		
 		// Initialise the kays and values for Hashtable
 		String variableName = ""; 
-		double[] values = new double[10000]; // Note by default large size - use subset to select used positions
-		int posUsed = -1;
+		ArrayList<Double> values = new ArrayList<Double>();
 		int multipleStrings = 0;
 		
 		// Initialise Variables to trace progress
 		int openCurlyBracket = 0;
-		int readingNodeInfo = 0;
-		int readingBranchInfo = 0;
+		boolean readingNodeInfo = false;
+		boolean readingBranchInfo = false;
 		int variableStartIndex = -99;
 		int branchLengthPresent = 0;
 		
 		// Start examining each character of the Newick Node String
-		for(int i = 0; i < chars.length; i++){
+		for(int i = 0; i < nodeInfoCharacters.size(); i++){
 			
 			// Note current Character
 			current = chars[i];
@@ -361,7 +375,7 @@ public class Tree {
 		return new NodeInfo(nodeId, nodeInfo, branchInfo, branchLength);
 	}
 	
-	private Node readNewickNode(StringBuffer newickNode, Node parentNode){
+	private Node readNewickNode(ArrayList<Character> newickNode, Node parentNode){
 		
 		/**
 		 * This method is to read a Newick Node. This node is an internal node with associated sub nodes that can be either internal
@@ -369,14 +383,17 @@ public class Tree {
 		 * node all subnodes are explored and their information stored as a tree of nodes within Java.
 		 */
 		
-		// Convert the newickNode to a character array
-		ArrayList<Character> newickNodeAsCharacters = ArrayListMethods.toArrayList(newickNode.toString().toCharArray());
+		// Initialise the current node as an internal node
+		this.internalNodes.add(new Node(this.internalNodes.size() - 1, true));
 		
 		// Find the Sub Nodes for the Current Node
-		ArrayList<ArrayList<Character>> newickSubNodes = findNewickSubNodes(newickNodeAsCharacters);
+		ArrayList<ArrayList<Character>> newickSubNodes = findNewickSubNodes(newickNode, 
+				this.internalNodes.get(this.internalNodes.size() - 1));
+		
 		String current = "";
 		
-		// Initialise array to store the Sub Nodes for the current Node
+		// Initialise the indices for each sub node
+		int[] subNodeIndices = ArrayMethods.range(this.)
 		Node[] subNodes = new Node[newickSubNodes.length];
 		int posUsed = -1;
 		

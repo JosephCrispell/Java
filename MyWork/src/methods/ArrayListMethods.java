@@ -35,6 +35,19 @@ public class ArrayListMethods {
 		return string;
 	}
 
+	public static int find(ArrayList<Character> array, char value){
+		
+		int index = -1;
+		for(int i = 0; i < array.size(); i++) {
+
+			if(array.get(i) == value) {
+				index = i;
+				break;
+			}
+		}
+		
+		return index;
+	}
 	
 	public static ArrayList<String> intersect(ArrayList<String> a, ArrayList<String> b){
 		
@@ -120,14 +133,12 @@ public class ArrayListMethods {
 		return arrayList;
 	}
 	
-	public static ArrayList<String> subset(ArrayList<String> array, int start, int end){
-		ArrayList<String> part = new ArrayList<String>();
-
-		for(int index = start; index <= end; index++){
-			
-			part.add(array.get(index));
-		}
+	public static ArrayList<Character> subsetChar(ArrayList<Character> array, int start, int end){
 		
-		return part;
+		return new ArrayList<Character>(array.subList(start, end));
+	}
+	public static ArrayList<String> subsetString(ArrayList<String> array, int start, int end){
+		
+		return new ArrayList<String>(array.subList(start, end));
 	}
 }
