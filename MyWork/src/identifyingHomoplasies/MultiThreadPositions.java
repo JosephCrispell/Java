@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Hashtable;
 
 import geneticDistances.Sequence;
-import methods.ArrayMethods;
 import methods.HashtableMethods;
 
 public class MultiThreadPositions extends Thread{

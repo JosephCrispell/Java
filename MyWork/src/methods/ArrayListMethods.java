@@ -7,26 +7,19 @@ public class ArrayListMethods {
 
 	public static void main(String[] args){
 		
-		ArrayList<String> a = new ArrayList<String>();
-		a.add("1:A");
-		a.add("1:C");
-		a.add("2:T");
-		a.add("2:G");
-		a.add("3:A");
-		a.add("3:C");
+		ArrayList<Character> a = new ArrayList<Character>();
+		a.add('A');
+		a.add('1');
+		a.add('2');
+		a.add('4');
+		a.add('R');
+		a.add('G');
 		
-		ArrayList<String> b = new ArrayList<String>();
-		b.add("1:A");
-		b.add("1:C");
-		b.add("2:T");
-		b.add("2:G");
-		b.add("3:A");
-		
-		System.out.println(toString(intersect(a, b), ", "));
+		System.out.println(toStringChar(subsetChar(a, 0, 1)));
 	}
 	
 	public static String toString(ArrayList<String> array, String sep){
-		StringBuffer string = new StringBuffer(array.get(0));
+		StringBuilder string = new StringBuilder(array.get(0));
 		
 		for(int i = 1; i < array.size(); i++){
 			string.append(sep);
@@ -45,15 +38,22 @@ public class ArrayListMethods {
 		return string.toString();
 	}
 	public static String toStringChar(ArrayList<Character> array){
-		StringBuffer string = new StringBuffer(array.get(0));
-		
-		for(int i = 1; i < array.size(); i++){
+		StringBuilder string = new StringBuilder(array.size());
+		for(int i = 0; i < array.size(); i++){
 			string.append(array.get(i));
 		}
 		
 		return string.toString();
 	}
-
+	public static String toStringDouble(ArrayList<Double> array, String sep){
+		StringBuilder string = new StringBuilder(array.size());
+		for(int i = 0; i < array.size(); i++){
+			string.append(array.get(i));
+		}
+		
+		return string.toString();
+	}
+	
 	public static int find(ArrayList<Character> array, char value){
 		
 		int index = -1;

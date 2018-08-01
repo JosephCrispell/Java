@@ -7,11 +7,13 @@ public class Sequence {
 	public String name;
 	public char[] sequence;
 	public char species;
+	public int length;
 	
 	public Sequence(String sequenceName, char[] nucleotides){
 		
 		this.name = sequenceName;
-		this.sequence = nucleotides;		
+		this.sequence = nucleotides;
+		this.length = nucleotides.length;
 	}
 	
 	// Setting methods
@@ -35,8 +37,27 @@ public class Sequence {
 	public char getSpecies(){
 		return this.species;
 	}
+	public char getNucleotide(int position) {
+		return this.sequence[position];
+	}
+	public int getLength() {
+		return this.length;
+	}
 	
 	// General methods
+	public static String[] getNames(Sequence[] sequences) {
+		
+		// Initialise an array to store each sequence's name
+		String[] names = new String[sequences.length];
+		
+		// Examine each sequence and store its name
+		for(int i = 0; i < sequences.length; i++) {
+			names[i] = sequences[i].getName();
+		}
+		
+		return(names);
+	}
+	
 	public static void append(Sequence[] sequences, int pos, Sequence sequence){
 		
 		if(pos < sequences.length){

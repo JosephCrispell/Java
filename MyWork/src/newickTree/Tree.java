@@ -6,15 +6,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Hashtable;
 
 import methods.ArrayListMethods;
-import methods.ArrayMethods;
 
 public class Tree {
 
-	public ArrayList<Node> tips = new ArrayList<Node>();
+	public ArrayList<Node> terminalNodes = new ArrayList<Node>();
 	public ArrayList<Node> internalNodes = new ArrayList<Node>();
 	
 	public Tree(String fileName) throws IOException {
@@ -24,6 +22,23 @@ public class Tree {
 		
 		// Store as traversable nodes
 		readNewickNode(newickTree, null);
+	}
+	
+	// Getting methods
+	public ArrayList<Node> getTerminalNodes(){
+		return this.terminalNodes;
+	}
+	public ArrayList<Node> getInternalNodes(){
+		return this.internalNodes;
+	}
+	public int getNInternalNodes() {
+		return this.internalNodes.size();
+	}
+	
+	// General methods
+	public void print() {
+
+		System.out.println(internalNodes.get(0).toNewickString(this.terminalNodes, this.internalNodes) + ";");
 	}
 	
 	// Class specific methods
@@ -53,7 +68,7 @@ public class Tree {
 											
 		// Initialise a variable to store the newick string
 		String line = null;
-		StringBuffer tree = new StringBuffer();
+		StringBuilder tree = new StringBuilder();
 												
 		// Begin reading the file
 		while(( line = reader.readLine()) != null){
@@ -127,20 +142,6 @@ public class Tree {
 		return newickNodes;
 	}
 
-	private String removeSubNodeInfo(String newickNode){
-		
-		/**
-		 * Internal Node:
-		 * 		(subNodes)[&NodeInfo]:[&BranchInfo]BranchLength
-		 * 
-		 * This method removes the (subNodes) part
-		 */
-		String[] parts = newickNode.split("\\)");
-		
-		// Return the last part - this will be at the correct level
-		return parts[parts.length - 1];
-	}
-	
 	private void extractNodeInformation(ArrayList<Character> newickNode, Node node, int lastBracketIndex, boolean internal){
 		/**
 		 * Newick Node Information is stored in a variable format:
@@ -160,15 +161,15 @@ public class Tree {
 		
 		// If this is a terminal node, no last bracket index will be available - need to identify when info begins
 		if(internal == false){
-			lastBracketIndex = findNodeInfoStart(newickNode);
+			lastBracketIndex = findNodeInfoStart(newickNode) - 1;
 		}
 		
 		// Subset the characters associated with the node information
-		ArrayList<Character> infoCharacters = ArrayListMethods.subsetChar(newickNode, lastBracketIndex + 1, newickNode.size() - 1);
+		ArrayList<Character> infoCharacters = ArrayListMethods.subsetChar(newickNode, lastBracketIndex + 1, newickNode.size());
 		
 		// Initialise variables to store the Information for the current Newick Node
-		Hashtable<String, ArrayList<Double>> nodeInfo = new Hashtable();
-		Hashtable<String, ArrayList<Double>> branchInfo = new Hashtable();
+		Hashtable<String, ArrayList<Double>> nodeInfo = new Hashtable<String, ArrayList<Double>>();
+		Hashtable<String, ArrayList<Double>> branchInfo = new Hashtable<String, ArrayList<Double>>();
 		
 		// Initialise the kays and values for Hashtable
 		String variableName = ""; 
@@ -348,7 +349,7 @@ public class Tree {
 					
 				// Get the Node ID
 				if(internal == false){
-					node.setName(getSubsetAsString(infoCharacters, 0, i));
+					node.setName(getSubsetAsString(newickNode, 0, lastBracketIndex + 1));
 				}
 				
 				// For Branch length increase index by 1
@@ -370,7 +371,7 @@ public class Tree {
 		node.setBranchInfo(nodeInfo);
 	}
 	
-	private Node readNewickNode(ArrayList<Character> newickNode, Node parentNode){
+	private void readNewickNode(ArrayList<Character> newickNode, Node parentNode){
 		
 		/**
 		 * This method is to read a Newick Node. This node is an internal node with associated sub nodes that can be either internal
@@ -379,51 +380,44 @@ public class Tree {
 		 */
 		
 		// Initialise the current node as an internal node
-		this.internalNodes.add(new Node(this.internalNodes.size() - 1, true));
+		Node node = new Node(this.internalNodes.size(), true);
+		this.internalNodes.add(node);
+		
+		// Set the parent node index of the current node if it exists
+		if(parentNode != null) {
+			node.setParentIndex(parentNode.getIndex());
+		}
 		
 		// Find the Sub Nodes for the Current Node
-		ArrayList<ArrayList<Character>> newickSubNodes = findNewickSubNodes(newickNode, 
-				this.internalNodes.get(this.internalNodes.size() - 1));
-		
-		String current = "";
-		
-		// Initialise the indices for each sub node
-		int[] subNodeIndices = ArrayMethods.range(this.)
-		Node[] subNodes = new Node[newickSubNodes.length];
-		int posUsed = -1;
-		
-		// Create the Current Node
-		NodeInfo nodeInfo = extractNodeInformation(newickNodeAsCharacters, true);
-		Node node = new Node(nodeInfo, subNodes, parentNode);
-				
-		// Initialise variable to store the information associated with any terminal sub nodes
-		NodeInfo terminalNodeInfo;
+		ArrayList<ArrayList<Character>> newickSubNodes = findNewickSubNodes(newickNode, node);
+		ArrayList<Character> currentNewickSubNode;
 		
 		// Examine each of the SubNodes
-		for(int i = 0; i < newickSubNodes.length; i++){
-			current = newickSubNodes[i];
+		for(int i = 0; i < newickSubNodes.size(); i++){
+			currentNewickSubNode = newickSubNodes.get(i);
 			
 			// Is the Current newick Sub node an Internal or Terminal Node?
-			if(current.matches("\\((.*)")){ // I.e. does it start with a bracket "("? - If it does then it is an internal node
+			if(currentNewickSubNode.get(0) == '('){ // I.e. does it start with a bracket "("? - If it does then it is an internal node
+				
+				// Assign the current sub node to its parent
+				node.addSubNodeReference(this.internalNodes.size(), true);
 				
 				// Create and Store this Internal Node
-				posUsed++;
-				subNodes[posUsed] = readNewickNode(current, node);
+				readNewickNode(currentNewickSubNode, node);				
 				
 			}else{
 				
 				// Create and Store this Terminal Node
-				terminalNodeInfo = extractNodeInformation(current, 0);
-				posUsed++;
-				subNodes[posUsed] = new Node(terminalNodeInfo, new Node[0], node);
+				Node terminalNode = new Node(this.terminalNodes.size(), false);
+				this.terminalNodes.add(terminalNode);
+				
+				// Get the terminal node information
+				extractNodeInformation(currentNewickSubNode, terminalNode, -1, false);
+				
+				// Assign the current sub node to its parent
+				node.addSubNodeReference(this.terminalNodes.size() - 1, false);
 			}
 		}
-		
-		// Update the SubNode Information
-		node.setSubNodes(subNodes);
-		
-		// Return the constructed tree Node
-		return node;		
 	}
 
 }

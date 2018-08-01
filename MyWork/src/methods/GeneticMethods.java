@@ -171,12 +171,11 @@ public class GeneticMethods {
     	
     	// Initialise Variables to Store the Sequence Information
     	String isolateName = "";
-    	String sequence = "";
+    	StringBuilder sequence = new StringBuilder();
     	Sequence[] sequences = new Sequence[999];
     	int pos = -1;
     	
     	int noSamples = -1;
-    	int noNucleotides = -1;
     	
     	// Begin Reading the Fasta File
     	String line = null;
@@ -188,7 +187,6 @@ public class GeneticMethods {
     			parts = line.split(" ");
     			
     			noSamples = Integer.parseInt(parts[0]);
-    			noNucleotides = Integer.parseInt(parts[1]);
     			
     			sequences = new Sequence[noSamples];
     		
@@ -199,24 +197,24 @@ public class GeneticMethods {
     			if(isolateName != ""){
     				
     				pos++;
-    				Sequence.append(sequences, pos, new Sequence(isolateName, sequence.toCharArray()));
+    				Sequence.append(sequences, pos, new Sequence(isolateName, sequence.toString().toCharArray()));
     			}
     			
     			// Get the current isolates Information
     			isolateName = line.substring(1);
-    			sequence = "";
+    			sequence = new StringBuilder();
     		
     		// Store the isolates sequence
     		}else{
     			
-    			sequence = sequence + "" + line;
+    			sequence.append(line);
        		}  		
     	}
 		reader.close();
 		
 		// Store the last isolate
 		pos++;
-		Sequence.append(sequences, pos, new Sequence(isolateName, sequence.toCharArray()));
+		Sequence.append(sequences, pos, new Sequence(isolateName, sequence.toString().toCharArray()));
 		
 		if(noSamples == -1){
 			sequences = Sequence.subset(sequences, 0, pos);

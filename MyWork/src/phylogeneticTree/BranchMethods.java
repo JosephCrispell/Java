@@ -127,7 +127,6 @@ public class BranchMethods {
 		}
 	}
 	
-	
 	public static double findMidPointInTime(double a, double b){
 		
 		double diff = Math.abs(a - b);
