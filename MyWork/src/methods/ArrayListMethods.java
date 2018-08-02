@@ -18,12 +18,32 @@ public class ArrayListMethods {
 		System.out.println(toStringChar(subsetChar(a, 0, 1)));
 	}
 	
+	public static Hashtable<Integer, Integer> indexArrayListInteger(ArrayList<Integer> array){
+		
+		Hashtable<Integer, Integer> indexed = new Hashtable<Integer, Integer>();
+		for(int i = 0; i < array.size(); i++) {
+			indexed.put(array.get(i), i);
+		}
+		
+		return indexed;
+	}
+	
 	public static String toString(ArrayList<String> array, String sep){
 		StringBuilder string = new StringBuilder(array.get(0));
 		
 		for(int i = 1; i < array.size(); i++){
 			string.append(sep);
 			string.append(array.get(i));
+		}
+		
+		return string.toString();
+	}
+	public static String toStringInt(ArrayList<Integer> array, String sep){
+		StringBuilder string = new StringBuilder(array.size());
+		string.append(array.get(0));
+		for(int i = 1; i < array.size(); i++){
+			string.append(sep);
+			string.append(array.get(i));			
 		}
 		
 		return string.toString();
@@ -47,7 +67,9 @@ public class ArrayListMethods {
 	}
 	public static String toStringDouble(ArrayList<Double> array, String sep){
 		StringBuilder string = new StringBuilder(array.size());
-		for(int i = 0; i < array.size(); i++){
+		string.append(array.get(0));
+		for(int i = 1; i < array.size(); i++){
+			string.append(sep);
 			string.append(array.get(i));
 		}
 		

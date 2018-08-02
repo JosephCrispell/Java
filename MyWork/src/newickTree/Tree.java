@@ -1,6 +1,7 @@
 package newickTree;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -9,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Hashtable;
 
 import methods.ArrayListMethods;
+import methods.WriteToFile;
 
 public class Tree {
 
@@ -36,9 +38,21 @@ public class Tree {
 	}
 	
 	// General methods
-	public void print() {
+	public void print(String fileName) throws IOException {
 
-		System.out.println(internalNodes.get(0).toNewickString(this.terminalNodes, this.internalNodes) + ";");
+		if(fileName == null) {
+			System.out.println(internalNodes.get(0).toNewickString(this.terminalNodes, this.internalNodes) + ";");
+		}else {
+			
+			// Open the file
+			BufferedWriter bWriter = WriteToFile.openFile(fileName, false);
+			
+			// Print the tree to file
+			WriteToFile.writeLn(bWriter, internalNodes.get(0).toNewickString(this.terminalNodes, this.internalNodes) + ";");
+			
+			// Close the file
+			WriteToFile.close(bWriter);
+		}		
 	}
 	
 	// Class specific methods
@@ -368,7 +382,7 @@ public class Tree {
 		
 		// Store the node and branch information found
 		node.setNodeInfo(nodeInfo);
-		node.setBranchInfo(nodeInfo);
+		node.setBranchInfo(branchInfo);
 	}
 	
 	private void readNewickNode(ArrayList<Character> newickNode, Node parentNode){

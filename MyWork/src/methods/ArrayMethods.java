@@ -81,6 +81,23 @@ public class ArrayMethods {
 		
 		return output;
 	}
+	public static char[] deletePositions(char[] array, Hashtable<Integer, Integer> positionsToIgnore){
+		
+		// Initialise a new array to store the sequence
+		char[] output = new char[array.length - positionsToIgnore.size()];
+		int pos = -1;
+		for(int i = 0; i < array.length; i++){
+			
+			if(positionsToIgnore.containsKey(pos) == true){
+				continue;
+			}
+			
+			pos++;
+			output[pos] = array[i];
+		}
+		
+		return output;
+	}
 	
 	public static boolean compare(String[] a, String[] b){
 		

@@ -8,7 +8,7 @@ import methods.HashtableMethods;
 
 public class Node {
 
-	public String name; // Only available for the tips
+	public String name; // Only available for the tips (unless added, consistency index labels inconsistent positions at some internal nodes)
 	public int index;
 	public boolean internal;
 	
@@ -175,6 +175,11 @@ public class Node {
 							
 				// Convert this current sub-node to a string and add it to the output
 				output += internalNodes.get(index).toNewickString(terminalNodes, internalNodes);
+				
+				// Add node name if provided
+				if(internalNodes.get(index).getName() != null) {
+					output += internalNodes.get(index).getName();
+				}
 				
 				// Add node information if available
 				if(this.nodeInfo.size() != 0) {
