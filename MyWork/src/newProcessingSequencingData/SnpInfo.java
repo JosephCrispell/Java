@@ -208,7 +208,8 @@ public class SnpInfo {
 		// Run heterozygosity check - Check if high quality bases supporting both the reference
 		// and alternate alleles on both the forward and reverse reads
 		double[] highQualityBaseCounts = info.get("DP4");
-		if(highQualityBaseCounts[0] > 0 &&
+		if(highQualityBaseCounts != null &&
+		   highQualityBaseCounts[0] > 0 &&
 		   highQualityBaseCounts[1] > 0 && 
 		   highQualityBaseCounts[2] > 0 &&
 		   highQualityBaseCounts[3] > 0){

@@ -54,6 +54,9 @@ public class Tree {
 			WriteToFile.close(bWriter);
 		}		
 	}
+	public String toString() {
+		return internalNodes.get(0).toNewickString(this.terminalNodes, this.internalNodes) + ";";
+	}
 	
 	// Class specific methods
 	private String getSubsetAsString(ArrayList<Character> array, int start, int end) {

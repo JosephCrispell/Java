@@ -61,11 +61,11 @@ public class MergeVcfFiles {
 			System.out.println("Beginning to merge VCF files. May take several minutes!");
 			
 			// Get the path to the directory
-//			String path = "/home/josephcrispell/Desktop/Research/RepublicOfIreland/Fastqs_MAP/Testing/vcfFiles/";
+//			String path = "/home/josephcrispell/Desktop/Research/Cumbria/vcfFiles/";
 			String path = args[0];
 			
 			// Open the genome annotation file
-//			String annotationFile = "/home/josephcrispell/Desktop/Research/Reference_MAP/GCF_000007865.1_ASM786v1_genomic.gff";
+//			String annotationFile = "/home/josephcrispell/Desktop/Research/Reference/TransferAnnotations_23-05-18/UpdatedMaloneAnnotations_FINAL_25-05-18.gff";
 			String annotationFile = args[1];
 			
 			// Note the regions of the genome that we want to ignore
@@ -86,13 +86,9 @@ public class MergeVcfFiles {
 			 *  	Variant sites are sites where at least one of the isolates shows variation		 *  
 			 */
 		
-//			String mergedVCFsFile = "/home/josephcrispell/Desktop/Research/RepublicOfIreland/Fastqs_MAP/Testing/vcfFiles/mergedVCFs_16-07-18.txt";
-			String mergedVCFsFile = "merged_" + date + ".txt";
-			
-//			String coverageFile = "/home/josephcrispell/Desktop/Research/RepublicOfIreland/Fastqs_MAP/Testing/vcfFiles/coverageVCFs_16-07-18.txt";
-//			String constantSiteCounts = "/home/josephcrispell/Desktop/Research/RepublicOfIreland/Fastqs_MAP/Testing/vcfFiles/constantSiteCounts_16-07-18.txt";
-			String coverageFile = "genomeCoverage_" + date + ".txt";
-			String constantSiteCounts = "constantSiteCounts_" + date + ".txt";
+			String mergedVCFsFile = path + "/merged_" + date + ".txt";
+			String coverageFile = path + "/genomeCoverage_" + date + ".txt";
+			String constantSiteCounts = path + "/constantSiteCounts_" + date + ".txt";
 			boolean skipIndels = true;
 			combineVCFFiles(vcfFiles, mergedVCFsFile, regionsToIgnore, coverageFile, constantSiteCounts, skipIndels);
 			

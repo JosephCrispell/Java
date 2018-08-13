@@ -7,18 +7,16 @@ import javax.swing.JFrame;
 import geneticDistances.Sequence;
 import methods.CalendarMethods;
 import methods.GeneticMethods;
-import phylogeneticTree.Node;
+import newickTree.ConsistencyIndex;
+import newickTree.Tree;
 
 import javax.swing.JButton;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Hashtable;
 
 import javax.swing.JFileChooser;
-import javax.swing.SpringLayout;
 import javax.swing.JLabel;
 import javax.swing.JTextArea;
 import javax.swing.JScrollPane;
@@ -40,14 +38,16 @@ public class HomoplasyFinderGUI extends JFrame {
 	public String fastaFile = "None provided";
 	public String reportFile = "homoplasyReport_" + date + ".txt";
 	public String outputFastaFile = "sequences_withoutHomoplasies_" + date + ".fasta";
+	public String outputTreeFile = "annotatedNewickTree_" + date + ".tree";
 	
 	// Create matching labels that will record to the user the tree and FASTA file selected
-	public JLabel lblTreeFileSelected;
-	public JLabel lblFastaFileSelected;
-	public JLabel lblReportFileSelected;
-	public JLabel lblOutputFastaFileSelected;
+	public JLabel labelTreeFileSelected;
+	public JLabel labelFastaFileSelected;
+	public JLabel labelReportFileSelected;
+	public JLabel labelOutputFastaFileSelected;
+	public JLabel labelOutputTreeFileSelected;
 	
-	// Set the directory that the file browsers will opne into - starts with home but will be updated to the previous directory opened
+	// Set the directory that the file browsers will open into - starts with home but will be updated to the previous directory opened
 	public File directory = new File(System.getProperty("user.home"));
 	
 	// Console
@@ -77,18 +77,18 @@ public class HomoplasyFinderGUI extends JFrame {
 		// Set the characteristics of the frame
 		setResizable(false);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 589, 496);
-		setTitle("HomoplasyFinder v. 1.0");
+		setBounds(100, 100, 645, 496);
+		setTitle("HomoplasyFinder");
 		getContentPane().setLayout(null);
 		
 		// Create a label for the tree file - located beside button and will update once tree file found
-		this.lblTreeFileSelected = new JLabel(this.treeFile);
-		this.lblTreeFileSelected.setBounds(270, 14, 303, 14);
-		getContentPane().add(this.lblTreeFileSelected);
+		this.labelTreeFileSelected = new JLabel(this.treeFile);
+		this.labelTreeFileSelected.setBounds(300, 14, 326, 14);
+		getContentPane().add(this.labelTreeFileSelected);
 		
 		// Create browse button for tree file
 		JButton buttonTreeFile = new JButton("Find tree file");
-		buttonTreeFile.setBounds(10, 10, 236, 23);
+		buttonTreeFile.setBounds(10, 10, 272, 23);
 		buttonTreeFile.setToolTipText("Select Newick formatted phylogenetic tree file");
 		
 		// Add mouse listener that will open file chooser when tree file button clicked
@@ -97,19 +97,19 @@ public class HomoplasyFinderGUI extends JFrame {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				
-				treeFile = findFile(lblTreeFileSelected, "open");
+				treeFile = findFile(labelTreeFileSelected, "open");
 			}
 		});
 		getContentPane().add(buttonTreeFile);
 		
 		// Create a label for the FASTA file - located beside button and will update once FASTA file found
-		this.lblFastaFileSelected = new JLabel(this.fastaFile);
-		this.lblFastaFileSelected.setBounds(270, 43, 303, 14);
-		getContentPane().add(this.lblFastaFileSelected);
+		this.labelFastaFileSelected = new JLabel(this.fastaFile);
+		this.labelFastaFileSelected.setBounds(300, 43, 326, 14);
+		getContentPane().add(this.labelFastaFileSelected);
 		
 		// Create browse button for FASTA file
 		JButton buttonFastaFile = new JButton("Find FASTA file");
-		buttonFastaFile.setBounds(10, 39, 236, 23);
+		buttonFastaFile.setBounds(10, 39, 272, 23);
 		buttonFastaFile.setToolTipText("Select FASTA formatted file containing nucleotide alignment");
 		
 		// Add mouse listener that will open file chooser when FASTA file button clicked
@@ -118,19 +118,19 @@ public class HomoplasyFinderGUI extends JFrame {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				
-				fastaFile = findFile(lblFastaFileSelected, "open");
+				fastaFile = findFile(labelFastaFileSelected, "open");
 			}
 		});
 		getContentPane().add(buttonFastaFile);
 		
 		// Create a label for the Report file - located beside button and will update if file changed
-		this.lblReportFileSelected = new JLabel(this.reportFile);
-		this.lblReportFileSelected.setBounds(270, 72, 303, 14);
-		getContentPane().add(this.lblReportFileSelected);
+		this.labelReportFileSelected = new JLabel(this.reportFile);
+		this.labelReportFileSelected.setBounds(300, 72, 326, 14);
+		getContentPane().add(this.labelReportFileSelected);
 		
 		// Create browse button for Report file
 		JButton buttonReportFile = new JButton("Change report file");
-		buttonReportFile.setBounds(10, 68, 236, 23);
+		buttonReportFile.setBounds(10, 68, 272, 23);
 		buttonReportFile.setToolTipText("Select file to save homoplasyFinder report to");
 		
 		// Add mouse listener that will open file chooser when report file button clicked
@@ -139,22 +139,64 @@ public class HomoplasyFinderGUI extends JFrame {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				
-				reportFile = findFile(lblReportFileSelected, "save");
+				reportFile = findFile(labelReportFileSelected, "save");
 			}
 		});
 		getContentPane().add(buttonReportFile);
+		
+		// Create a label indicating the chosen output fasta file
+		this.labelOutputFastaFileSelected = new JLabel(this.outputFastaFile);
+		this.labelOutputFastaFileSelected.setBounds(300, 101, 326, 14);
+		getContentPane().add(this.labelOutputFastaFileSelected);
+		
+		// Create a label to choose the output FASTA file
+		JButton buttonOutputFastaFile = new JButton("Change output sequences file");
+		buttonOutputFastaFile.setBounds(10, 97, 272, 23);
+		buttonOutputFastaFile.setToolTipText("Select the file to print the FASTA formatted nucleotide sequences without homoplasies into");
+		
+		// Add mouse listener that will open file chooser when report file button clicked
+		buttonOutputFastaFile.addMouseListener(new MouseAdapter() {
+			
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				
+				outputFastaFile = findFile(labelOutputFastaFileSelected, "save");
+			}
+		});
+		getContentPane().add(buttonOutputFastaFile);
+		
+		// Create a label indicating the chosen output fasta file
+		this.labelOutputTreeFileSelected = new JLabel(this.outputTreeFile);
+		this.labelOutputTreeFileSelected.setBounds(300, 130, 326, 14);
+		getContentPane().add(this.labelOutputTreeFileSelected);
+		
+		// Create a label to choose the output FASTA file
+		JButton buttonOutputTreeFile = new JButton("Change output tree file");
+		buttonOutputTreeFile.setBounds(10, 126, 272, 23);
+		buttonOutputTreeFile.setToolTipText("Select the file to print the annotated NEWICK formatted phylogetic tree into");
+		
+		// Add mouse listener that will open file chooser when report file button clicked
+		buttonOutputTreeFile.addMouseListener(new MouseAdapter() {
+			
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				
+				outputFastaFile = findFile(labelOutputTreeFileSelected, "save");
+			}
+		});
+		getContentPane().add(buttonOutputTreeFile);
 		
 		// Add text area to print progress out to
 		this.textArea = new JTextArea();
 		this.textArea.setText(details());
 		this.textArea.setEditable(false);
 		JScrollPane scrollPane = new JScrollPane(this.textArea);
-		scrollPane.setBounds(10, 216, 563, 242);
+		scrollPane.setBounds(10, 216, 625, 242);
 		getContentPane().add(scrollPane);
 		
 		// Add run button to run homoplasyFinder
 		JButton buttonRun = new JButton("Run");
-		buttonRun.setBounds(264, 160, 67, 23);
+		buttonRun.setBounds(249, 164, 67, 23);
 		buttonRun.setToolTipText("Run homoplasyFinder on the selected tree and FASTA file");
 		buttonRun.addMouseListener(new MouseAdapter() {
 			
@@ -165,13 +207,16 @@ public class HomoplasyFinderGUI extends JFrame {
 				// Run homoplasy finder when mouse clicked
 				try {
 					
+					// Check that both a tree file and FASTA file have been provided
 					if(treeFile.matches("None provided") == false && fastaFile.matches("None provided") == false){
 						
 						// Run homoplasyFinder
 						runHomoplasyFinder();
 						
 						// Print information about output files
-						textArea.append("\nCreated report: " + reportFile + "\nCreate FASTA nucleotide alignment file without homoplasies: " + outputFastaFile + "\n");
+						textArea.append("\nCreated report: " + reportFile + 
+								"\nCreated FASTA nucleotide alignment file without homoplasies: " + outputFastaFile + 
+								"\nCreated annotated version of input Newick formatted tree file: " + outputTreeFile + "\n");
 					}else{
 						textArea.setText("Please select tree and FASTA files...");
 					}
@@ -185,27 +230,6 @@ public class HomoplasyFinderGUI extends JFrame {
 		});
 		getContentPane().add(buttonRun);
 		
-		// Create a label indicating the chosen output fasta file
-		this.lblOutputFastaFileSelected = new JLabel(this.outputFastaFile);
-		this.lblOutputFastaFileSelected.setBounds(270, 101, 303, 14);
-		getContentPane().add(this.lblOutputFastaFileSelected);
-		
-		// Create a label to choose the output FASTA file
-		JButton buttonOutputFastaFile = new JButton("Change output sequences file");
-		buttonOutputFastaFile.setBounds(10, 97, 236, 23);
-		buttonOutputFastaFile.setToolTipText("Select the file to print the sequences without homoplasies into");
-		
-		// Add mouse listener that will open file chooser when report file button clicked
-		buttonOutputFastaFile.addMouseListener(new MouseAdapter() {
-			
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				
-				outputFastaFile = findFile(lblOutputFastaFileSelected, "save");
-			}
-		});
-		getContentPane().add(buttonOutputFastaFile);
-		
 	}
 	
 	/**
@@ -218,17 +242,18 @@ public class HomoplasyFinderGUI extends JFrame {
 		String homoplasyFinderDetails = "";
 		
 		homoplasyFinderDetails += "HomoplasyFinder - a tool to identify homoplasies present on a phylogenetic tree\n";
-		homoplasyFinderDetails += "Version: 1.0\n";
+		homoplasyFinderDetails += "Version: 0.0.1\n";
 		homoplasyFinderDetails += "Author: Joseph Crispell\n";
-		homoplasyFinderDetails += "Date created: 24-02-18\n";
+		homoplasyFinderDetails += "Date created: 13-08-18\n";
 		homoplasyFinderDetails += "Licence: GPL 3.0\n\n";
 		
-		homoplasyFinderDetails += "Results table structure:\n";
-		homoplasyFinderDetails += "Position\tAlleles\tIsolatesForAlleles\n";
-		homoplasyFinderDetails += "10\tA,G\tisolateA-isolateB-isolateC,isolateD-isolateE\n\n";
-		homoplasyFinderDetails += "Position: in the FASTA nucleotide alignment\n";
-		homoplasyFinderDetails += "Alleles: nucleotides found at position\n";
-		homoplasyFinderDetails += "IsolatesForAlleles: isolates (\":\" separated) found with each allele separated by a \",\"\n";
+//		homoplasyFinderDetails += "Example report table structure:\n";
+//		homoplasyFinderDetails += "Position\tConsistencyIndex\tCountsACGT\tMinimumNumberChangesOnTree\n";
+//		homoplasyFinderDetails += "10\t0.5\t\t10:2:0:0\t2\n";
+//		homoplasyFinderDetails += "Position: in the FASTA nucleotide alignment\n";
+//		homoplasyFinderDetails += "ConsistencyIndex: the consistency index calculated for position\n";
+//		homoplasyFinderDetails += "CountsACGT: number of isolates with A, C, G, or T (\":\" separated) at the position\n";
+//		homoplasyFinderDetails += "MinimumNumberChangesOnTree: the minimum number of nucleotide changes required at this position to explain the structure of the phylogenetic tree\n";
 		
 		return homoplasyFinderDetails;
 	}
@@ -277,25 +302,25 @@ public class HomoplasyFinderGUI extends JFrame {
 			path += "/";
 		}
 		
-		// Read in tree
-		Node tree = HomoplasyFinder6.readNewickTree(this.treeFile, false);
-		
-		// Read in the FASTA file
+		// Read in the sequences
 		Sequence[] sequences = GeneticMethods.readFastaFile(this.fastaFile, false);
 		
-		// Get the alleles in the population and the isolates they are associated with
-		Hashtable<String, ArrayList<String>> alleles = HomoplasyFinder6.noteAllelesInPopulation(sequences, false);
-		ArrayList<String> positions = HomoplasyFinder5.getAllelePositions(alleles);
+		// Read the NEWICK tree and store as a traversable node set
+		Tree tree = new Tree(this.treeFile);
 		
-		// Assign alleles
-		ArrayList<String> unassigned = HomoplasyFinder6.assignAllelesToNodes(alleles, positions, tree, HomoplasyFinder6.getSequenceIDs(sequences));
+		// Calculate the consistency index of each position in the alignment on the phylogeny
+		ConsistencyIndex consistency = new ConsistencyIndex(tree, sequences, false);
 		
-		// Examine the homoplasies
-		int[] homoplasyPositions = HomoplasyFinder6.examineUnAssignedAlleles(unassigned, alleles, false, path, this.reportFile, this.date, this.textArea);
+		// Create a FASTA file without inconsistent sites
+		consistency.printSequencesWithoutInConsistentSites(this.outputFastaFile);
 		
-		/**
-		 * Return a FASTA file without the homoplasy sites
-		 */
-		HomoplasyFinder6.printFASTAWithoutHomoplasies(homoplasyPositions, path, this.outputFastaFile, this.date, sequences, false);
+		// Create an annotated NEWICK tree file
+		consistency.printAnnotatedTree(this.outputTreeFile);
+		
+		// Create a report file
+		consistency.printSummary(this.reportFile);
+		
+		// Print summary to text area of GUI
+		consistency.printSummary(this.textArea);
 	}
 }
