@@ -54,6 +54,10 @@ public class HomoplasyFinder {
 		consistency.printSummary(path + "consistencyIndexReport_10-08-18.txt");
 	}
 	
+	public static String test(String input) {
+		return "This was input into Java: " + input;
+	}
+	
 	public static void runHomoplasyFinderFromR(String treeFile, String fastaFile, String pathForOutput,
 			boolean verbose) throws IOException {
 		
