@@ -7,7 +7,7 @@ public class HomoplasyFinder {
 	public static void main(String[] args) throws IOException {
 		
 		// Check if help requested
-		if(args[0].equals("-help") || args[0].equals("") || args[0].equals("-h") || args[0].equals("help") || 
+		if(args.length == 0 || args[0].equals("-help") || args[0].equals("") || args[0].equals("-h") || args[0].equals("help") || 
 				args[0].equals("--help")){
 			System.out.println("HomoplasyFinder: a tool to identify homoplasies within a phylogenetic tree and alignment");
 			System.out.println("\nCommand Line Structure:");

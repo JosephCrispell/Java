@@ -204,7 +204,7 @@ public class ConsistencyIndex {
 		
 		int[] output = new int[this.inconsistentPositions.size()];
 		for(int i = 0; i < this.inconsistentPositions.size(); i++) {
-			output[i] = this.inconsistentPositions.get(i);
+			output[i] = this.inconsistentPositions.get(i) + 1;
 		}
 		
 		return output;
