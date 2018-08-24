@@ -16,6 +16,70 @@ public class ArrayMethods {
 	}
 	
 	// Methods
+	public static int estimateNumberOfPeaks(int nSearches, double[] values, int mergeDistance, 
+			double propSearchesFoundInThreshold, Random random) {
+		
+		// Initialise an array to store the indices of the peaks identified
+		ArrayList<Integer> peakIndices = new ArrayList<Integer>();
+		ArrayList<Integer> peakHits = new ArrayList<Integer>();
+		
+		// Run the searches (hill climbing to peaks)
+		for(int i = 0; i < nSearches; i++) {
+			
+			// Pick a random index
+			int index = random.nextInt(values.length);
+			
+			// Initialise a variable to record whether moved
+			boolean moved = true;
+			
+			// Search for local maxima
+			while(moved) {
+				
+				// Get the indices on left and right
+				int left = index - 1;
+				int right = index + 1;
+				
+				// Check if can move left
+				if(left >= 0 && values[left] > values[index]) {
+					index = left;
+				
+				// Check if can move right
+				}else if(right < values.length && values[right] > values[index]) {
+					index = right;
+					
+				// If can't move finish - found peak!
+				}else {
+					moved = false;
+				}
+			}
+			
+			// Store the last index visited - if not too close to any other peak indices
+			int indexOfClosePeak = -1;
+			for(int j = 0; j < peakIndices.size(); j++) {
+				if(Math.abs(peakIndices.get(j) - index) < mergeDistance) {
+					indexOfClosePeak = j;
+					break;
+				}
+			}
+			if(indexOfClosePeak == -1) {
+				peakIndices.add(index);
+				peakHits.add(0);
+			}else {
+				peakHits.set(indexOfClosePeak, peakHits.get(indexOfClosePeak) + 1);
+			}
+		}
+		
+		// Count number peaks that were hit more than propSearchesFoundInThreshold * nSearches
+		int count = 0;
+		for(int hitCount : peakHits) {
+			if(hitCount > propSearchesFoundInThreshold * nSearches) {
+				count++;
+			}
+		}
+		
+		return count;
+	}
+	
 	public static boolean[] initialise(int size, boolean value){
 		boolean[] array = new boolean[size];
 		for(int i = 0; i < array.length; i++){

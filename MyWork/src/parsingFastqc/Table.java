@@ -22,18 +22,21 @@ public class Table {
 		
 		// Initialise the values table
 		this.colTypes = colTypes;
-		this.values = new Value[100][this.colTypes.length];
+		this.values = new Value[10][this.colTypes.length];
 	}
 	
 	// Getting methods
 	public String getName() {
-		return name;
+		return this.name;
+	}
+	public String[] getColTypes() {
+		return this.colTypes;
 	}
 	public String[] getColNames() {
-		return colNames;
+		return this.colNames;
 	}
 	public Value[][] getValues() {
-		return values;
+		return this.values;
 	}
 	public void print() {
 		System.out.println(ArrayMethods.toString(this.colNames, "\t"));
@@ -63,8 +66,43 @@ public class Table {
 			System.out.println();
 		}
 	}
+	public int[] getColumnIntValues(int columnIndex) {
+		int[] columnValues = new int[this.values.length];
+		
+		for(int row = 0; row < this.values.length; row++) {
+			columnValues[row] = this.values[row][columnIndex].getIntValue();
+		}
+		
+		return columnValues;
+	}
+	public String[] getColumnStringValues(int columnIndex) {
+		String[] columnValues = new String[this.values.length];
+		
+		for(int row = 0; row < this.values.length; row++) {
+			columnValues[row] = this.values[row][columnIndex].getStringValue();
+		}
+		
+		return columnValues;
+	}
+	public double[] getColumnDoubleValues(int columnIndex) {
+		double[] columnValues = new double[this.values.length];
+		
+		for(int row = 0; row < this.values.length; row++) {
+			columnValues[row] = this.values[row][columnIndex].getDoubleValue();
+		}
+		
+		return columnValues;
+	}
+	public int[][] getColumnIntArrayValues(int columnIndex) {
+		int[][] columnValues = new int[this.values.length][0];
+		
+		for(int row = 0; row < this.values.length; row++) {
+			columnValues[row] = this.values[row][columnIndex].getIntValues();
+		}
+		
+		return columnValues;
+	}
 	
-	// Methods for building table
 	// Methods for building the table
 	public void finishedWithTable() {
 		
@@ -111,7 +149,7 @@ public class Table {
 		if(this.row == this.values.length) {
 			
 			// Initialise new table
-			Value[][] newTable = new Value[this.values.length + 100][this.colTypes.length];
+			Value[][] newTable = new Value[this.values.length + 10][this.colTypes.length];
 			
 			// Fill the table
 			for(int i = 0; i < this.values.length; i++) {

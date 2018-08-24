@@ -25,7 +25,7 @@ public class Simulation {
 		Parameters parameters = new Parameters();
 
 		// Initialise a poisson distributions
-		PoissonGenerator[] mutationPoissons = Methods.generatePoissonDistributionsAroundMutationRates(parameters.getMutationRatesPerSeason(), random);
+		PoissonGenerator[] mutationPoissons = Testing.generatePoissonDistributionsAroundMutationRates(parameters.getMutationRatesPerSeason(), random);
 		PoissonGenerator litterSizePoisson = new PoissonGenerator(parameters.getAvgLitterSize(), random);
 		PoissonGenerator agePoisson = new PoissonGenerator(parameters.getMeanAge(), random);
 		PoissonGenerator nImmigrantsPoisson = new PoissonGenerator(parameters.getAvgNoImmigrants(), random);
