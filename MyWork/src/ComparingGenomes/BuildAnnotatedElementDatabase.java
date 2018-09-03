@@ -25,16 +25,36 @@ public class BuildAnnotatedElementDatabase {
 	public static void main(String[] args) throws IOException{
 		
 		// Set the path
-		String path = "/home/josephcrispell/Desktop/Research/ComparingReferenceGenomes_10-04-18/ncbi-genomes-2018-04-10/Test/";
-				
+//		String path = "/home/josephcrispell/Desktop/Research/ComparingReferenceGenomes_10-04-18/ncbi-genomes-2018-04-10/Test/";
+		String path = "/home/josephcrispell/Desktop/Research/Reference_Casali2012/";
+		
+		String[] sequences = getSequencesFromGenbankFile(path, "Casali2012_UpdatedH37Rv.embl");
+		
+		System.out.println("Found " + sequences.length + " sequences");
+		
+		BufferedWriter bWriter = WriteToFile.openFile(path + "Casali2012_UpdatedH37Rv.fasta", false);
+		bWriter.write(">Casali2012_UpdatedH37Rv Mycobacterium tuberculosis H37Rv, complete genome\n");
+		
+		for(int i = 0; i < sequences[0].length(); i += 80) {
+			
+			int end = i + 80;
+			if(end > sequences[0].length() - 1) {
+				end = sequences[0].length(); // Don't add -1 as last index isn't included - I THINK!
+			}
+			
+			bWriter.write(sequences[0].substring(i, end) + "\n");
+		}	
+		
+		bWriter.close();
+		
 		// Get the current date
 		String date = CalendarMethods.getCurrentDate("dd-MM-yy");
 		
-		// Set size range for the annotated elements of interest
-		int[] sizeRange = {50, 100000};
-		
-		// Get an array of all the genbank files in the current directory
-		String[] genbankFiles = GeneralMethods.getAllFilesInDirectory(path, ".gbff");
+//		// Set size range for the annotated elements of interest
+//		int[] sizeRange = {50, 100000};
+//		
+//		// Get an array of all the genbank files in the current directory
+//		String[] genbankFiles = GeneralMethods.getAllFilesInDirectory(path, ".gbff");
 		
 //		// Examine the annotations and their sequences present in each genbank file - store the unique ones
 //		Hashtable<String, String[]> uniqueAnnotations = readGenbankFilesAndRecordUniqueAnnotations(genbankFiles, path, sizeRange, true, false);
@@ -44,8 +64,8 @@ public class BuildAnnotatedElementDatabase {
 		// Print the information for each annotation found
 		//writeUniqueAnnotationsToFile(uniqueAnnotations, path, date);
 		
-		Hashtable<String, Annotation> annotations = readGenbankFiles(genbankFiles, path, sizeRange, true, false);
-		System.out.println("Found " + annotations.size() + " unique annotations");
+//		Hashtable<String, Annotation> annotations = readGenbankFiles(genbankFiles, path, sizeRange, true, false);
+//		System.out.println("Found " + annotations.size() + " unique annotations");
 	}
 	
 	public static void addOrUpdateAnnotations(Hashtable<String, Annotation> annotations, String annotationSequence, String file, int set, String type,
@@ -226,7 +246,7 @@ public class BuildAnnotatedElementDatabase {
 			parts = line.split("( +)");
 			
 			// Check if found sequence
-			if(foundSequence == false && line.matches("ORIGIN(.*)")){
+			if(foundSequence == false && (line.matches("ORIGIN(.*)") || line.matches("SQ(.*)"))){
 				foundSequence = true;
 				sequence = new StringBuilder();
 				continue;
@@ -253,7 +273,7 @@ public class BuildAnnotatedElementDatabase {
 			
 			// Build sequence until end if reached
 			if(foundSequence == true){
-				for(int i = 2; i < parts.length; i++){
+				for(int i = 1; i < parts.length - 1; i++){
 					sequence.append(parts[i].toUpperCase());
 				}
 			}						

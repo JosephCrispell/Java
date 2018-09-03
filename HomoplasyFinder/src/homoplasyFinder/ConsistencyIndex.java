@@ -153,9 +153,9 @@ public class ConsistencyIndex {
 				// Annotate the current internal node - by providing it with an node label (name)
 				Node internalNode = this.internalNodes.get(this.internalNodeIndicesOfChanges[position][i]);
 				if(internalNode.getName() != null) {
-					internalNode.setName(internalNode.getName() + "-" + position);
+					internalNode.setName(internalNode.getName() + "-" + (position + 1));
 				}else {
-					internalNode.setName(Integer.toString(position));
+					internalNode.setName(Integer.toString(position + 1));
 				}
 			}
 		}
@@ -405,7 +405,7 @@ public class ConsistencyIndex {
 		
 		// Examine each terminal node and notes its sequence index
 		for(int i = 0; i < this.sequences.length; i++) {
-			
+
 			this.terminalNodeIndexForEachSequence[i] = indices.get(this.sequences[i].getName());
 		}
 	}
