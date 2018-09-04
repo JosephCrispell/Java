@@ -7,38 +7,38 @@ public class HomoplasyFinder {
 	public static void main(String[] args) throws IOException {
 		
 		// Check if help requested
-//		if(args.length == 0 || args[0].equals("-help") || args[0].equals("") || args[0].equals("-h") || args[0].equals("help") || 
-//				args[0].equals("--help")){
-//			System.out.println("HomoplasyFinder: a tool to identify homoplasies within a phylogenetic tree and alignment");
-//			System.out.println("\nCommand Line Structure:");
-//			System.out.println("\tjava -jar homoplasyFinder_DATE.jar verbose sequences.fasta newick.tree\n");
-//			System.out.println("\t\tverbose\tDetailed output [0] or none [1]");
-//			System.out.println("\t\tsequences.fasta\tFASTA file containing alignment");
-//			System.out.println("\t\tnewick.tree\tNewick formatted tree file");
-//			System.out.println("\nNotes:");
-//			System.out.println("First line of input FASTA file contains the number of isolates and sites in the file");
-//
-//			System.exit(0);
-//		}
+		if(args.length == 0 || args[0].equals("-help") || args[0].equals("") || args[0].equals("-h") || args[0].equals("help") || 
+				args[0].equals("--help")){
+			System.out.println("HomoplasyFinder: a tool to identify homoplasies within a phylogenetic tree and alignment");
+			System.out.println("\nCommand Line Structure:");
+			System.out.println("\tjava -jar homoplasyFinder_DATE.jar verbose sequences.fasta newick.tree\n");
+			System.out.println("\t\tverbose\tDetailed output [0] or none [1]");
+			System.out.println("\t\tsequences.fasta\tFASTA file containing alignment");
+			System.out.println("\t\tnewick.tree\tNewick formatted tree file");
+			System.out.println("\nNotes:");
+			System.out.println("First line of input FASTA file contains the number of isolates and sites in the file");
+
+			System.exit(0);
+		}
 
 		// Get the command line arguments
-//		boolean verbose = args[0].matches("1");
-//		String path = "";
-		boolean verbose = true;
+		boolean verbose = args[0].matches("1");
+		String path = "";
+//		boolean verbose = true;
 		
 		// Get the current date
 		String date = Methods.getCurrentDate("dd-MM-yy");
 		
 		// Set the path
-		String path = "/home/josephcrispell/Desktop/Research/Granjean2017ConvergentEvolution/";
+//		String path = "/home/josephcrispell/Desktop/Research/Granjean2017ConvergentEvolution/";
 		
 		// Read in the sequences
-//		Sequence[] sequences = Methods.readFastaFile(args[1], false);
-		Sequence[] sequences = Methods.readFastaFile(path + "FASTQs/vcfFiles/sequences_Prox-10_27-08-2018.fasta", false);
+		Sequence[] sequences = Methods.readFastaFile(args[1], false);
+//		Sequence[] sequences = Methods.readFastaFile(path + "FASTQs/vcfFiles/sequences_Prox-10_27-08-2018.fasta", false);
 		
 		// Read the NEWICK tree and store as a traversable node set
-//		Tree tree = new Tree(args[2]);
-		Tree tree = new Tree(path + "RAxML_27-08-18/RAxML_bipartitions.RaxML-R_27-08-18_rmLT");
+		Tree tree = new Tree(args[2]);
+//		Tree tree = new Tree(path + "RAxML_27-08-18/RAxML_bipartitions.RaxML-R_27-08-18_rmLT");
 		
 		// Calculate the consistency index of each position in the alignment on the phylogeny
 		ConsistencyIndex consistency = new ConsistencyIndex(tree, sequences, verbose);
