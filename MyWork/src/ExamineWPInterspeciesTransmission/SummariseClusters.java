@@ -760,7 +760,7 @@ public class SummariseClusters {
 				
 				// Calculate the distance of the current centroid to point specified
 				meanSpatialDistance += GeneralMethods.calculateEuclideanDistance(centroids[i], coordinates);
-			}			
+			}
 		}
 		
 		// Finish calculating means

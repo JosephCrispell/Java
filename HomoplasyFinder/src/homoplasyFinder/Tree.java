@@ -262,7 +262,7 @@ public class Tree {
 				}else if(multipleStrings == 1){
 					
 					// For Variables with multiple Strings: species.set={"BOVINE", "POSSUM"} -> species.set--BOVINE-POSSUM
-					variableName = variableName + getSubsetAsString(infoCharacters, variableStartIndex + 1, i - 1);				
+					variableName = variableName + getSubsetAsString(infoCharacters, variableStartIndex, i);				
 				}else if(multipleStrings == 2){
 					
 					// For Variables with multiple Strings: species.set={"BOVINE", "POSSUM"} -> species.set--BOVINE-POSSUM
@@ -392,6 +392,11 @@ public class Tree {
 		 * or terminal nodes. In order to traverse the entire Newick tree this method should be used within itself. For each internal
 		 * node all subnodes are explored and their information stored as a tree of nodes within Java.
 		 */
+		
+		// Remove last character if it is a semi-colon
+		if(newickNode.get(newickNode.size() - 1) == ';') {
+			newickNode.remove(newickNode.size() - 1);
+		}
 		
 		// Initialise the current node as an internal node
 		Node node = new Node(this.internalNodes.size(), true);

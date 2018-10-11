@@ -18,6 +18,19 @@ public class ArrayListMethods {
 		System.out.println(toStringChar(subsetChar(a, 0, 1)));
 	}
 	
+	public static ArrayList<Character> toArrayList(String string){
+		
+		// Initialise an arraylist to store the characters
+        ArrayList<Character> array = new ArrayList<Character>(string.length());
+
+        // Add each character of the string into the array list
+        for (int x = 0; x < string.length(); x ++){
+        	array.add(string.charAt(x));
+        }
+        
+        return array;
+	}
+	
 	public static Hashtable<Integer, Integer> indexArrayListInteger(ArrayList<Integer> array){
 		
 		Hashtable<Integer, Integer> indexed = new Hashtable<Integer, Integer>();

@@ -19,10 +19,10 @@ public class ExamineHeterozygousSitesInMergedVCFFile {
 		String date = CalendarMethods.getCurrentDate("dd-MM-yyyy");
 	
 		// Set the path variable
-		String path = "/home/josephcrispell/Desktop/Research/RepublicOfIreland/Fastqs/vcfFiles/";
+		String path = "/home/josephcrispell/Desktop/Research/Woodchester_CattleAndBadgers/NewAnalyses_22-03-18/vcfFiles/PreviousMergings/1_22-03-18/";
 		
 		// Note the merged file name
-		String mergedFile = "merged_10-07-2018.txt";
+		String mergedFile = "merged_22-03-2018.txt";
 		lookForHeterozygousSitesInMergedVcfsFile(path, mergedFile);
 	}
 	

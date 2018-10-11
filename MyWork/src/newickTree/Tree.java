@@ -17,11 +17,15 @@ public class Tree {
 	public ArrayList<Node> terminalNodes = new ArrayList<Node>();
 	public ArrayList<Node> internalNodes = new ArrayList<Node>();
 	
-	public Tree(String fileName) throws IOException {
+	public Tree(String fileName, String newick) throws IOException {
 		
-		// Get newick string
-		ArrayList<Character> newickTree = readNewickFile(fileName);
-		
+		// Get newick string as set of characters
+		ArrayList<Character> newickTree;
+		if(newick == null) {
+			newickTree = readNewickFile(fileName);
+		}else {
+			newickTree = ArrayListMethods.toArrayList(newick);
+		}
 		// Store as traversable nodes
 		readNewickNode(newickTree, null);
 	}
@@ -332,12 +336,12 @@ public class Tree {
 				if(values.isEmpty() && multipleStrings == 0){
 					
 					// Check that value isn't in a String format e.g. species = "BOVINE"
-					if(infoCharacters.get(variableStartIndex) != '"'){
+					if(variableName.matches("location") == false){
 						values.add(Double.parseDouble(getSubsetAsString(infoCharacters, variableStartIndex, i)));
 						
-					}else if(infoCharacters.get(variableStartIndex) == '"'){
+					}else{
 						// Combine the value to the Variable Name: key: species--BOVINE
-						variableName = variableName + "--" + getSubsetAsString(infoCharacters, variableStartIndex + 1, i - 1);
+						variableName = variableName + "--" + getSubsetAsString(infoCharacters, variableStartIndex, i);
 					}
 					
 				}else if(multipleStrings == 1){
@@ -396,6 +400,11 @@ public class Tree {
 		 * node all subnodes are explored and their information stored as a tree of nodes within Java.
 		 */
 		
+		// Remove last character if it is a semi-colon
+		if(newickNode.get(newickNode.size() - 1) == ';') {
+			newickNode.remove(newickNode.size() - 1);
+		}
+		
 		// Initialise the current node as an internal node
 		Node node = new Node(this.internalNodes.size(), true);
 		this.internalNodes.add(node);
@@ -436,5 +445,5 @@ public class Tree {
 			}
 		}
 	}
-
+	
 }

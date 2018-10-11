@@ -60,6 +60,12 @@ public class Node {
 	public ArrayList<Boolean> getSubNodeTypes() {
 		return this.subNodeTypes;
 	}
+	public int getParentIndex() {
+		return this.parentIndex;
+	}
+	public Hashtable<String, ArrayList<Double>> getNodeInfo(){
+		return this.nodeInfo;
+	}
 	
 	// General methods
 	public void addSubNodeReference(int index, boolean isInternal) {
