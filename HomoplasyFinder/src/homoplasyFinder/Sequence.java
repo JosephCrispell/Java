@@ -6,6 +6,7 @@ public class Sequence {
 
 	public String name;
 	public char[] sequence;
+	public Hashtable<Integer, Character> variantPositions;
 	public char species;
 	public int length;
 	
@@ -45,7 +46,7 @@ public class Sequence {
 	}
 	
 	// General methods
-	public static String[] getNames(Sequence[] sequences) {
+ 	public static String[] getNames(Sequence[] sequences) {
 		
 		// Initialise an array to store each sequence's name
 		String[] names = new String[sequences.length];

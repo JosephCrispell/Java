@@ -2,6 +2,7 @@ package homoplasyFinder;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -71,7 +72,7 @@ public class Methods {
 		return string;
 	}
 	
-	public static Sequence[] readFastaFile(String fileName, boolean verbose) throws IOException{
+	public static ArrayList<Sequence> readFastaFile(String fileName, boolean verbose) throws IOException{
 		
 		/**
 		 * FASTA file structure:
@@ -89,14 +90,20 @@ public class Methods {
 		}
 		
 		// Open the Sequence Fasta File for Reading
-    	InputStream input = new FileInputStream(fileName);
+    	InputStream input = null;
+    	try {
+    		input = new FileInputStream(fileName);
+    	}catch(FileNotFoundException e){
+    		System.err.println("The input FASTA file: " + fileName + " could not be found!");
+    		System.exit(0);
+    	}
+    	
     	BufferedReader reader = new BufferedReader(new InputStreamReader(input));
     	
     	// Initialise Variables to Store the Sequence Information
     	String isolateName = "";
     	StringBuilder sequence = new StringBuilder();
-    	Sequence[] sequences = new Sequence[999];
-    	int pos = -1;
+    	ArrayList<Sequence> sequences = new ArrayList<Sequence>();
     	
     	int noSamples = -1;
     	
@@ -111,7 +118,7 @@ public class Methods {
     			
     			noSamples = Integer.parseInt(parts[0]);
     			
-    			sequences = new Sequence[noSamples];
+    			sequences = new ArrayList<Sequence>(noSamples);
     		
     		// Deal with the Isolate Sequences
     		}else if(line.matches("(^>)(.*)")){
@@ -119,9 +126,8 @@ public class Methods {
     			// Store the previous Sequence
     			if(isolateName != ""){
     				
-    				pos++;
-    				Sequence.append(sequences, pos, new Sequence(isolateName, sequence.toString().toCharArray()));
-    			}
+  					sequences.add(new Sequence(isolateName, sequence.toString().toCharArray()));
+       			}
     			
     			// Get the current isolates Information
     			isolateName = line.substring(1);
@@ -136,12 +142,7 @@ public class Methods {
 		reader.close();
 		
 		// Store the last isolate
-		pos++;
-		Sequence.append(sequences, pos, new Sequence(isolateName, sequence.toString().toCharArray()));
-		
-		if(noSamples == -1){
-			sequences = Sequence.subset(sequences, 0, pos);
-		}
+		sequences.add(new Sequence(isolateName, sequence.toString().toCharArray()));
 		
 		return sequences;
 	}

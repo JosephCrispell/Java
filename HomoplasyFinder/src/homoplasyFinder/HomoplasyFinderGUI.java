@@ -9,6 +9,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
@@ -297,7 +298,7 @@ public class HomoplasyFinderGUI extends JFrame {
 		}
 		
 		// Read in the sequences
-		Sequence[] sequences = Methods.readFastaFile(this.fastaFile, false);
+		ArrayList<Sequence> sequences = Methods.readFastaFile(this.fastaFile, false);
 		
 		// Read the NEWICK tree and store as a traversable node set
 		Tree tree = new Tree(this.treeFile);

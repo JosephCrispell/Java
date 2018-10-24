@@ -23,7 +23,7 @@ public class ConsistencyIndex {
 	private int nTerminalNodes;
 	
 	// Sequences
-	private Sequence[] sequences;
+	private ArrayList<Sequence> sequences;
 	private int nSites;
 	private int nStatesPerSite;
 	private int[] terminalNodeIndexForEachSequence;
@@ -34,9 +34,10 @@ public class ConsistencyIndex {
 	private int[][] internalNodeIndicesOfChanges;
 	private ArrayList<Integer> inconsistentPositions;
 	private double[] consistencyIndices;
-	private boolean[][][] terminalNodeStates;
+	private boolean[][] terminalNodeStates;
+	Hashtable<Character, boolean[]> stateVectorForEachNucleotide;
 	
-	public ConsistencyIndex(Tree tree, Sequence[] sequences, boolean verbose) {
+	public ConsistencyIndex(Tree tree, ArrayList<Sequence> sequences, boolean verbose) {
 		
 		/**
 		 * Algorithm to calculate the minimum number of changes of each site in an alignment on a phylogeny
@@ -83,23 +84,62 @@ public class ConsistencyIndex {
 		 *  	
 		 */
 		
-		// Note whether verbose outputs wanter
+		// Note whether verbose outputs wanted
 		this.verbose = verbose;
 		
 		// Store the tree and sequences
 		storeTree(tree);
 		storeSequences(sequences);
 		
-		// Count the number of times each nucleotide is found at each positions
-		countAllelesAtEachPositionInSequences();
+		// Set the number of states per site to 4
+		this.nStatesPerSite = 4;
 		
-		// Calculate the minimum number of changes of each position on the phylogeny
-		calculateMinimumNumberOfChangesOnPhylogeny();
-		//calculateMinimumNumberOfChangesOnPhylogenyMultiThread();
+		// Initialise a hashtable storing a boolean vector - corresponding to nucleotides
+		this.stateVectorForEachNucleotide = noteStateVectorForEachNucleotide();
 		
-		// Identify the inconsistent positions
-		identifyInconsistentPositions();
+		// Initialise an array to store the allele counts
+		this.stateCountsPerPosition = new int[this.nSites][this.nStatesPerSite]; // Counts for each possible (A, C, G, T) at each position
 		
+		// Initialise an array to store the minimum number of changes for each position
+		this.minNumberChangesOnTreeAtEachPosition = new int[this.nSites];
+		
+		// Initialise an array to store the internal node indices where those changes occur
+		this.internalNodeIndicesOfChanges = new int[this.nSites][this.tree.getNInternalNodes()];
+		
+		// Initialise an array to store the inconsistent sites (consistency < 1)
+		this.inconsistentPositions = new ArrayList<Integer>();
+		
+		// Initialise an array to store the consistency index of each site
+		this.consistencyIndices = new double[this.nSites];
+		
+		// Examine each position in the alignment
+		for(int position = 0; position < this.nSites; position++) {
+			
+			// Count the number of times each nucleotide is found at the current position and note terminal node states
+			countAllelesAtEachPositionInSequences(position);
+			
+			// Check if multiple alleles present - i.e. not a constant site
+			if(areMultipleStatesPresent(this.stateCountsPerPosition[position])) {
+				
+				// Calculate the minimum number of changes of each position on the phylogeny
+				calculateMinimumNumberOfChangesOnPhylogeny(position);
+				
+				// Calculate the consistency index
+				identifyInconsistentPositions(position);
+			}
+			
+			if(this.verbose && (position + 1) % 100000 == 0) {
+				System.out.println("Finished with " + (position + 1) + " positions");
+			}
+		}
+		
+		// Print verbose summary
+		if(this.verbose) {
+			System.out.println("Identified " + this.inconsistentPositions.size() + " positions with consistency index < 1: ");
+			for(int position : this.inconsistentPositions) {
+				System.out.println(position + 1);
+			}
+		}
 	}
 	
 	// Setting methods
@@ -124,19 +164,19 @@ public class ConsistencyIndex {
 		
 		// Print out the number of isolates and sites in FASTA
 		int newSequenceLength = this.nSites - this.inconsistentPositions.size();
-		WriteToFile.writeLn(bWriter, sequences.length + " " + newSequenceLength);
+		WriteToFile.writeLn(bWriter, sequences.size() + " " + newSequenceLength);
 		
 		// Initialise an array to each isolate sequence data
 		char[] sequence = new char[newSequenceLength];
 		
 		// Write out each of the sequences
-		for(int i = 0; i < sequences.length; i++){
+		for(int i = 0; i < sequences.size(); i++){
 			
 			// Print sequence ID
-			WriteToFile.writeLn(bWriter, ">" + sequences[i].getName());
+			WriteToFile.writeLn(bWriter, ">" + sequences.get(i).getName());
 			
 			// Print sequence
-			sequence = Methods.deletePositions(sequences[i].getSequence(), positionsToIgnore);
+			sequence = Methods.deletePositions(sequences.get(i).getSequence(), positionsToIgnore);
 			WriteToFile.writeLn(bWriter, Methods.toString(sequence));
 		}
 		WriteToFile.close(bWriter);
@@ -164,7 +204,7 @@ public class ConsistencyIndex {
 		this.tree.print(fileName);
 	}
 	
-	public void printSummary(String fileName) throws IOException {
+	public void printSummary(String fileName, boolean includeConsistentSites) throws IOException {
 		
 		// Open the file
 		BufferedWriter bWriter = WriteToFile.openFile(fileName, false);
@@ -174,11 +214,22 @@ public class ConsistencyIndex {
 		
 		// Print each position
 		String output = "";
-		for(int position : this.inconsistentPositions) {
-			output += (position + 1) + "\t" + this.consistencyIndices[position] + "\t" + 
-					Methods.toString(this.stateCountsPerPosition[position], ":") + "\t" + this.minNumberChangesOnTreeAtEachPosition[position] + "\n";
+		if(includeConsistentSites) {
+			for(int position = 0; position < this.nSites; position++) {
+				if(areMultipleStatesPresent(this.stateCountsPerPosition[position])) {
+					output += (position + 1) + "\t" + this.consistencyIndices[position] + "\t" + 
+							Methods.toString(this.stateCountsPerPosition[position], ":") + "\t" + this.minNumberChangesOnTreeAtEachPosition[position] + "\n";
+				}else {
+					output += (position + 1) + "\t" + 1 + "\t" + Methods.toString(this.stateCountsPerPosition[position], ":") + "\t" + "-" + "\n";
+				}				
+			}	
+		}else {
+			for(int position : this.inconsistentPositions) {
+				output += (position + 1) + "\t" + this.consistencyIndices[position] + "\t" + 
+						Methods.toString(this.stateCountsPerPosition[position], ":") + "\t" + this.minNumberChangesOnTreeAtEachPosition[position] + "\n";
+			}			
 		}
-		WriteToFile.write(bWriter, output);
+		WriteToFile.write(bWriter, output);		
 		
 		// Close the file
 		WriteToFile.close(bWriter);
@@ -211,6 +262,28 @@ public class ConsistencyIndex {
 	}
 	
 	// Class specific methods
+	private boolean areMultipleStatesPresent(int[] stateCounts) {
+		
+		// Initialise a variable to return
+		boolean result = false;
+		
+		// Initialise a count variable
+		int count = 0;
+		
+		// Examine the counts
+		for(int i = 0; i < stateCounts.length; i++) {
+			if(stateCounts[i] > 1) {
+				count++;
+				if(count > 1) {
+					result = true;
+					break;
+				}
+			}
+		}
+		
+		return result;
+	}
+	
 	private Hashtable<Character, boolean[]> noteStateVectorForEachNucleotide(){
 		
 		Hashtable<Character, boolean[]> possibleNucleotidesForEachNucleotide = new Hashtable<Character, boolean[]>();
@@ -234,33 +307,16 @@ public class ConsistencyIndex {
 		return possibleNucleotidesForEachNucleotide;
 	}
 	
- 	private void identifyInconsistentPositions() {
-		
-		// Initialise an array to store the inconsistent sites (consistency < 1)
-		this.inconsistentPositions = new ArrayList<Integer>();
-		
-		// Initialise an array to store the consistency index of each site
-		this.consistencyIndices = new double[this.nSites];
-		
-		// Examine each position
-		for(int pos = 0; pos < this.nSites; pos++) {
+ 	private void identifyInconsistentPositions(int position) {
+					
+		// Calculate the consistency index
+		this.consistencyIndices[position] = calculateConsistencyIndexForPosition(this.stateCountsPerPosition[position], 
+				this.minNumberChangesOnTreeAtEachPosition[position]);
 			
-			// Calculate the consistency index
-			this.consistencyIndices[pos] = calculateConsistencyIndexForPosition(this.stateCountsPerPosition[pos], 
-					this.minNumberChangesOnTreeAtEachPosition[pos]);
-			
-			// Report the position if, the consistency index is less than 1
-			if(this.consistencyIndices[pos] < 1) {
+		// Report the position if, the consistency index is less than 1
+		if(this.consistencyIndices[position] < 1) {
 				
-				this.inconsistentPositions.add(pos);
-			}			
-		}
-		
-		if(this.verbose) {
-			System.out.println("Identified " + this.inconsistentPositions.size() + " positions with consistency index < 1: ");
-			for(int position : this.inconsistentPositions) {
-				System.out.println(position + 1);
-			}
+			this.inconsistentPositions.add(position);
 		}
 	}
 	
@@ -285,29 +341,23 @@ public class ConsistencyIndex {
 		return consistency;
 	}
 	
-	private void calculateMinimumNumberOfChangesOnPhylogeny() {
+	private void calculateMinimumNumberOfChangesOnPhylogeny(int position) {
 				
-		// Initialise an array to store the minimum number of changes for each position
-		this.minNumberChangesOnTreeAtEachPosition = new int[this.nSites];
-		
-		// Initialise an array to store the internal node indices where those changes occur
-		this.internalNodeIndicesOfChanges = new int[this.nSites][this.tree.getNInternalNodes()];
-		
 		// Initialise an array to store the possible nucleotides for each position assigned to each internal node
-		boolean[][][] possibleStatesForEachInternalNode = new boolean[this.nInternalNodes][this.nSites][this.nStatesPerSite];
+		boolean[][] possibleStatesForEachInternalNode = new boolean[this.nInternalNodes][this.nStatesPerSite];
 		
 		// Starting at the first terminal node's ancestor, visit all the internal nodes
-		identifyPossibleStatesForInternalNode(0, possibleStatesForEachInternalNode);
+		identifyPossibleStatesForInternalNode(0, possibleStatesForEachInternalNode, position);
 	}
 
-	private void identifyPossibleStatesForInternalNode(int internalNodeIndex, boolean[][][] possibleStatesForEachInternalNode) {
+	private void identifyPossibleStatesForInternalNode(int internalNodeIndex, boolean[][] possibleStatesForEachInternalNode, int position) {
 		
 		// Get the sub-node information for the current internal node
 		ArrayList<Integer> subNodeIndices = this.internalNodes.get(internalNodeIndex).getSubNodeIndices();
 		ArrayList<Boolean> subNodeTypes = this.internalNodes.get(internalNodeIndex).getSubNodeTypes();
 		
 		// Initialise an array to store the possible states assigned for each position, for each sub-node
-		boolean[][][] possibleStatesForSubNodes = new boolean[subNodeIndices.size()][this.nSites][this.nStatesPerSite];
+		boolean[][] possibleStatesForSubNodes = new boolean[subNodeIndices.size()][this.nStatesPerSite];
 		
 		// Examine each sub-node
 		for(int i = 0; i < subNodeIndices.size(); i++) {
@@ -316,7 +366,7 @@ public class ConsistencyIndex {
 			if(subNodeTypes.get(i)) {
 			
 				// Identify the possible states for the current internal sub-node
-				identifyPossibleStatesForInternalNode(subNodeIndices.get(i), possibleStatesForEachInternalNode);
+				identifyPossibleStatesForInternalNode(subNodeIndices.get(i), possibleStatesForEachInternalNode, position);
 				
 				// Get the possible nucleotides assigned to this internal sub-node
 				possibleStatesForSubNodes[i] = possibleStatesForEachInternalNode[subNodeIndices.get(i)];
@@ -329,25 +379,20 @@ public class ConsistencyIndex {
 		
 		// Determine the possible nucleotides for the current node, based on those of the sub-nodes
 		possibleStatesForEachInternalNode[internalNodeIndex] = getPossibleStateForInternalNodeFromPossibleStatesOfSubNodes(possibleStatesForSubNodes,
-				internalNodeIndex);
+				internalNodeIndex, position);
 	}
 	
-	private boolean[][] getPossibleStateForInternalNodeFromPossibleStatesOfSubNodes(boolean[][][] possibleNucleotidesForSubNodes,
-			int internalNodeIndex){
+	private boolean[] getPossibleStateForInternalNodeFromPossibleStatesOfSubNodes(boolean[][] possibleNucleotidesForSubNodes,
+			int internalNodeIndex, int position){
 		
 		// Get the possible nucleotides for the first subNode
-		boolean[][] possibleNucleotides = possibleNucleotidesForSubNodes[0];
+		boolean[] possibleNucleotides = possibleNucleotidesForSubNodes[0];
 		
 		// Examine the other sub-nodes
 		for(int i = 1; i < possibleNucleotidesForSubNodes.length; i++) {
-			
-			// Examine each of the positions
-			for(int pos = 0; pos < this.nSites; pos++) {
-				
-				// Compare the current sub-nodes possible nucleotides to those stored
-				possibleNucleotides[pos] =  comparePossibleNucleotidesOfTwoSubNodes(possibleNucleotides[pos], possibleNucleotidesForSubNodes[i][pos],
-						pos, internalNodeIndex);
-			}
+		
+			// Compare the current sub-nodes possible nucleotides to those stored
+			possibleNucleotides =  comparePossibleNucleotidesOfTwoSubNodes(possibleNucleotides, possibleNucleotidesForSubNodes[i], position, internalNodeIndex);
 		}
 		
 		return possibleNucleotides;		
@@ -401,28 +446,19 @@ public class ConsistencyIndex {
 		}
 		
 		// Initialise an array to store the terminal node index associated with sequence
-		this.terminalNodeIndexForEachSequence = new int[this.sequences.length];
+		this.terminalNodeIndexForEachSequence = new int[this.sequences.size()];
 		
 		// Examine each terminal node and notes its sequence index
-		for(int i = 0; i < this.sequences.length; i++) {
+		for(int i = 0; i < this.sequences.size(); i++) {
 
-			this.terminalNodeIndexForEachSequence[i] = indices.get(this.sequences[i].getName());
+			this.terminalNodeIndexForEachSequence[i] = indices.get(this.sequences.get(i).getName());
 		}
 	}
 	
-	private void countAllelesAtEachPositionInSequences() {
-		
-		// Initialise a hashtable storing a boolean vector - corresponding to nucleotides
-		Hashtable<Character, boolean[]> stateVectorForEachNucleotide = noteStateVectorForEachNucleotide();
-		
-		// Set the number of states per site to 4
-		this.nStatesPerSite = 4;
-		
-		// Initialise an array to store the allele counts
-		this.stateCountsPerPosition = new int[this.nSites][this.nStatesPerSite]; // Counts for each possible (A, C, G, T) at each position
-		
+	private void countAllelesAtEachPositionInSequences(int position) {
+				
 		// Initialise an array to store the possible state at each site at each terminal node
-		this.terminalNodeStates = new boolean[this.nTerminalNodes][this.nSites][this.nStatesPerSite];
+		this.terminalNodeStates = new boolean[this.nTerminalNodes][this.nStatesPerSite];
 		
 		// Build a hashtable to note which count position is for each allele
 		Hashtable<Character, Integer> nucleotidePositions = new Hashtable<Character, Integer>();
@@ -432,27 +468,23 @@ public class ConsistencyIndex {
 		nucleotidePositions.put('T', 3);
 				
 		// Examine each sequence
-		for(int sequenceIndex = 0; sequenceIndex < this.sequences.length; sequenceIndex++) {
+		for(int sequenceIndex = 0; sequenceIndex < this.sequences.size(); sequenceIndex++) {
 			
 			// Get the terminal node index of the current sequence
 			int terminalNodeIndex = this.terminalNodeIndexForEachSequence[sequenceIndex];
 			
-			// Examine each position in the current sequence
-			for(int pos = 0; pos < this.sequences[0].getLength(); pos++) {
-			
-				// Get the current nucleotide
-				char nucleotide = this.sequences[sequenceIndex].getNucleotide(pos);
+			// Get the current nucleotide
+			char nucleotide = this.sequences.get(sequenceIndex).getNucleotide(position);
 				
-				// Only examine nucleotide characters, skip anything else
-				if(nucleotidePositions.containsKey(nucleotide)) {
+			// Only examine nucleotide characters, skip anything else
+			if(nucleotidePositions.containsKey(nucleotide)) {
 					
-					// Count the current allele
-					this.stateCountsPerPosition[pos][nucleotidePositions.get(nucleotide)]++;
-				}
-				
-				// Note the current state at the current position (for terminal node states) for the terminal node associated with the current sequence
-				this.terminalNodeStates[terminalNodeIndex][pos] = stateVectorForEachNucleotide.get(nucleotide);
+				// Count the current allele
+				this.stateCountsPerPosition[position][nucleotidePositions.get(nucleotide)]++;
 			}
+				
+			// Note the current state at the current position (for terminal node states) for the terminal node associated with the current sequence
+			this.terminalNodeStates[terminalNodeIndex] = this.stateVectorForEachNucleotide.get(nucleotide);
 		}
 	}
 
@@ -468,11 +500,11 @@ public class ConsistencyIndex {
 		this.nTerminalNodes = this.terminalNodes.size();
 	}
 	
-	private void storeSequences(Sequence[] sequences) {
+	private void storeSequences(ArrayList<Sequence> sequences) {
 		
 		// Store the sequences and their length
 		this.sequences = sequences;
-		this.nSites = this.sequences[0].length;
+		this.nSites = this.sequences.get(0).length;
 		
 		// Note the terminal node index associated with each sequence
 		noteTerminalNodeIndexAssociatedWithEachSequence();
