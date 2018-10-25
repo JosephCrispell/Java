@@ -1,5 +1,6 @@
 package homoplasyFinder;
 
+import java.awt.Color;
 import java.awt.EventQueue;
 
 import javax.swing.JFrame;
@@ -15,6 +16,9 @@ import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JTextArea;
 import javax.swing.JScrollPane;
+import javax.swing.JRadioButton;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
 
 public class HomoplasyFinderGUI extends JFrame {
 
@@ -28,12 +32,16 @@ public class HomoplasyFinderGUI extends JFrame {
 	// Get the current date
 	public String date = Methods.getCurrentDate("dd-MM-yy");
 	
-	// Create two variables to record the tree, FASTA, and report files selected
+	// Create variables to record the tree, FASTA, and report files selected
 	public String treeFile = "None provided";
 	public String fastaFile = "None provided";
-	public String reportFile = "homoplasyReport_" + date + ".txt";
+	public String reportFile = "consistencyIndexReport_" + date + ".txt";
 	public String outputFastaFile = "sequences_withoutHomoplasies_" + date + ".fasta";
 	public String outputTreeFile = "annotatedNewickTree_" + date + ".tree";
+	
+	// Create boolean variables to record whether consistent sites are to be included in report and whether to multithread
+	public boolean includeConsistentSitesInReport = false;
+	public boolean multithread = false;
 	
 	// Create matching labels that will record to the user the tree and FASTA file selected
 	public JLabel labelTreeFileSelected;
@@ -186,12 +194,44 @@ public class HomoplasyFinderGUI extends JFrame {
 		this.textArea.setText(details());
 		this.textArea.setEditable(false);
 		JScrollPane scrollPane = new JScrollPane(this.textArea);
-		scrollPane.setBounds(10, 216, 625, 242);
+		scrollPane.setBounds(10, 250, 620, 200);
 		getContentPane().add(scrollPane);
+		
+		// Add a button to allow the user to decide whether to include consistent sites in report
+		JRadioButton includeConsistentSitesButton = new JRadioButton("Include consistent sites");
+		includeConsistentSitesButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				
+				if(includeConsistentSitesButton.isSelected()) {
+					includeConsistentSitesInReport = true;
+				}else {
+					includeConsistentSitesInReport = false;
+				}
+			}
+		});
+		includeConsistentSitesButton.setBounds(20, 160, 186, 23);
+		getContentPane().add(includeConsistentSitesButton);
+		includeConsistentSitesButton.setToolTipText("Click button to include sites that are consistent with phylogeny in report");
+		
+		// Add a button to allow the user to turn on multithreading
+		JRadioButton multithreadButton = new JRadioButton("Multithread");
+		multithreadButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				
+				if(multithreadButton.isSelected()) {
+					multithread = true;
+				}else {
+					multithread = false;
+				}
+			}
+		});
+		multithreadButton.setBounds(20, 187, 114, 23);
+		getContentPane().add(multithreadButton);
+		multithreadButton.setToolTipText("Click button to turn on multithreading");
 		
 		// Add run button to run homoplasyFinder
 		JButton buttonRun = new JButton("Run");
-		buttonRun.setBounds(249, 164, 67, 23);
+		buttonRun.setBounds(280, 170, 67, 23);
 		buttonRun.setToolTipText("Run homoplasyFinder on the selected tree and FASTA file");
 		buttonRun.addMouseListener(new MouseAdapter() {
 			
@@ -237,7 +277,7 @@ public class HomoplasyFinderGUI extends JFrame {
 		String homoplasyFinderDetails = "";
 		
 		homoplasyFinderDetails += "HomoplasyFinder - a tool to identify homoplasies present on a phylogenetic tree\n";
-		homoplasyFinderDetails += "Version: 0.0.1\n";
+		homoplasyFinderDetails += "Version: 0.0.9999\n";
 		homoplasyFinderDetails += "Author: Joseph Crispell\n";
 		homoplasyFinderDetails += "Date created: 13-08-18\n";
 		homoplasyFinderDetails += "Licence: GPL 3.0\n\n";
@@ -304,16 +344,16 @@ public class HomoplasyFinderGUI extends JFrame {
 		Tree tree = new Tree(this.treeFile);
 		
 		// Calculate the consistency index of each position in the alignment on the phylogeny
-		ConsistencyIndex consistency = new ConsistencyIndex(tree, sequences, false);
+		ConsistencyIndex consistency = new ConsistencyIndex(tree, sequences, false, this.multithread);
 		
 		// Create a FASTA file without inconsistent sites
-		consistency.printSequencesWithoutInConsistentSites(this.outputFastaFile);
+		consistency.printSequencesWithoutInConsistentSites(path + this.outputFastaFile);
 		
 		// Create an annotated NEWICK tree file
-		consistency.printAnnotatedTree(this.outputTreeFile);
+		consistency.printAnnotatedTree(path + this.outputTreeFile);
 		
 		// Create a report file
-		consistency.printSummary(this.reportFile);
+		consistency.printSummary(path + this.reportFile, this.includeConsistentSitesInReport);
 		
 		// Print summary to text area of GUI
 		consistency.printSummary(this.textArea);
