@@ -3,6 +3,7 @@ package homoplasyFinder;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -76,8 +77,14 @@ public class Tree {
 
 	private ArrayList<Character> readNewickFile(String fileName) throws IOException{
 		
-		// Open the animals table file
-		InputStream input = new FileInputStream(fileName);
+		// Open the newick tree file
+    	InputStream input = null;
+    	try {
+    		input = new FileInputStream(fileName);
+    	}catch(FileNotFoundException e){
+    		System.err.println((char)27 + "[31mERROR!! The input tree file: \"" + fileName + "\" could not be found!" + (char)27 + "[0m");
+    		System.exit(0);
+    	}
 		BufferedReader reader = new BufferedReader(new InputStreamReader(input));
 											
 		// Initialise a variable to store the newick string
@@ -165,7 +172,7 @@ public class Tree {
 		 *  		(SubNodes)[&NodeInfo]:[&BranchInfo]BranchLength
 		 *  	
 		 *  
-		 *  It is only necessary for the NodeID and BranchLength to be present the rest is optional
+		 *  It is only necessary for the NodeID to be present the rest is optional
 		 *  	NOTE - BranchLength and BranchInfo are never present for the root	
 		 *  
 		 *  3[&rate_range={0.002,6.93},LatLongs1=-44.303,LatLongs2=170.304]:[&rate_range={0.002},length_range={4.000,26.978}]4.200
@@ -178,211 +185,219 @@ public class Tree {
 			lastBracketIndex = findNodeInfoStart(newickNode) - 1;
 		}
 		
-		// Subset the characters associated with the node information
-		ArrayList<Character> infoCharacters = Methods.subsetChar(newickNode, lastBracketIndex + 1, newickNode.size());
-		
-		// Initialise variables to store the Information for the current Newick Node
-		Hashtable<String, ArrayList<Double>> nodeInfo = new Hashtable<String, ArrayList<Double>>();
-		Hashtable<String, ArrayList<Double>> branchInfo = new Hashtable<String, ArrayList<Double>>();
-		
-		// Initialise the kays and values for Hashtable
-		String variableName = ""; 
-		ArrayList<Double> values = new ArrayList<Double>();
-		int multipleStrings = 0;
-		
-		// Initialise Variables to trace progress
-		int openCurlyBracket = 0;
-		int readingNodeInfo = 0; // 0 = haven't found, 1 = found, 2 = finished
-		int readingBranchInfo = 0; // 0 = haven't found, 1 = found, 2 = finished
-		int variableStartIndex = -1;
-		boolean branchLengthPresent = false;
-		
-		// Initialise a variable to record the current character
-		char current;
-		
-		// Start examining each character of the Newick Node String
-		for(int i = 0; i < infoCharacters.size(); i++){
+		// Check if any information present - possible that branch length isn't present. If not present last Bracket index will be -2
+		if(lastBracketIndex != -2) {
 			
-			// Note current Character
-			current = infoCharacters.get(i);
+			// Subset the characters associated with the node information
+			ArrayList<Character> infoCharacters = Methods.subsetChar(newickNode, lastBracketIndex + 1, newickNode.size());
+			
+			// Initialise variables to store the Information for the current Newick Node
+			Hashtable<String, ArrayList<Double>> nodeInfo = new Hashtable<String, ArrayList<Double>>();
+			Hashtable<String, ArrayList<Double>> branchInfo = new Hashtable<String, ArrayList<Double>>();
+			
+			// Initialise the kays and values for Hashtable
+			String variableName = ""; 
+			ArrayList<Double> values = new ArrayList<Double>();
+			int multipleStrings = 0;
+			
+			// Initialise Variables to trace progress
+			int openCurlyBracket = 0;
+			int readingNodeInfo = 0; // 0 = haven't found, 1 = found, 2 = finished
+			int readingBranchInfo = 0; // 0 = haven't found, 1 = found, 2 = finished
+			int variableStartIndex = -1;
+			boolean branchLengthPresent = false;
+			
+			// Initialise a variable to record the current character
+			char current;
+			
+			// Start examining each character of the Newick Node String
+			for(int i = 0; i < infoCharacters.size(); i++){
 				
-			if(current == '['){
-						
-				// Get the Node ID
-				if(internal == false){
-					node.setName(getSubsetAsString(infoCharacters, 0, i));
-				}
-						
-				// Which Information are we currently reading?
-				if(readingNodeInfo == 0){
-					readingNodeInfo = 1;
-				}else if(branchLengthPresent == true && variableStartIndex != i){
+				// Note current Character
+				current = infoCharacters.get(i);
 					
-					// Means either no Node Information available or it has already been read - Store the Branch Length if Present
-					node.setBranchLength(Double.parseDouble(getSubsetAsString(infoCharacters, variableStartIndex, i)));
-										
-					// Begin reading the Branch Information if present
-					readingBranchInfo = 1;
-				}else{
-					readingBranchInfo = 1;
-				}
-						
-				// Move into the Information Area - skip the "[&" bit
-				variableStartIndex = i + 2;
-						
-			}else if(current == '='){
-						
-				// Record the Variable Name
-				variableName = getSubsetAsString(infoCharacters, variableStartIndex, i);
-				variableStartIndex = i + 1;
-						
-			}else if(current == '{'){ // Means more than one value for the variable
-				openCurlyBracket++;
-				variableStartIndex = i + 1;
-				
-				// Check if the values are a list of Strings e.g. species.set={"BOVINE", "POSSUM"}
-				if(Character.isDigit(infoCharacters.get(i + 1)) == false){
-					
-					// For Variables with multiple Strings: species.set={"BOVINE", "POSSUM"} -> species.set--BOVINE-POSSUM
-					variableName = variableName + "--";
-					multipleStrings = 1;
-					
-					// Check if variables are within quotes
-					if(infoCharacters.get(i + 1) != '"'){
-						multipleStrings = 2;
+				if(current == '['){
+							
+					// Get the Node ID
+					if(internal == false){
+						node.setName(getSubsetAsString(infoCharacters, 0, i));
 					}
-				}
+							
+					// Which Information are we currently reading?
+					if(readingNodeInfo == 0){
+						readingNodeInfo = 1;
+					}else if(branchLengthPresent == true && variableStartIndex != i){
 						
-			}else if(current == '}'){ // Finished finding all values for the variable
-				openCurlyBracket--;
-						
-				// Store the Current Value - check that not dealing with multiple Strings
-				if(multipleStrings == 0){
-					values.add(Double.parseDouble(getSubsetAsString(infoCharacters, variableStartIndex, i)));
-				}else if(multipleStrings == 1){
-					
-					// For Variables with multiple Strings: species.set={"BOVINE", "POSSUM"} -> species.set--BOVINE-POSSUM
-					variableName = variableName + getSubsetAsString(infoCharacters, variableStartIndex, i);				
-				}else if(multipleStrings == 2){
-					
-					// For Variables with multiple Strings: species.set={"BOVINE", "POSSUM"} -> species.set--BOVINE-POSSUM
-					variableName = variableName + getSubsetAsString(infoCharacters, variableStartIndex, i);
-				}
-						
-			}else if(openCurlyBracket == 1 && current == ','){ // Still inside curly brackets - add value into array for the current variable
-				
-				// Store the Current Value - check that not dealing with multiple Strings
-				if(multipleStrings == 0){
-					values.add(Double.parseDouble(getSubsetAsString(infoCharacters, variableStartIndex, i)));
-				}else if(multipleStrings == 1){
-					
-					// For Variables with multiple Strings: species.set={"BOVINE", "POSSUM"} -> species.set--BOVINE-POSSUM
-					variableName = variableName + getSubsetAsString(infoCharacters, variableStartIndex + 1, i - 1) + "-";
-				
-				}else if(multipleStrings == 2){
-					
-					// For Variables with multiple Strings: species.set={"BOVINE", "POSSUM"} -> species.set--BOVINE-POSSUM
-					variableName = variableName + getSubsetAsString(infoCharacters, variableStartIndex, i);
-				}
-						
-				// Move Value index on
-				variableStartIndex = i + 1;
-						
-			}else if(openCurlyBracket == 0 && current == ','){
-					
-				// Extract the Variable Information
-				if(values.isEmpty() && multipleStrings == 0){
-					
-					// Check that value isn't in a String format e.g. species = "BOVINE"
-					if(Character.isDigit(infoCharacters.get(variableStartIndex)) == true){
-						values.add(Double.parseDouble(getSubsetAsString(infoCharacters, variableStartIndex, i)));
-					
-					// Value is a string - check if there are quotes present
-					}else if(infoCharacters.get(variableStartIndex) == '"'){
-						// Combine the value to the Variable Name: key: species--BOVINE
-						variableName = variableName + "--" + getSubsetAsString(infoCharacters, variableStartIndex + 1, i - 1);
-						
+						// Means either no Node Information available or it has already been read - Store the Branch Length if Present
+						node.setBranchLength(Double.parseDouble(getSubsetAsString(infoCharacters, variableStartIndex, i)));
+											
+						// Begin reading the Branch Information if present
+						readingBranchInfo = 1;
 					}else{
-						// Combine the value to the Variable Name: key: species--BOVINE
-						variableName = variableName + "--" + getSubsetAsString(infoCharacters, variableStartIndex, i);
+						readingBranchInfo = 1;
 					}
+							
+					// Move into the Information Area - skip the "[&" bit
+					variableStartIndex = i + 2;
+							
+				}else if(current == '='){
+							
+					// Record the Variable Name
+					variableName = getSubsetAsString(infoCharacters, variableStartIndex, i);
+					variableStartIndex = i + 1;
+							
+				}else if(current == '{'){ // Means more than one value for the variable
+					openCurlyBracket++;
+					variableStartIndex = i + 1;
 					
-				}else if(multipleStrings != 0){
-					
-					multipleStrings = 0; // Finished dealing with variable
-				}
-				
-				// Store the Variable Information
-				if(readingNodeInfo == 1){
-					nodeInfo.put(variableName, Methods.copyDouble(values));
-				}else if(readingBranchInfo == 1){
-					branchInfo.put(variableName, Methods.copyDouble(values));
-				}
+					// Check if the values are a list of Strings e.g. species.set={"BOVINE", "POSSUM"}
+					if(Character.isDigit(infoCharacters.get(i + 1)) == false){
 						
-				// Reset the Variable Information
-				variableStartIndex = i + 1;
-				values = new ArrayList<Double>();
+						// For Variables with multiple Strings: species.set={"BOVINE", "POSSUM"} -> species.set--BOVINE-POSSUM
+						variableName = variableName + "--";
+						multipleStrings = 1;
 						
-			}else if(current == ']'){
-				
-				// Extract the Variable Information
-				if(values.isEmpty() && multipleStrings == 0){
-					
-					// Check that value isn't in a String format e.g. species = "BOVINE"
-					if(infoCharacters.get(variableStartIndex) != '"'){
+						// Check if variables are within quotes
+						if(infoCharacters.get(i + 1) != '"'){
+							multipleStrings = 2;
+						}
+					}
+							
+				}else if(current == '}'){ // Finished finding all values for the variable
+					openCurlyBracket--;
+							
+					// Store the Current Value - check that not dealing with multiple Strings
+					if(multipleStrings == 0){
 						values.add(Double.parseDouble(getSubsetAsString(infoCharacters, variableStartIndex, i)));
+					}else if(multipleStrings == 1){
 						
-					}else if(infoCharacters.get(variableStartIndex) == '"'){
-						// Combine the value to the Variable Name: key: species--BOVINE
-						variableName = variableName + "--" + getSubsetAsString(infoCharacters, variableStartIndex + 1, i - 1);
+						// For Variables with multiple Strings: species.set={"BOVINE", "POSSUM"} -> species.set--BOVINE-POSSUM
+						variableName = variableName + getSubsetAsString(infoCharacters, variableStartIndex, i);				
+					}else if(multipleStrings == 2){
+						
+						// For Variables with multiple Strings: species.set={"BOVINE", "POSSUM"} -> species.set--BOVINE-POSSUM
+						variableName = variableName + getSubsetAsString(infoCharacters, variableStartIndex, i);
+					}
+							
+				}else if(openCurlyBracket == 1 && current == ','){ // Still inside curly brackets - add value into array for the current variable
+					
+					// Store the Current Value - check that not dealing with multiple Strings
+					if(multipleStrings == 0){
+						values.add(Double.parseDouble(getSubsetAsString(infoCharacters, variableStartIndex, i)));
+					}else if(multipleStrings == 1){
+						
+						// For Variables with multiple Strings: species.set={"BOVINE", "POSSUM"} -> species.set--BOVINE-POSSUM
+						variableName = variableName + getSubsetAsString(infoCharacters, variableStartIndex + 1, i - 1) + "-";
+					
+					}else if(multipleStrings == 2){
+						
+						// For Variables with multiple Strings: species.set={"BOVINE", "POSSUM"} -> species.set--BOVINE-POSSUM
+						variableName = variableName + getSubsetAsString(infoCharacters, variableStartIndex, i);
+					}
+							
+					// Move Value index on
+					variableStartIndex = i + 1;
+							
+				}else if(openCurlyBracket == 0 && current == ','){
+						
+					// Extract the Variable Information
+					if(values.isEmpty() && multipleStrings == 0){
+						
+						// Check that value isn't in a String format e.g. species = "BOVINE"
+						if(Character.isDigit(infoCharacters.get(variableStartIndex)) == true){
+							values.add(Double.parseDouble(getSubsetAsString(infoCharacters, variableStartIndex, i)));
+						
+						// Value is a string - check if there are quotes present
+						}else if(infoCharacters.get(variableStartIndex) == '"'){
+							// Combine the value to the Variable Name: key: species--BOVINE
+							variableName = variableName + "--" + getSubsetAsString(infoCharacters, variableStartIndex + 1, i - 1);
+							
+						}else{
+							// Combine the value to the Variable Name: key: species--BOVINE
+							variableName = variableName + "--" + getSubsetAsString(infoCharacters, variableStartIndex, i);
+						}
+						
+					}else if(multipleStrings != 0){
+						
+						multipleStrings = 0; // Finished dealing with variable
 					}
 					
-				}else if(multipleStrings == 1){
-					multipleStrings = 0; // Finished dealing with variable
-				}
-				
-				// Store the Variable Information
-				if(readingNodeInfo == 1){
-					nodeInfo.put(variableName, Methods.copyDouble(values));
-				}else if(readingBranchInfo == 1){
-					branchInfo.put(variableName, Methods.copyDouble(values));
-				}
-						
-				// Reset the Variable Information
-				variableStartIndex = i + 1;
-				values = new ArrayList<Double>();
+					// Store the Variable Information
+					if(readingNodeInfo == 1){
+						nodeInfo.put(variableName, Methods.copyDouble(values));
+					}else if(readingBranchInfo == 1){
+						branchInfo.put(variableName, Methods.copyDouble(values));
+					}
+							
+					// Reset the Variable Information
+					variableStartIndex = i + 1;
+					values = new ArrayList<Double>();
+							
+				}else if(current == ']'){
 					
-				// Note that finished Reading Variable Information
-				if(readingNodeInfo == 1){
+					// Extract the Variable Information
+					if(values.isEmpty() && multipleStrings == 0){
+						
+						// Check that value isn't in a String format e.g. species = "BOVINE"
+						if(infoCharacters.get(variableStartIndex) != '"'){
+							values.add(Double.parseDouble(getSubsetAsString(infoCharacters, variableStartIndex, i)));
+							
+						}else if(infoCharacters.get(variableStartIndex) == '"'){
+							// Combine the value to the Variable Name: key: species--BOVINE
+							variableName = variableName + "--" + getSubsetAsString(infoCharacters, variableStartIndex + 1, i - 1);
+						}
+						
+					}else if(multipleStrings == 1){
+						multipleStrings = 0; // Finished dealing with variable
+					}
+					
+					// Store the Variable Information
+					if(readingNodeInfo == 1){
+						nodeInfo.put(variableName, Methods.copyDouble(values));
+					}else if(readingBranchInfo == 1){
+						branchInfo.put(variableName, Methods.copyDouble(values));
+					}
+							
+					// Reset the Variable Information
+					variableStartIndex = i + 1;
+					values = new ArrayList<Double>();
+						
+					// Note that finished Reading Variable Information
+					if(readingNodeInfo == 1){
+						readingNodeInfo = 2;
+					}else if(readingBranchInfo == 1){
+						readingBranchInfo = 2;
+					}
+							
+				}else if(current == ':'){
+						
+					// Get the Node ID
+					if(internal == false){
+						node.setName(getSubsetAsString(newickNode, 0, lastBracketIndex + 1));
+					}
+					
+					// For Branch length increase index by 1
+					branchLengthPresent = true;
+					variableStartIndex = i + 1;
+					
+					// Note that finished reading nodeInfo if it was present
 					readingNodeInfo = 2;
-				}else if(readingBranchInfo == 1){
-					readingBranchInfo = 2;
-				}
-						
-			}else if(current == ':'){
+							
+				}else if(i == infoCharacters.size() - 1 && node.getBranchLength() == -1 && branchLengthPresent == true){ // If reached end and no BranchLength yet stored
 					
-				// Get the Node ID
-				if(internal == false){
-					node.setName(getSubsetAsString(newickNode, 0, lastBracketIndex + 1));
+					// Make sure Branch Length is stored
+					node.setBranchLength(Double.parseDouble(getSubsetAsString(infoCharacters, variableStartIndex, i + 1)));
 				}
-				
-				// For Branch length increase index by 1
-				branchLengthPresent = true;
-				variableStartIndex = i + 1;
-				
-				// Note that finished reading nodeInfo if it was present
-				readingNodeInfo = 2;
-						
-			}else if(i == infoCharacters.size() - 1 && node.getBranchLength() == -1 && branchLengthPresent == true){ // If reached end and no BranchLength yet stored
-				
-				// Make sure Branch Length is stored
-				node.setBranchLength(Double.parseDouble(getSubsetAsString(infoCharacters, variableStartIndex, i + 1)));
 			}
+			
+			// Store the node and branch information found
+			node.setNodeInfo(nodeInfo);
+			node.setBranchInfo(branchInfo);
+			
+		// If no branch information and this is a terminal node - set ID to the the newick node as ID should be the only thing present
+		}else if(internal == false){
+			node.setName(Methods.toStringChar(newickNode));
 		}
-		
-		// Store the node and branch information found
-		node.setNodeInfo(nodeInfo);
-		node.setBranchInfo(branchInfo);
 	}
 	
 	private void readNewickNode(ArrayList<Character> newickNode, Node parentNode){

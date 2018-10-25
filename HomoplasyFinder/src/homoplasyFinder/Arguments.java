@@ -8,6 +8,7 @@ public class Arguments {
 	public boolean createFasta = false;
 	public boolean createAnnotatedNewickTree = false;
 	public boolean includeConsistentSitesInReport = false;
+	public boolean multithread = false;
 	
 	public Arguments(String[] args) {
 		
@@ -20,7 +21,7 @@ public class Arguments {
 		System.out.println("HomoplasyFinder: a tool to identify homoplasies within a phylogenetic tree and alignment");
 		
 		System.out.println("\nNecessary command line arguments:");
-		System.out.println("\t--fasta [fullPathToFASTAFile]\tThe input FASTA containing a nucleotide alignment");
+		System.out.println("\t--fasta [fullPathToFASTAFile]\tThe input FASTA containing a nucleotide alignment (sequential format)");
 		System.out.println("\t--tree [fullPathToTreeFile]\tThe input Newick formatted tree file");
 		
 		System.out.println("\nOptional command line arguments:");
@@ -28,9 +29,35 @@ public class Arguments {
 		System.out.println("\t--createFasta\t\tA flag to create a FASTA file without inconsistent sites");
 		System.out.println("\t--createAnnotatedTree\tA flag to create an annotated Newick formatted tree file");
 		System.out.println("\t--includeConsistent\tA flag to include information about sites that are consistent (non-homoplasious) in report");
+		System.out.println("\t--multithread\tA flag to turn on multithreading");
 		System.out.println("\t--help\t\t\tA flag to print this information and exit");
 	}
+
+	// Getting methods
+	public boolean isVerbose() {
+		return verbose;
+	}
+	public String getFastaFile() {
+		return fastaFile;
+	}
+	public String getTreeFile() {
+		return treeFile;
+	}
+	public boolean isCreateFasta() {
+		return createFasta;
+	}
+	public boolean isCreateAnnotatedNewickTree() {
+		return createAnnotatedNewickTree;
+	}
+	public boolean isIncludeConsistentSitesInReport() {
+		return includeConsistentSitesInReport;
+	}
+	public boolean isMultithread() {
+		return multithread;
+	}
+
 	
+	// Method to retrieve command line options from arguments
 	private void examineCommandLineArgumentsProvided(String[] args) {
 		
 		// Examine each argument
@@ -62,6 +89,10 @@ public class Arguments {
 			}else if(args[i].equals("--includeConsistent")) {
 				this.includeConsistentSitesInReport = true;
 				
+			// Check if flag for including consistent sites in FASTA is present?
+			}else if(args[i].equals("--multithread")) {
+				this.multithread = true;
+				
 			// Check for help request
 			}else if(args[i].matches("(.*)help")){
 				printHelp();
@@ -69,7 +100,7 @@ public class Arguments {
 							
 			// Else - input argument not recognised, print help
 			}else {
-				System.err.println("The input argument: " + args[i] + " provided wasn't recognised!\n");
+				System.err.println((char)27 + "[31mERROR!! The input argument: \"" + args[i] + "\" provided wasn't recognised!\n" + (char)27 + "[0m");
 				printHelp();
 				System.exit(0);
 			}
@@ -77,7 +108,7 @@ public class Arguments {
 		
 		// Check both FASTA and tree files were provided
 		if(this.fastaFile == null || this.treeFile == null) {
-			System.err.println("Please provide the full path names of both a FASTA file and newick formatted tree file.\n");
+			System.err.println((char)27 + "[31mERROR!! HomoplasyFinder requires the full path names of both a FASTA file and a newick formatted tree file.\n" + (char)27 + "[0m");
 			printHelp();
 			System.exit(0);
 		}

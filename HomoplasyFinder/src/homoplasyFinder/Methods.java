@@ -94,7 +94,7 @@ public class Methods {
     	try {
     		input = new FileInputStream(fileName);
     	}catch(FileNotFoundException e){
-    		System.err.println("The input FASTA file: " + fileName + " could not be found!");
+    		System.err.println((char)27 + "[31mERROR!! The input FASTA file: \"" + fileName + "\" could not be found!" + (char)27 + "[0m");
     		System.exit(0);
     	}
     	
@@ -182,6 +182,17 @@ public class Methods {
 		
 		return string.toString();
 	}
+	
+	public static String toStringInt(ArrayList<Integer> array, String sep){
+		StringBuilder string = new StringBuilder(array.size());
+		string.append(array.get(0));
+		for(int i = 1; i < array.size(); i++){
+			string.append(sep + array.get(i));
+		}
+		
+		return string.toString();
+	}
+
 
 	public static ArrayList<Character> subsetChar(ArrayList<Character> array, int start, int end){
 		

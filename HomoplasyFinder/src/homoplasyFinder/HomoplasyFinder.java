@@ -15,38 +15,33 @@ public class HomoplasyFinder {
 		
 		// Set the path
 		String path = "";
-//		String path = "/home/josephcrispell/Desktop/ClonalFrameML_SaureusData/";
-//		String path = "/home/josephcrispell/Desktop/Research/Homoplasy/DataForTesting/";
 		
 		// Read in the sequences
-		ArrayList<Sequence> sequences = Methods.readFastaFile(arguments.fastaFile, false);
-//		ArrayList<Sequence> sequences = Methods.readFastaFile(path + "Saureus_sequences.fasta", false);
-//		ArrayList<Sequence> sequences = Methods.readFastaFile(path + "example_09-04-18.fasta", false);
+		ArrayList<Sequence> sequences = Methods.readFastaFile(arguments.getFastaFile(), false);
 		
 		// Read the NEWICK tree and store as a traversable node set
-		Tree tree = new Tree(arguments.treeFile);
-//		Tree tree = new Tree(path + "Saureus_phyML.newick");
-//		Tree tree = new Tree(path + "example-TRUE_09-04-18.tree");
+		Tree tree = new Tree(arguments.getTreeFile());
 		
 		// Calculate the consistency index of each position in the alignment on the phylogeny
-		ConsistencyIndex consistency = new ConsistencyIndex(tree, sequences, arguments.verbose);
+		ConsistencyIndex consistency = new ConsistencyIndex(tree, sequences, arguments.isVerbose(), arguments.isMultithread());
 		
 		// Create a FASTA file without inconsistent sites
-		if(arguments.createFasta) {
+		if(arguments.isCreateFasta()) {
 			consistency.printSequencesWithoutInConsistentSites(path + "noInconsistentSites_" + date + ".fasta");
 		}
 			
 		// Create an annotated NEWICK tree file
-		if(arguments.createAnnotatedNewickTree) {
+		if(arguments.isCreateAnnotatedNewickTree()) {
 			consistency.printAnnotatedTree(path + "annotatedNewickTree_" + date + ".tree");
 		}
 		
 		// Create a report file
-		consistency.printSummary(path + "consistencyIndexReport_" + date + ".txt", arguments.includeConsistentSitesInReport);
+		consistency.printSummary(path + "consistencyIndexReport_" + date + ".txt", arguments.isIncludeConsistentSitesInReport());
 	}	
 	
 	public static int[] runHomoplasyFinderFromR(String treeFile, String fastaFile, String pathForOutput,
-			boolean createFasta, boolean createReport, boolean createTree, boolean includeConsistentSites, boolean verbose) throws IOException {
+			boolean createFasta, boolean createReport, boolean createTree, boolean includeConsistentSites, boolean verbose,
+			boolean multithread) throws IOException {
 		
 		// Get the current date
 		String date = Methods.getCurrentDate("dd-MM-yy");
@@ -58,7 +53,7 @@ public class HomoplasyFinder {
 		Tree tree = new Tree(treeFile);
 		
 		// Calculate the consistency index of each position in the alignment on the phylogeny
-		ConsistencyIndex consistency = new ConsistencyIndex(tree, sequences, verbose);
+		ConsistencyIndex consistency = new ConsistencyIndex(tree, sequences, verbose, multithread);
 		
 		// Create a FASTA file without inconsistent sites
 		if(createFasta) {
