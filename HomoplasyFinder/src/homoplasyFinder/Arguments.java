@@ -29,7 +29,7 @@ public class Arguments {
 		System.out.println("\t--createFasta\t\tA flag to create a FASTA file without inconsistent sites");
 		System.out.println("\t--createAnnotatedTree\tA flag to create an annotated Newick formatted tree file");
 		System.out.println("\t--includeConsistent\tA flag to include information about sites that are consistent (non-homoplasious) in report");
-		System.out.println("\t--multithread\tA flag to turn on multithreading");
+		System.out.println("\t--multithread\t\tA flag to turn on multithreading");
 		System.out.println("\t--help\t\t\tA flag to print this information and exit");
 	}
 
