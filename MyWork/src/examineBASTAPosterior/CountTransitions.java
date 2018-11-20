@@ -26,11 +26,17 @@ public class CountTransitions {
 		// Note the date when analyses were created
 		String date = "10-04-18";
 		
+		// Note whether you want to use the conservative approach (ancestor represents one sub-node)
+		boolean conservative = true;
+		
 		// Create an output file
 		String outputFile = path + "TransitionCounts_" + date + ".txt";
+		if(conservative) {
+			outputFile = path + "TransitionCounts-conservative_" + date + ".txt";
+		}
 		BufferedWriter bWriter = WriteToFile.openFile(outputFile, false);
 		bWriter.write("Analysis\tReplicate\tSample\tPosterior\tTreeLikelihood\tCount_BB\tCount_BC\tCount_CB\tCount_CC\tSumBranchLengths_BB\tSumBranchLengths_BC\tSumBranchLengths_CB\tSumBranchLengths_CC\n");
-		
+				
 		// Note each of the BASTA analyses
 		String[] analyses = {
 				"2Deme_equal_relaxed", "3Deme-outerIsCattle_varying_relaxed", "8Deme-EastWest_equal_relaxed",
@@ -45,7 +51,7 @@ public class CountTransitions {
 				
 			// Loop through each of the three replicates - for the BASTA analyses
 			for(int rep = 1; rep <= 3; rep++) {
-				
+			
 				System.out.println("Counting transitions for: " + analysis + ". Replicate: " + rep);
 				
 				// Read in a trees file
@@ -57,7 +63,7 @@ public class CountTransitions {
 				Hashtable<String, String> likelihoods = readPosteriorLogFile(logFile);
 				
 				// Count the number of badger-to-cattle and cattle-to-badger transitions
-				countTransitionsOnPhylogenies(trees, likelihoods, bWriter, analysis, rep);
+				countTransitionsOnPhylogenies(trees, likelihoods, bWriter, analysis, rep, conservative);
 				
 				System.out.println("\n\n");
 			}
@@ -108,7 +114,7 @@ public class CountTransitions {
 	}
 	
 	public static void countTransitionsOnPhylogenies(Hashtable<String, Tree> trees, Hashtable<String, String> likelihoods, BufferedWriter bWriter,
-			String analysis, int replicate) throws IOException {
+			String analysis, int replicate, boolean conservativeApproach) throws IOException {
 		
 		System.out.println("Counting transitions on " + trees.size() + " trees...");
 		
@@ -139,8 +145,12 @@ public class CountTransitions {
 			Node root = findRoot(tree.getInternalNodes());
 			
 			// Start traversing the tree from the current node
-			examineNode(root, null, transitions, branchLengthSums, internalNodes, terminalNodes);
-			
+			if(conservativeApproach) {
+				examineNodeConservative(root, transitions, internalNodes, terminalNodes);
+			}else {
+				examineNode(root, null, transitions, branchLengthSums, internalNodes, terminalNodes);
+			}
+						
 			// Print progress information
 			if((i + 1) % 1000 == 0) {
 				System.out.println("Finished counting transitions on " + (i + 1) + " trees...");
@@ -151,6 +161,65 @@ public class CountTransitions {
 					"\t" + transitions[0][0] + "\t" + transitions[0][1] + "\t" + transitions[1][0] + "\t" + transitions[1][1] +
 					"\t" + branchLengthSums[0][0] + "\t" + branchLengthSums[0][1] + "\t" + branchLengthSums[1][0] + "\t" + branchLengthSums[1][1] + "\n");
 		}		
+	}
+	
+	public static void examineNodeConservative(Node node, int[][] transitions, ArrayList<Node> internalNodes, ArrayList<Node> terminalNodes) {
+		
+		/**
+		 * A more conservative transition count method - recommended by Nicola De Maio
+		 * 	- Assumes the ancestor represents one of the tips in the past
+		 * 
+		 * For a two state problem: A & B
+		 *  ----A				----A				----A				----B	
+		 * |		1 AA	   |		0 AA	   |		1 AA	   |		0 AA
+		 * A		0 AB	   A		1 AB	   A----B	1 AB	   A		2 AB
+		 * |				   |				   |				   |
+		 *  ----A				----B				----A				----B
+		 */
+		
+		// Get the sub node indices and types of the current node
+		ArrayList<Integer> subNodeIndices = node.getSubNodeIndices();
+		ArrayList<Boolean> subNodeTypes = node.getSubNodeTypes();
+		
+		// Get the current node's state
+		int nodeStateIndex = returnStateIndex(HashtableMethods.getKeysString(node.getNodeInfo())[0]);
+		
+		// Initialise a variable to count how many
+		int nSameAsNode = 0;
+		
+		// Examine each of the sub nodes
+		for(int i = 0; i < subNodeIndices.size(); i++) {
+			
+			// Get the current sub node object
+			Node subNode = null;
+			if(subNodeTypes.get(i)) {
+				subNode = internalNodes.get(subNodeIndices.get(i));
+					
+				// For internal nodes - go and examine them
+				examineNodeConservative(subNode, transitions, internalNodes, terminalNodes);
+			}else {
+				subNode = terminalNodes.get(subNodeIndices.get(i));
+			}
+				
+			// Get the state of the current sub-node
+			int subNodeStateIndex = returnStateIndex(HashtableMethods.getKeysString(subNode.getNodeInfo())[0]);
+				
+			// Check if it is the same as the input node
+			if(nodeStateIndex != -1 && nodeStateIndex == subNodeStateIndex) {
+				nSameAsNode++;
+				
+			// If it's different then count the inter-state transition rates
+			}else if(nodeStateIndex != -1 && subNodeStateIndex != -1){
+					
+				// Count the transition
+				transitions[nodeStateIndex][subNodeStateIndex]++;
+			}
+		}
+			
+		// Count the within state transition rates if they occurred
+		if(nSameAsNode > 1) {
+			transitions[nodeStateIndex][nodeStateIndex] += nSameAsNode - 1;
+		}	
 	}
 	
 	public static void examineNode(Node node, Node parent, int[][] transitions, double[][] branchLengthSums, ArrayList<Node> internalNodes,

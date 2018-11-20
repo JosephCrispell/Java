@@ -31,6 +31,8 @@ public class SmithWaterman {
 		int[][][] scoreSources = fillInScoringMatrix(scoringMatrix, a, b, match, misMatch, gap);
 		printScoringMatrix(scoringMatrix, a, b);
 		System.out.println("\n\n");
+		printSourceMatrix(scoreSources, a, b);
+		System.out.println("\n\n");
 		
 		Alignment[] alignments = constructAlignments(scoringMatrix, a, b, scoreSources, true, true);
 
@@ -239,4 +241,33 @@ public class SmithWaterman {
 		}		
 	}
 
+	public static void printSourceMatrix(int[][][] sourceMatrix, char[] a, char[] b){
+		
+		System.out.println("    " + ArrayMethods.toString(b, " "));
+		for(int i = 0; i < sourceMatrix.length; i++){
+			
+			if(i != 0){
+				System.out.print(a[i-1] + " ");
+			}else{
+				System.out.print("  ");
+			}
+			for(int j = 0; j < sourceMatrix[0].length; j++){
+				
+				// Check direction - either diagonal up or down
+				// {{i-1, j-1}, {i, j-1}, {i-1, j}}
+				if(i == 0 || j == 0 || (sourceMatrix[i][j][0] == 0 && sourceMatrix[i][j][1] == 0)) {
+					System.out.print("  ");
+				}else if(sourceMatrix[i][j][0] == i-1 && sourceMatrix[i][j][1] == j-1) {
+					System.out.print("\\ ");
+				}else if(sourceMatrix[i][j][0] == i-1 && sourceMatrix[i][j][1] == j) {
+					System.out.print("^ ");
+				}else if(sourceMatrix[i][j][0] == i && sourceMatrix[i][j][1] == j-1) {
+					System.out.print("< ");
+				}else {
+					System.out.print("  ");
+				}
+			}
+			System.out.println();
+		}		
+	}
 }
