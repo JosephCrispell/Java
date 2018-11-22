@@ -20,54 +20,67 @@ public class CountTransitions {
 
 	public static void main(String[] args) throws IOException{
 		
-		// Set the path
-		String path = "/home/josephcrispell/Desktop/Research/Woodchester_CattleAndBadgers/NewAnalyses_22-03-18/BASTA/";
-		
-		// Note the date when analyses were created
-		String date = "10-04-18";
-		
-		// Note whether you want to use the conservative approach (ancestor represents one sub-node)
-		boolean conservative = true;
-		
-		// Create an output file
-		String outputFile = path + "TransitionCounts_" + date + ".txt";
-		if(conservative) {
-			outputFile = path + "TransitionCounts-conservative_" + date + ".txt";
+		// Insert a help statement
+		if(args.length < 2 || args[0].equals("-help") || args[0].equals("") || args[0].equals("--help") || args[0].equals("-h") || args[0].equals("help")) {
+			System.out.println("A simple tool to count the number of transitions between \"badger\" and \"cow\" states on a distribution of posterior trees from BASTA.");
+			
+			System.out.println("\nCommand line structure: ");
+			System.out.println("java -jar CountTransitions_DATE.jar BASTA-log-file.trees BASTA-log-file.log");
+			System.exit(0);
 		}
+		
+//		// Set the path
+//		String path = "/home/josephcrispell/Desktop/Research/Woodchester_CattleAndBadgers/NewAnalyses_22-03-18/BASTA/";
+//		
+//		// Note the date when analyses were created
+//		String date = "10-04-18";
+//		
+//		// Note whether you want to use the conservative approach (ancestor represents one sub-node)
+//		boolean conservative = true;
+//		
+//		// Create an output file
+//		String outputFile = path + "TransitionCounts_" + date + ".txt";
+//		if(conservative) {
+//			outputFile = path + "TransitionCounts-conservative_" + date + ".txt";
+//		}
+		String treesFile = args[0];
+		String logFile = args[1];
+		String analysis = treesFile.substring(0, treesFile.length()-6);
+		String outputFile = analysis + "_TransitionCounts.txt";
 		BufferedWriter bWriter = WriteToFile.openFile(outputFile, false);
 		bWriter.write("Analysis\tReplicate\tSample\tPosterior\tTreeLikelihood\tCount_BB\tCount_BC\tCount_CB\tCount_CC\tSumBranchLengths_BB\tSumBranchLengths_BC\tSumBranchLengths_CB\tSumBranchLengths_CC\n");
 				
-		// Note each of the BASTA analyses
-		String[] analyses = {
-				"2Deme_equal_relaxed", "3Deme-outerIsCattle_varying_relaxed", "8Deme-EastWest_equal_relaxed",
-				"2Deme_varying_relaxed", "4Deme_equal_relaxed", "8Deme-EastWest_varying_relaxed",
-				"3Deme-outerIsBadger_equal_relaxed", "4Deme_varying_relaxed", "8Deme-NorthSouth_equal_relaxed",
-				"3Deme-outerIsBadger_varying_relaxed", "6Deme-EastWest_equal_relaxed", "8Deme-NorthSouth_varying_relaxed",
-				"3Deme-outerIsBoth_equal_relaxed", "6Deme-EastWest_varying_relaxed", "3Deme-outerIsBoth_varying_relaxed", 
-				"6Deme-NorthSouth_equal_relaxed", "3Deme-outerIsCattle_equal_relaxed", "6Deme-NorthSouth_varying_relaxed"};
-					
-		// Examine each of the different BASTA analyses
-		for(String analysis : analyses) {
-				
-			// Loop through each of the three replicates - for the BASTA analyses
-			for(int rep = 1; rep <= 3; rep++) {
-			
-				System.out.println("Counting transitions for: " + analysis + ". Replicate: " + rep);
-				
-				// Read in a trees file
-				String treesFile = path + "Replicate" + rep + "_" + date + "/" + analysis + "_" + date + "/" + analysis + "_" + date + ".trees";
+//		// Note each of the BASTA analyses
+//		String[] analyses = {
+//				"2Deme_equal_relaxed", "3Deme-outerIsCattle_varying_relaxed", "8Deme-EastWest_equal_relaxed",
+//				"2Deme_varying_relaxed", "4Deme_equal_relaxed", "8Deme-EastWest_varying_relaxed",
+//				"3Deme-outerIsBadger_equal_relaxed", "4Deme_varying_relaxed", "8Deme-NorthSouth_equal_relaxed",
+//				"3Deme-outerIsBadger_varying_relaxed", "6Deme-EastWest_equal_relaxed", "8Deme-NorthSouth_varying_relaxed",
+//				"3Deme-outerIsBoth_equal_relaxed", "6Deme-EastWest_varying_relaxed", "3Deme-outerIsBoth_varying_relaxed", 
+//				"6Deme-NorthSouth_equal_relaxed", "3Deme-outerIsCattle_equal_relaxed", "6Deme-NorthSouth_varying_relaxed"};
+//					
+//		// Examine each of the different BASTA analyses
+//		for(String analysis : analyses) {
+//				
+//			// Loop through each of the three replicates - for the BASTA analyses
+//			for(int rep = 1; rep <= 3; rep++) {
+//			
+//				System.out.println("Counting transitions for: " + analysis + ". Replicate: " + rep);
+//				
+//				// Read in a trees file
+//				String treesFile = path + "Replicate" + rep + "_" + date + "/" + analysis + "_" + date + "/" + analysis + "_" + date + ".trees";
 				Hashtable<String, Tree> trees = readPosteriorTrees(treesFile);
 				
-				// Read the log file to get each sample likelihood value
-				String logFile = path + "Replicate" + rep + "_" + date + "/" + analysis + "_" + date + "/" + analysis + "_" + date + ".log";
+//				// Read the log file to get each sample likelihood value
+//				String logFile = path + "Replicate" + rep + "_" + date + "/" + analysis + "_" + date + "/" + analysis + "_" + date + ".log";
 				Hashtable<String, String> likelihoods = readPosteriorLogFile(logFile);
 				
 				// Count the number of badger-to-cattle and cattle-to-badger transitions
-				countTransitionsOnPhylogenies(trees, likelihoods, bWriter, analysis, rep, conservative);
+				countTransitionsOnPhylogenies(trees, likelihoods, bWriter, analysis, 0, true);
 				
-				System.out.println("\n\n");
-			}
-		}		
+//				System.out.println("\n\n");
+//			}
+//		}		
 		
 		// Close the output file
 		bWriter.close();
