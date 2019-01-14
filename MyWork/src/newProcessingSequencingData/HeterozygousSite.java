@@ -5,13 +5,13 @@ import java.util.Hashtable;
 public class HeterozygousSite {
 	
 	public int position;
-	public char referenceAllele;
-	public char[] alternateAlleles;
+	public String referenceAllele;
+	public String[] alternateAlleles;
 	public double qualityScore;
 	public Hashtable<String, double[]> infoCol;
 	public Hashtable<String, double[]> formatCol;
 	
-	public HeterozygousSite(int pos, char ref, char[] alternates, double quality, Hashtable<String, double[]> info,
+	public HeterozygousSite(int pos, String ref, String[] alternates, double quality, Hashtable<String, double[]> info,
 			Hashtable<String, double[]> format){
 		
 		this.position = pos;
@@ -26,10 +26,10 @@ public class HeterozygousSite {
 	public int getPosition() {
 		return position;
 	}
-	public char getReferenceAllele(){
+	public String getReferenceAllele(){
 		return this.referenceAllele;
 	}
-	public char[] getAlternateAlleles() {
+	public String[] getAlternateAlleles() {
 		return alternateAlleles;
 	}
 	public double getQualityScore() {

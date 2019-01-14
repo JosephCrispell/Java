@@ -40,8 +40,8 @@ public class MergeVcfFiles {
 			System.out.println("\tRead Depth - DP\n\tHigh Quality Base Depth (DP4) - HQDP\n\tMapping Quality - MQ\n\tQuality Score - QUAL");
 			System.out.println("\tFQ\n\tReference and Alternate Alleles - RefAlt");
 			System.out.println("\nThe above Information is stored in the following Format:");
-			System.out.println("\tDP;HQDP;MQ;QUAL;FQ;RefAlt");
-			System.out.println("\n*** Currently skipping any INDELS observed in the VCF files");
+			System.out.println("\tDP;HQDP;MQ;QUAL;FQ;Ref;Alt");
+			System.out.println("\n*** NOTE: Data for INDELS are retained in merged output file.");
 		}else{
 			
 			// Get the current date
@@ -61,7 +61,7 @@ public class MergeVcfFiles {
 			System.out.println("Beginning to merge VCF files. May take several minutes!");
 			
 			// Get the path to the directory
-//			String path = "/home/josephcrispell/Desktop/Research/Cumbria/vcfFiles/";
+//			String path = "/home/josephcrispell/Desktop/Research/RepublicOfIreland/Mbovis/WorkingOnIndels/";
 			String path = args[0];
 			
 			// Open the genome annotation file
@@ -83,14 +83,13 @@ public class MergeVcfFiles {
 			/**
 			 *  Combine all the VCF Files into a single Merged VCF File
 			 *  	Only Variant sites are included in the Merged file
-			 *  	Variant sites are sites where at least one of the isolates shows variation		 *  
+			 *  	Variant sites are sites where at least one of the isolates shows variation  
 			 */
 		
 			String mergedVCFsFile = path + "/merged_" + date + ".txt";
 			String coverageFile = path + "/genomeCoverage_" + date + ".txt";
 			String constantSiteCounts = path + "/constantSiteCounts_" + date + ".txt";
-			boolean skipIndels = true;
-			combineVCFFiles(vcfFiles, mergedVCFsFile, regionsToIgnore, coverageFile, constantSiteCounts, skipIndels);
+			combineVCFFiles(vcfFiles, mergedVCFsFile, regionsToIgnore, coverageFile, constantSiteCounts);
 			
 			/**
 			 * Note the heterozygous site count of each VCF file
@@ -276,7 +275,7 @@ public class MergeVcfFiles {
 		 * 		FQ									FQ		int
 		 * 		Reference and Alternate alleles				char char
 		 * 
-		 * 		DP;HQDP;MQ;QUAL;FQ;RefAlt
+		 * 		DP;HQDP;MQ;QUAL;FQ;Ref;Alt
 		 */
 		
 		// Initialise Default values for the above metrics
@@ -322,12 +321,12 @@ public class MergeVcfFiles {
 		infoSummary = infoSummary + ";" + fq;
 		
 		// Add the Reference and Alternate alleles
-		infoSummary = infoSummary + ";" + info.getRef() + info.getAlt();
+		infoSummary = infoSummary + ";" + info.getRef() + ";" + info.getAlt();
 		
 		return infoSummary;
 	}
 	
-	public static String[] returnNextLineFromEachFile(VcfFile[] readers, String[] previousLinesInfo, boolean skipIndels) throws IOException{
+	public static String[] returnNextLineFromEachFile(VcfFile[] readers, String[] previousLinesInfo) throws IOException{
 		
 		/**
 		 * Getting the next set of lines from the VCF files
@@ -346,22 +345,9 @@ public class MergeVcfFiles {
 			// If shift = 1 mean that we are meant to move to the next line for the current BufferedReader
 			if(readers[i].getShift() == 1){
 				
-				// Store the next file line from the current BufferedReader (VCF file) - skip INDELS
-				if(skipIndels) {
-					indelFound = true;
-					while(indelFound) {
-						line = readers[i].getBfReader().readLine();
-						if(line != null) {
-							indelFound = line.matches("(.*)INDEL(.*)");
-						}else {
-							indelFound = false;
-						}						
-					}
-					
-				}else {
-					line = readers[i].getBfReader().readLine();
-				}							
-				
+				// Store the next file line from the current BufferedReader (VCF file)
+				line = readers[i].getBfReader().readLine();
+								
 				// Check that haven't just reach end of the VCF file
 				if(line != null){
 					linesInfo[i] = summariseSNPInfoLine(line, readers[i]);
@@ -618,15 +604,15 @@ public class MergeVcfFiles {
 		}
 	}
 	
-	public static int checkIfSNPFallsInRegionToIgnore(int snp, int[][] regionsToIgnore){
+	public static boolean checkIfSNPFallsInRegionToIgnore(int snp, int[][] regionsToIgnore){
 		
-		int result = 0;
+		boolean result = false;
 		
 		// Check each region in turn to see if SNP falls within it
 		for(int[] coords : regionsToIgnore){
 			
 			if(snp >= coords[0] && snp <= coords[1]){
-				result = 1;
+				result = true;
 				break;				
 			}
 		}
@@ -635,7 +621,7 @@ public class MergeVcfFiles {
 	}
 	
 	public static void combineVCFFiles(VcfFile[] vcfFiles, String mergedVCFsFile, int[][] coordsOfRegionsToIgnore,
-			String coverageFile, String constantSiteCountsFile, boolean skipIndels) throws IOException{
+			String coverageFile, String constantSiteCountsFile) throws IOException{
 		
 		// Open the output merged VCFs File
 		BufferedWriter outputMerged = WriteToFile.openFile(mergedVCFsFile, false);
@@ -644,10 +630,10 @@ public class MergeVcfFiles {
 		BufferedWriter outputCoverage = WriteToFile.openFile(coverageFile, false);
 		
 		// Get the first set of SNP Information lines
-		String[] lines = returnNextLineFromEachFile(vcfFiles, new String[vcfFiles.length], skipIndels);
+		String[] lines = returnNextLineFromEachFile(vcfFiles, new String[vcfFiles.length]);
 		String[] outputLines = new String[2];
 		int snp;
-		int result;
+		boolean result;
 		
 		// Initialise an array to store a count of constant sites: A C G T
 		int[] constantSiteCounts = new int[4];
@@ -685,24 +671,25 @@ public class MergeVcfFiles {
 			
 			// Does the the SNP fall within a region we want to ignore?
 			snp = Integer.parseInt(outputLines[0].split("\t")[1]);
-			result = 0;
+			
+			result = false;
 			if(coordsOfRegionsToIgnore.length > 0){
 				result = checkIfSNPFallsInRegionToIgnore(snp, coordsOfRegionsToIgnore);
-			}			
+			}
 			
 			// Only print SNP Information for those SNPs where an Alternate allele has been found in at least 1 sample
-			if(outputLines[0].matches("(.*);[A-Z][A-Z](.*)") && result == 0){
+			if(outputLines[0].matches("(.*);([A-Z]+);([A-Z]+)(.*)") && result == false){
 				WriteToFile.writeLn(outputMerged, outputLines[0]);
 			
 			// Record the number of constant sites as a Count: A C G T
-			}else if(result == 0){
+			}else if(result == false){
 				
 				// Found out which allele is present at the current position
 				constantSiteCounts = findAllelePresent(outputLines[0], constantSiteCounts);
 			}
 			
 			// Get the next set of lines from the merged.txt lines
-			lines = returnNextLineFromEachFile(vcfFiles, lines, skipIndels);
+			lines = returnNextLineFromEachFile(vcfFiles, lines);
 			
 			// Print a progress dot every x lines
 			if(lineNo % 10000 == 0){

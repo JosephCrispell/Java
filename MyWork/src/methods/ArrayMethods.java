@@ -9,7 +9,14 @@ public class ArrayMethods {
 	public static void main(String[] args) {
 		// Method Testing Area
 		
-		double[] numbers = {1,2,3,2,3,23,2,2,34,4,4,5,3,3,45,3,45,4,4};
+		String[] tests = {"77;0,0,53,20;46;225.0;0;A;G:54;0,0,26,19;46;225.0;0;A;G:64;0,0,29,24;46;225.0;0;A;G", 
+				"4;0,0,0,0;0;29.5864;0;TTCG;AG:3;0,0,0,0;0;29.5864;0;T;ATG:-------------------", 
+				"-------------------:59;29,25,1,0;49;29.671;0;TGGGG;.:-------------------"};
+		
+		for(String test : tests) {
+			System.out.println(test.matches("(.*);([A-Z]+);([A-Z]+)(.*)"));
+		}
+		
 		
 
 		// 

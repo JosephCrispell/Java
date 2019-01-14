@@ -9,8 +9,8 @@ public class SnpInfo {
 	public String fileName;
 	public String chrom;
 	public int pos;
-	public char ref;
-	public char alt;
+	public String ref;
+	public String alt;
 	public double qualityScore;
 	public Hashtable<String, double[]> infoCol;
 	public Hashtable<String, double[]> formatCol;
@@ -42,7 +42,7 @@ public class SnpInfo {
 		String[] cols = snpInfoLine.split("\t");
 		this.chrom = cols[0];
 		this.pos = Integer.parseInt(cols[1]);
-		this.ref = cols[3].charAt(0);
+		this.ref = cols[3];
 		this.qualityScore = Double.parseDouble(cols[5]);
 		this.infoCol = getInfoColInfo(cols[7]);
 		this.formatCol = getFormatColInfo(cols[8], cols[9]);
@@ -61,10 +61,10 @@ public class SnpInfo {
 	public int getPos(){
 		return this.pos;
 	}
-	public char getRef(){
+	public String getRef(){
 		return this.ref;
 	}
-	public char getAlt(){
+	public String getAlt(){
 		return this.alt;
 	}
 	public double getQualityScore(){
@@ -171,8 +171,8 @@ public class SnpInfo {
 		return formatCol;		
 	}
 
-	public static char getAlternateAllele(String col, Hashtable<String, double[]> format, int snpPos, 
-			VcfFile file, Hashtable<String, double[]> info, double quality, char refAllele){
+	public static String getAlternateAllele(String col, Hashtable<String, double[]> format, int snpPos, 
+			VcfFile file, Hashtable<String, double[]> info, double quality, String refAllele){
 		
 		/**
 		 * Rarely more than one alternate allele can be present at a given position. If an alternate allele is called
@@ -199,10 +199,10 @@ public class SnpInfo {
 		char[] alleles;
 		
 		// Set default allele to unknown (N)
-		char allele = 'N';
+		String allele = "N";
 		
 		// Get the alternate Allele(s)
-		char[] alternateAlleles = ArrayMethods.toChar(col.split(","));
+		String[] alternateAlleles = col.split(",");
 		allele = alternateAlleles[0];
 		
 		// Run heterozygosity check - Check if high quality bases supporting both the reference

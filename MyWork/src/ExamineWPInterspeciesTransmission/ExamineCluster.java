@@ -41,7 +41,7 @@ public class ExamineCluster {
 
 		// Set the date for these files
 		String date = "04-04-2018"; // Override date
-		String path = "C:/Users/Joseph Crisp/Desktop/UbuntuSharedFolder/Woodchester_CattleAndBadgers/NewAnalyses_22-03-18/";
+		String path = "/home/josephcrispell/Desktop/Research/Woodchester_CattleAndBadgers/NewAnalyses_22-03-18/";
 
 		// Read in the Cattle data
 		String consolidatedSampledAnimalInfo = path + "IsolateData/ConsolidatedCattleIsolateData_" + date + ".txt";
@@ -554,8 +554,7 @@ public class ExamineCluster {
 		// Initialise a hashtable to record the tattoos of the animals that we
 		// are interested in
 		Hashtable<String, ContactEvent[]> animalsToKeep = new Hashtable<String, ContactEvent[]>();
-		ContactEvent contactInfo;
-
+		
 		// Check that there is movement data available for this sampled badger
 		if (badgerIsolateLifeHistoryData.getBadgerCaptureHistories().get(tattoo).getNMovements() != 0) {
 
@@ -568,9 +567,9 @@ public class ExamineCluster {
 					continue;
 				}
 
-				// Calculate how much time the cattle being compared spent in
-				// the same herd
-				contactInfo = getInfoForPeriodsSpentInSameGroup(
+				// Calculate how much time the badgers being compared spent in
+				// the same group
+				ContactEvent contactInfo = getInfoForPeriodsSpentInSameGroup(
 						badgerIsolateLifeHistoryData.getBadgerCaptureHistories().get(tattoo).getPeriodsInEachGroup(),
 						badgerIsolateLifeHistoryData.getBadgerCaptureHistories().get(id).getPeriodsInEachGroup(),
 						tattoo, id);
