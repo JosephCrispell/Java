@@ -42,6 +42,7 @@ public class MergeVcfFiles {
 			System.out.println("\nThe above Information is stored in the following Format:");
 			System.out.println("\tDP;HQDP;MQ;QUAL;FQ;Ref;Alt");
 			System.out.println("\n*** NOTE: Data for INDELS are retained in merged output file.");
+			System.out.println("\n*** NOTE: For large datasets consider allotting more RAM using java -jar -Xmx12000m to assign 12GB of RAM");
 		}else{
 			
 			// Get the current date
