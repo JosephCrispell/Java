@@ -8,8 +8,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Hashtable;
 
+import methods.ArrayMethods;
 import methods.CalendarMethods;
 import methods.HashtableMethods;
 import methods.WriteToFile;
@@ -22,69 +24,39 @@ public class CountTransitions {
 		
 		// Insert a help statement
 		if(args.length < 2 || args[0].equals("-help") || args[0].equals("") || args[0].equals("--help") || args[0].equals("-h") || args[0].equals("help")) {
-			System.out.println("A simple tool to count the number of transitions between \"badger\" and \"cow\" states on a distribution of posterior trees from BASTA.");
+			System.out.println("A simple tool to count the number of transitions between estimated states on a distribution of posterior trees from BASTA.");
 			
 			System.out.println("\nCommand line structure: ");
-			System.out.println("java -jar CountTransitions_DATE.jar BASTA-log-file.trees BASTA-log-file.log");
+			System.out.println("java -jar CountTransitions_DATE.jar BASTA-log-file.trees BASTA-log-file.log states");
+			System.out.println("\tBASTA-log-file.trees\tPosterior distribution of trees from BASTA analysis");
+			System.out.println("\tBASTA-log-file.log\tPosterior distribution of parameter estimates from BASTA analysis");
+			System.out.println("\tstates\t\t\tComma seperated list of possible states for nodes in posterior trees");
+			System.out.println("\nNOTE:\nUnsampled estimated states must be included in states list and will be formatted \"Unsampled0\", \"Unsampled1\", etc.");
+			System.out.println("These states are named in order of appearance in the migration rate matrix.");
 			System.exit(0);
 		}
 		
-//		// Set the path
-//		String path = "/home/josephcrispell/Desktop/Research/Woodchester_CattleAndBadgers/NewAnalyses_22-03-18/BASTA/";
-//		
-//		// Note the date when analyses were created
-//		String date = "10-04-18";
-//		
-//		// Note whether you want to use the conservative approach (ancestor represents one sub-node)
-//		boolean conservative = true;
-//		
-//		// Create an output file
-//		String outputFile = path + "TransitionCounts_" + date + ".txt";
-//		if(conservative) {
-//			outputFile = path + "TransitionCounts-conservative_" + date + ".txt";
-//		}
+		// Get the command line arguments
 		String treesFile = args[0];
 		String logFile = args[1];
 		String analysis = treesFile.substring(0, treesFile.length()-6);
 		String outputFile = analysis + "_TransitionCounts.txt";
-		BufferedWriter bWriter = WriteToFile.openFile(outputFile, false);
-		bWriter.write("Analysis\tReplicate\tSample\tPosterior\tTreeLikelihood\tCount_BB\tCount_BC\tCount_CB\tCount_CC\tSumBranchLengths_BB\tSumBranchLengths_BC\tSumBranchLengths_CB\tSumBranchLengths_CC\n");
-				
-//		// Note each of the BASTA analyses
-//		String[] analyses = {
-//				"2Deme_equal_relaxed", "3Deme-outerIsCattle_varying_relaxed", "8Deme-EastWest_equal_relaxed",
-//				"2Deme_varying_relaxed", "4Deme_equal_relaxed", "8Deme-EastWest_varying_relaxed",
-//				"3Deme-outerIsBadger_equal_relaxed", "4Deme_varying_relaxed", "8Deme-NorthSouth_equal_relaxed",
-//				"3Deme-outerIsBadger_varying_relaxed", "6Deme-EastWest_equal_relaxed", "8Deme-NorthSouth_varying_relaxed",
-//				"3Deme-outerIsBoth_equal_relaxed", "6Deme-EastWest_varying_relaxed", "3Deme-outerIsBoth_varying_relaxed", 
-//				"6Deme-NorthSouth_equal_relaxed", "3Deme-outerIsCattle_equal_relaxed", "6Deme-NorthSouth_varying_relaxed"};
-//					
-//		// Examine each of the different BASTA analyses
-//		for(String analysis : analyses) {
-//				
-//			// Loop through each of the three replicates - for the BASTA analyses
-//			for(int rep = 1; rep <= 3; rep++) {
-//			
-//				System.out.println("Counting transitions for: " + analysis + ". Replicate: " + rep);
-//				
-//				// Read in a trees file
-//				String treesFile = path + "Replicate" + rep + "_" + date + "/" + analysis + "_" + date + "/" + analysis + "_" + date + ".trees";
-				Hashtable<String, Tree> trees = readPosteriorTrees(treesFile);
-				
-//				// Read the log file to get each sample likelihood value
-//				String logFile = path + "Replicate" + rep + "_" + date + "/" + analysis + "_" + date + "/" + analysis + "_" + date + ".log";
-				Hashtable<String, String> likelihoods = readPosteriorLogFile(logFile);
-				
-				// Count the number of badger-to-cattle and cattle-to-badger transitions
-				countTransitionsOnPhylogenies(trees, likelihoods, bWriter, analysis, 0, true);
-				
-//				System.out.println("\n\n");
-//			}
-//		}		
+		String[] states = args[2].split(",");
 		
-		// Close the output file
-		bWriter.close();
+//		String treesFile = "/home/josephcrispell/Desktop/Research/Cumbria/BASTA/Replicate1_10-05-19/4DemeCumbria_equal_relaxed_1_10-05-19/4DemeCumbria_equal_relaxed_1_10-05-19.trees";
+//		String logFile = "/home/josephcrispell/Desktop/Research/Cumbria/BASTA/Replicate1_10-05-19/4DemeCumbria_equal_relaxed_1_10-05-19/4DemeCumbria_equal_relaxed_1_10-05-19.log";
+//		String analysis = treesFile.substring(0, treesFile.length()-6);
+//		String outputFile = analysis + "_TransitionCounts.txt";
+//		String[] states = {"badgerCumbria", "badgerTVR", "cowCumbria", "cowTVR"};
 		
+		// Read in a trees file
+		Hashtable<String, Tree> trees = readPosteriorTrees(treesFile);
+		
+		// Read the log file to get each sample likelihood value
+		Hashtable<String, String> likelihoods = readPosteriorLogFile(logFile);
+		
+		// Count the number of transitions between the node states of posterior trees
+		countTransitionsOnPhylogenies(trees, likelihoods, outputFile, states);		
 	}
 	
 	public static Hashtable<String, String> readPosteriorLogFile(String fileName) throws IOException{
@@ -126,10 +98,27 @@ public class CountTransitions {
 		return likelihoods;
 	}
 	
-	public static void countTransitionsOnPhylogenies(Hashtable<String, Tree> trees, Hashtable<String, String> likelihoods, BufferedWriter bWriter,
-			String analysis, int replicate, boolean conservativeApproach) throws IOException {
+	public static void countTransitionsOnPhylogenies(Hashtable<String, Tree> trees, Hashtable<String, String> likelihoods, String outputFile,
+			String[] states) throws IOException {
 		
+		// Sort the vector of states - to make sure they were input in the correct order
+		Arrays.sort(states);
+		
+		// Print the states and their indices
+		printStates(states);
+		
+		// Index the states
+		Hashtable<String, Integer> indexedStates = HashtableMethods.indexArray(states);
+		
+		// Print progress
 		System.out.println("Counting transitions on " + trees.size() + " trees...");
+		
+		// Open the output file
+		BufferedWriter bWriter = WriteToFile.openFile(outputFile, false);
+		
+		// Add header into output file
+		bWriter.write("Sample\tPosterior\tTreeLikelihood");
+		addStateTransitionColumnHeaders(bWriter, states);
 		
 		// Get the sample names
 		String[] keys = HashtableMethods.getKeysString(trees);
@@ -143,12 +132,12 @@ public class CountTransitions {
 			/**
 			 *  Initialise matrices to store the transition counts and branch lengths sums
 			 *  	
-			 *  		Badger	Cattle
-			 *  Badger	  0       0
-			 *  Cattle    0       0
+			 *  	A	B	...
+			 *  A	0   0
+			 *  B   0   0
+			 *  ... 
 			 */
-			int[][] transitions = new int[2][2];
-			double[][] branchLengthSums = new double[2][2];
+			int[][] transitions = new int[states.length][states.length];
 			
 			// Get the internal and terminal nodes from the tree
 			ArrayList<Node> internalNodes = tree.getInternalNodes();
@@ -158,11 +147,7 @@ public class CountTransitions {
 			Node root = findRoot(tree.getInternalNodes());
 			
 			// Start traversing the tree from the current node
-			if(conservativeApproach) {
-				examineNodeConservative(root, transitions, internalNodes, terminalNodes);
-			}else {
-				examineNode(root, null, transitions, branchLengthSums, internalNodes, terminalNodes);
-			}
+			examineNodeConservative(root, transitions, internalNodes, terminalNodes, indexedStates);
 						
 			// Print progress information
 			if((i + 1) % 1000 == 0) {
@@ -170,13 +155,51 @@ public class CountTransitions {
 			}
 			
 			// Print transition counts for current tree to file
-			bWriter.write(analysis + "\t" + replicate + "\t" + keys[i] + "\t" + likelihoods.get(keys[i]) + 
-					"\t" + transitions[0][0] + "\t" + transitions[0][1] + "\t" + transitions[1][0] + "\t" + transitions[1][1] +
-					"\t" + branchLengthSums[0][0] + "\t" + branchLengthSums[0][1] + "\t" + branchLengthSums[1][0] + "\t" + branchLengthSums[1][1] + "\n");
+			bWriter.write(keys[i] + "\t" + likelihoods.get(keys[i]));
+			addStateTransitionCounts(bWriter, transitions);
 		}		
 	}
+	public static void printStates(String[] states) {
+		System.out.println("Ordered states: ");
+		for(int i = 0; i < states.length; i++) {
+			System.out.println("\t" + states[i] + "\t" + i);
+		}
+		System.out.println();
+	}
+	public static void addStateTransitionColumnHeaders(BufferedWriter bWriter, String[] states) throws IOException {
+		for(String a : states) {
+			for(String b : states) {
+				
+				// Skip the diagonal
+				if(a.matches(b)) {
+					continue;
+				}
+				
+				// Create the column label for the current count
+				bWriter.write("\tCount_" + a + "-" + b);
+			}
+		}
+		bWriter.write("\n");
+	}
+		
+	public static void addStateTransitionCounts(BufferedWriter bWriter, int[][] transitionCounts) throws IOException {
+		for(int i = 0; i < transitionCounts.length; i++) {
+			for(int j = 0; j < transitionCounts.length; j++) {
+				
+				// Skip the diagonal
+				if(i == j) {
+					continue;
+				}
+				
+				// Create the column label for the current count
+				bWriter.write( "\t" + transitionCounts[i][j]);
+			}
+		}
+		bWriter.write("\n");
+	}
 	
-	public static void examineNodeConservative(Node node, int[][] transitions, ArrayList<Node> internalNodes, ArrayList<Node> terminalNodes) {
+	public static void examineNodeConservative(Node node, int[][] transitions, ArrayList<Node> internalNodes, ArrayList<Node> terminalNodes,
+			Hashtable<String, Integer> indexedStates) {
 		
 		/**
 		 * A more conservative transition count method - recommended by Nicola De Maio
@@ -195,7 +218,8 @@ public class CountTransitions {
 		ArrayList<Boolean> subNodeTypes = node.getSubNodeTypes();
 		
 		// Get the current node's state
-		int nodeStateIndex = returnStateIndex(HashtableMethods.getKeysString(node.getNodeInfo())[0]);
+		String nodeState = HashtableMethods.getKeysString(node.getNodeInfo())[0].split("--")[1];
+		int nodeStateIndex = indexedStates.get(nodeState);
 		
 		// Initialise a variable to count how many
 		int nSameAsNode = 0;
@@ -209,13 +233,14 @@ public class CountTransitions {
 				subNode = internalNodes.get(subNodeIndices.get(i));
 					
 				// For internal nodes - go and examine them
-				examineNodeConservative(subNode, transitions, internalNodes, terminalNodes);
+				examineNodeConservative(subNode, transitions, internalNodes, terminalNodes, indexedStates);
 			}else {
 				subNode = terminalNodes.get(subNodeIndices.get(i));
 			}
 				
 			// Get the state of the current sub-node
-			int subNodeStateIndex = returnStateIndex(HashtableMethods.getKeysString(subNode.getNodeInfo())[0]);
+			String subNodeState = HashtableMethods.getKeysString(subNode.getNodeInfo())[0].split("--")[1];
+			int subNodeStateIndex = indexedStates.get(subNodeState);
 				
 			// Check if it is the same as the input node
 			if(nodeStateIndex != -1 && nodeStateIndex == subNodeStateIndex) {

@@ -1155,7 +1155,7 @@ public class ArrayMethods {
 		for(int index = 0; index < array.length; index++){
 			newArray[index] = array[index];
 		}
-		newArray[newArray.length - 1] = value;
+		newArray[array.length] = value;
 		
 		return newArray;
 	}
@@ -1675,26 +1675,30 @@ public class ArrayMethods {
 	}
 
 	public static void print(String[] array, String sep){
-		for(int index = 0; index < array.length; index++){
-			System.out.print(array[index] + sep);
+		System.out.print(array[0]);
+		for(int index = 1; index < array.length; index++){
+			System.out.print(sep + array[index]);
 		}
 		System.out.println();
 	}
 	public static void print(char[] array, String sep){
-		for(int index = 0; index < array.length; index++){
-			System.out.print(array[index] + sep);
+		System.out.print(array[0]);
+		for(int index = 1; index < array.length; index++){
+			System.out.print(sep + array[index]);
 		}
 		System.out.println();
 	}
 	public static void print(int[] array, String sep){
-		for(int index = 0; index < array.length; index++){
-			System.out.print(array[index] + sep);
+		System.out.print(array[0]);
+		for(int index = 1; index < array.length; index++){
+			System.out.print(sep + array[index]);
 		}
 		System.out.println();
 	}	
 	public static void print(double[] array, String sep){
-		for(int index = 0; index < array.length; index++){
-			System.out.print(array[index] + sep);
+		System.out.print(array[0]);
+		for(int index = 1; index < array.length; index++){
+			System.out.print(sep + array[index]);
 		}
 		System.out.println();
 	}

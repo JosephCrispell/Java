@@ -1,4 +1,0 @@
-FileName	HeterozygousSiteCount
-26-MBovis_3.vcf	531
-19-MBovis_2.vcf	547
-17-MBovis_1.vcf	411
