@@ -130,7 +130,7 @@ public class CountTransitions {
 			Tree tree = trees.get(keys[i]);
 			
 			/**
-			 *  Initialise matrices to store the transition counts and branch lengths sums
+			 *  Initialise matrix to store the transition counts and branch lengths sums
 			 *  	
 			 *  	A	B	...
 			 *  A	0   0
@@ -157,8 +157,12 @@ public class CountTransitions {
 			// Print transition counts for current tree to file
 			bWriter.write(keys[i] + "\t" + likelihoods.get(keys[i]));
 			addStateTransitionCounts(bWriter, transitions);
-		}		
+		}
+		
+		// Close the output file
+		bWriter.close();
 	}
+	
 	public static void printStates(String[] states) {
 		System.out.println("Ordered states: ");
 		for(int i = 0; i < states.length; i++) {
@@ -166,14 +170,10 @@ public class CountTransitions {
 		}
 		System.out.println();
 	}
+	
 	public static void addStateTransitionColumnHeaders(BufferedWriter bWriter, String[] states) throws IOException {
 		for(String a : states) {
 			for(String b : states) {
-				
-				// Skip the diagonal
-				if(a.matches(b)) {
-					continue;
-				}
 				
 				// Create the column label for the current count
 				bWriter.write("\tCount_" + a + "-" + b);
@@ -185,11 +185,6 @@ public class CountTransitions {
 	public static void addStateTransitionCounts(BufferedWriter bWriter, int[][] transitionCounts) throws IOException {
 		for(int i = 0; i < transitionCounts.length; i++) {
 			for(int j = 0; j < transitionCounts.length; j++) {
-				
-				// Skip the diagonal
-				if(i == j) {
-					continue;
-				}
 				
 				// Create the column label for the current count
 				bWriter.write( "\t" + transitionCounts[i][j]);
