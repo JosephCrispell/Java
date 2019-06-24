@@ -258,7 +258,7 @@ public class ExamineCaptureData {
 			}
 		}
 		
-		System.out.println("Replaced " + count + " social groups with NAs");
+		System.out.println("Replaced " + count + " social groups that were NAs");
 	}
 	
 	public static String[] getSocialGroupBeforeAndAfter(CaptureEvent[] captureInfo, int index){

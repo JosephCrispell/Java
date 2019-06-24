@@ -17,7 +17,7 @@ public class Consolidate {
 		String date = CalendarMethods.getCurrentDate("dd-MM-yyyy");
 		
 		// Set the path
-		String path = "C:/Users/Joseph Crisp/Desktop/UbuntuSharedFolder/Woodchester_CattleAndBadgers/NewAnalyses_13-07-17/BadgerCaptureData/";
+		String path = "/home/josephcrispell/Desktop/Research/Woodchester_CattleAndBadgers/NewAnalyses_22-03-18/BadgerCaptureData/";
 		
 		// Open the capture data file
 		String captureDataFile = path + "WP_CaptureData.csv";

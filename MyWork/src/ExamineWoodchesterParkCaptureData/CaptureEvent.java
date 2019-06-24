@@ -1,8 +1,10 @@
 package ExamineWoodchesterParkCaptureData;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Hashtable;
 
+import methods.ArrayListMethods;
 import methods.ArrayMethods;
 import methods.CalendarMethods;
 import methods.GeneralMethods;
@@ -37,6 +39,10 @@ public class CaptureEvent {
 		 * 	24			25
 		 */
 		
+		// Check the line for quotes - some of the cells have quotes and contain commas
+		line = checkForQuotesContainingCommas(line);
+		
+		// Spliot the current line into its parts
 		String[] parts = line.split(",", -1);
 		int[] dateFormat = {0, 1, 2}; // day, month, year
 		
@@ -123,6 +129,9 @@ public class CaptureEvent {
 		// Remove semi-colons if present
 		value = GeneralMethods.replaceDelimiter(value, ";", ",");
 		
+		// Remove quotes if present
+		value = GeneralMethods.replaceDelimiter(value, "\"", "");
+		
 		return value;
 	}
 	public String parseSpoligotype(String value){
@@ -133,6 +142,9 @@ public class CaptureEvent {
 		
 		// Remove semi-colons if present
 		value = GeneralMethods.replaceDelimiter(value, ";", ",");
+		
+		// Remove quotes if present
+		value = GeneralMethods.replaceDelimiter(value, "\"", "");
 		
 		return value;
 	}
@@ -183,6 +195,31 @@ public class CaptureEvent {
 	}
 	
 	// General methods
+	public static String checkForQuotesContainingCommas(String line) {
+		
+		// Check if the current line contains a quote
+		if(line.contains("\"")) {
+			
+			// Identify the index of each quote
+			ArrayList<Integer> indices = ArrayListMethods.getIndicesOfCharacterInString(line, '\"');
+			
+			// Examine each pair of indices
+			for(int i = 0; i < indices.size(); i = i + 2) {
+				
+				// Get the string between the current quotes
+				String substring = line.substring(indices.get(i)+1, indices.get(i + 1));
+				
+				// Replace the comma in the substring - if present
+				String substringWithoutComma = GeneralMethods.replaceDelimiter(substring, ",", "-");
+				
+				// Replace the original quoted block in the input line
+				line = line.replaceAll("\"" + substring + "\"", substringWithoutComma);
+			}
+		}
+		
+		return(line);
+	}
+	
 	public static CaptureEvent[] copy(CaptureEvent[] array){
 		CaptureEvent[] copy = new CaptureEvent[array.length];
 		

@@ -7,15 +7,31 @@ public class ArrayListMethods {
 
 	public static void main(String[] args){
 		
-		ArrayList<Character> a = new ArrayList<Character>();
-		a.add('A');
-		a.add('1');
-		a.add('2');
-		a.add('4');
-		a.add('R');
-		a.add('G');
+		String test = "D034,Yes,CUB,1997,FEMALE,10-Mar-99,1999,NA,NA,NA,5.7,M.BOVIS,\"11,17\",NA,NA,,,,,,,,,,,Super excretor";
 		
-		System.out.println(toStringChar(subsetChar(a, 0, 1)));
+		ArrayList<Integer> indices = getIndicesOfCharacterInString(test, '\"');
+		
+		System.out.println(toStringInt(indices, ", "));
+	}
+	
+	public static ArrayList<Integer> getIndicesOfCharacterInString(String string, char character){
+		
+		// Split the string into its characters
+		char[] characters = string.toCharArray();
+		
+		// Initialise an array to store the indices of the character
+		ArrayList<Integer> indices = new ArrayList<Integer>();
+		
+		// Examine each character in string
+		for(int i = 0; i < characters.length; i++) {
+			
+			// Check if current character is equal to the input character
+			if(characters[i] == character) {
+				indices.add(i);
+			}
+		}
+		
+		return(indices);
 	}
 	
 	public static ArrayList<Character> toArrayList(String string){
