@@ -308,20 +308,27 @@ public class ConsistencyIndex {
 		Hashtable<Character, boolean[]> possibleNucleotidesForEachNucleotide = new Hashtable<Character, boolean[]>();
 		boolean[] possibleForA = {true, false, false, false};
 		possibleNucleotidesForEachNucleotide.put('A', possibleForA);
+		possibleNucleotidesForEachNucleotide.put('a', possibleForA);
 		boolean[] possibleForC = {false, true, false, false};
 		possibleNucleotidesForEachNucleotide.put('C', possibleForC);
+		possibleNucleotidesForEachNucleotide.put('c', possibleForC);
 		boolean[] possibleForG = {false, false, true, false};
 		possibleNucleotidesForEachNucleotide.put('G', possibleForG);
+		possibleNucleotidesForEachNucleotide.put('g', possibleForG);
 		boolean[] possibleForT = {false, false, false, true};
 		possibleNucleotidesForEachNucleotide.put('T', possibleForT);
+		possibleNucleotidesForEachNucleotide.put('t', possibleForT);
 		boolean[] possibleForN = {true, true, true, true};
 		possibleNucleotidesForEachNucleotide.put('N', possibleForN);
+		possibleNucleotidesForEachNucleotide.put('n', possibleForN);
 		boolean[] possibleForDash = {true, true, true, true};
 		possibleNucleotidesForEachNucleotide.put('-', possibleForDash);
 		boolean[] possibleForR = {true, false, true, false};
 		possibleNucleotidesForEachNucleotide.put('R', possibleForR);
+		possibleNucleotidesForEachNucleotide.put('r', possibleForR);
 		boolean[] possibleForY = {false, true, false, true};
 		possibleNucleotidesForEachNucleotide.put('Y', possibleForY);
+		possibleNucleotidesForEachNucleotide.put('y', possibleForY);
 		
 		return possibleNucleotidesForEachNucleotide;
 	}
@@ -470,9 +477,13 @@ public class ConsistencyIndex {
 		// Build a hashtable to note which count position is for each allele
 		Hashtable<Character, Integer> nucleotidePositions = new Hashtable<Character, Integer>();
 		nucleotidePositions.put('A', 0);
+		nucleotidePositions.put('a', 0);
 		nucleotidePositions.put('C', 1);
+		nucleotidePositions.put('c', 1);
 		nucleotidePositions.put('G', 2);
+		nucleotidePositions.put('g', 2);
 		nucleotidePositions.put('T', 3);
+		nucleotidePositions.put('t', 3);
 		
 		// Examine each sequence
 		for(int sequenceIndex = 0; sequenceIndex < sequences.size(); sequenceIndex++) {
@@ -489,9 +500,17 @@ public class ConsistencyIndex {
 				// Count the current allele
 				stateCountsPerPosition[positionIndex][nucleotidePositions.get(nucleotide)]++;
 			}
+			
+			// Check if nucleotide is one we expect
+			if(stateVectorForEachNucleotide.containsKey(nucleotide)) {
+				// Note the current state at the current position (for terminal node states) for the terminal node associated with the current sequence
+				terminalNodeStates[terminalNodeIndex] = stateVectorForEachNucleotide.get(nucleotide);
 				
-			// Note the current state at the current position (for terminal node states) for the terminal node associated with the current sequence
-			terminalNodeStates[terminalNodeIndex] = stateVectorForEachNucleotide.get(nucleotide); 
+			// Throw an error - found unexpected character (not one of: A, a, C, c, G, g, T, t, N, n, -, R, r, Y, y
+			}else {
+				System.err.println((char)27 + "[31mERROR!! Unrecognised character (" + nucleotide + ") in nucleotide alignment at position: " + (sequenceIndex + 1) + (char)27 + "[0m");
+				System.exit(0);
+			}
 		}
 	}
 
