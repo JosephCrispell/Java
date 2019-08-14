@@ -25,7 +25,7 @@ public class ConsistencyIndex {
 	// Sequences
 	private ArrayList<Sequence> sequences;
 	private int nSites;
-	private int nStatesPerSite = 4;
+	private int nStatesPerSite;
 	private int[] terminalNodeIndexForEachSequence;
 	
 	// Consistency index
@@ -35,7 +35,8 @@ public class ConsistencyIndex {
 	private ArrayList<Integer> inconsistentPositions;
 	private double[] consistencyIndices;
 	
-	public ConsistencyIndex(Tree tree, ArrayList<Sequence> sequences, boolean verbose, boolean multithread) {
+	public ConsistencyIndex(Tree tree, ArrayList<Sequence> sequences, boolean verbose, boolean multithread,
+			int nStates) {
 		
 		/**
 		 * Algorithm to calculate the minimum number of changes of each site in an alignment on a phylogeny
@@ -79,18 +80,24 @@ public class ConsistencyIndex {
 		 *  	-	true	true 	true	true
 		 *  	R	true	false	true	false
 		 *  	Y	false	true	false	true
-		 *  	
+		 *  
+		 *  Currently extending to work with a presence/absence matrix:
+		 *  	state sets:	0	1
+		 *  	NOT sure how to deal with 'N' or even if that is necessary
 		 */
 		
 		// Note whether verbose outputs wanted
 		this.verbose = verbose;
+		
+		// Store the number of states per site
+		this.nStatesPerSite = nStates;
 		
 		// Store the tree and sequences
 		storeTree(tree);
 		storeSequences(sequences);
 		
 		// Initialise all the necessary variables for storing the information associated with calculating the consistency indices
-		this.stateCountsPerPosition = new int[this.nSites][this.nStatesPerSite]; // Counts for each possible (A, C, G, T) at each position
+		this.stateCountsPerPosition = new int[this.nSites][this.nStatesPerSite]; // Counts for each possible state at each position
 		this.minNumberChangesOnTreeAtEachPosition = new int[this.nSites]; // The minimum number of changes for each position
 		this.internalNodeIndicesOfChanges = new int[this.nSites][this.nInternalNodes]; // The internal node indices where those changes occur
 		this.inconsistentPositions = new ArrayList<Integer>(); // Array store the inconsistent sites (consistency < 1)
@@ -221,6 +228,42 @@ public class ConsistencyIndex {
 	
 	}
 	
+	public void printSummary(String fileName, ArrayList<int[]> regionCoords, boolean includeConsistentSites) throws IOException {
+		
+		// Open the file
+		BufferedWriter bWriter = WriteToFile.openFile(fileName, false);
+		
+		// Print a summary of the inconsistent positions identified
+		WriteToFile.writeLn(bWriter, "Start\tEnd\tConsistencyIndex\tCounts\tMinimumNumberChangesOnTree");
+		
+		// Print each position
+		String output = "";
+		if(includeConsistentSites) {
+			for(int position = 0; position < this.nSites; position++) {
+				if(areMultipleStatesPresent(this.stateCountsPerPosition[position])) {
+					output += regionCoords.get(position)[0] + "\t" + regionCoords.get(position)[1] + "\t" + 
+				              this.consistencyIndices[position] + "\t" + 
+							  Methods.toString(this.stateCountsPerPosition[position], ":") + "\t" + 
+				              this.minNumberChangesOnTreeAtEachPosition[position] + "\n";
+				}else {
+					output += regionCoords.get(position)[0] + "\t" + regionCoords.get(position)[1] + "\t" + 1 + "\t" + 
+				              Methods.toString(this.stateCountsPerPosition[position], ":") + "\t" + "-" + "\n";
+				}				
+			}	
+		}else {
+			for(int position : this.inconsistentPositions) {
+				output += regionCoords.get(position)[0] + "\t" + regionCoords.get(position)[1] + "\t" + 
+			              this.consistencyIndices[position] + "\t" + Methods.toString(this.stateCountsPerPosition[position], ":") + 
+			              "\t" + this.minNumberChangesOnTreeAtEachPosition[position] + "\n";
+			}			
+		}
+		WriteToFile.write(bWriter, output);		
+		
+		// Close the file
+		WriteToFile.close(bWriter);
+	
+	}
+	
 	public void printSummary(JTextArea guiTextArea) throws IOException {
 				
 		// Print a summary of the inconsistent positions identified
@@ -231,6 +274,22 @@ public class ConsistencyIndex {
 		String output = "";
 		for(int position : this.inconsistentPositions) {
 			output += (position + 1) + "\t" + this.consistencyIndices[position] + "\t" + 
+					Methods.toString(this.stateCountsPerPosition[position], ":") + "\t" + this.minNumberChangesOnTreeAtEachPosition[position] + "\n";
+		}
+		guiTextArea.append(output + "\n");
+	}
+	
+	public void printSummary(JTextArea guiTextArea, ArrayList<int[]> regionCoords) throws IOException {
+		
+		// Print a summary of the inconsistent positions identified
+		guiTextArea.append("Identified " + this.inconsistentPositions.size() + " positions with consistency index < 1: \n");
+		guiTextArea.append("Start\tEnd\tConsistencyIndex\tCountsACGT\tMinimumNumberChangesOnTree\n");
+		
+		// Print each position
+		String output = "";
+		for(int position : this.inconsistentPositions) {
+			output += regionCoords.get(position)[0] + "\t" + regionCoords.get(position)[1] + "\t" + 
+					"\t" + this.consistencyIndices[position] + "\t" + 
 					Methods.toString(this.stateCountsPerPosition[position], ":") + "\t" + this.minNumberChangesOnTreeAtEachPosition[position] + "\n";
 		}
 		guiTextArea.append(output + "\n");
@@ -252,8 +311,8 @@ public class ConsistencyIndex {
 			ArrayList<Node> internalNodes, int[][] internalNodeIndicesOfChanges, int[] minNumberChangesOnTreeAtEachPosition,
 			ArrayList<Integer> inconsistentPositions, double[] consistencyIndices, int start, int end) {
 		
-		// Initialise a hashtable storing a boolean vector - corresponding to nucleotides
-		Hashtable<Character, boolean[]> stateVectorForEachNucleotide = noteStateVectorForEachNucleotide();
+		// Initialise a hashtable storing a boolean vector - corresponding to states
+		Hashtable<Character, boolean[]> stateVectorForEachCharacterState = noteStateVectorForEachCharacter();
 		
 		// Examine each position in the alignment
 		for(int position = start; position <= end; position++) {
@@ -261,18 +320,19 @@ public class ConsistencyIndex {
 			// If multithreading the index for storing information will be different than position
 			int positionIndex = position - start;
 			
-			// Count the number of times each nucleotide is found at the current position and note terminal node states
+			// Count the number of times each state is found at the current position and note terminal node states
 			boolean[][] terminalNodeStates = new boolean[nTerminalNodes][nStatesPerSite];
 			countAllelesAtEachPositionInSequences(position, positionIndex, terminalNodeStates, nTerminalNodes, nStatesPerSite,
 					sequences, terminalNodeIndexForEachSequence, stateCountsPerPosition, 
-					stateVectorForEachNucleotide);
+					stateVectorForEachCharacterState);
 			
 			// Check if multiple alleles present - i.e. not a constant site
 			if(areMultipleStatesPresent(stateCountsPerPosition[positionIndex])) {
 				
 				// Calculate the minimum number of changes of each position on the phylogeny
 				calculateMinimumNumberOfChangesOnPhylogeny(positionIndex, nStatesPerSite,
-						internalNodes, terminalNodeStates, internalNodeIndicesOfChanges, minNumberChangesOnTreeAtEachPosition, start, end);
+						internalNodes, terminalNodeStates, internalNodeIndicesOfChanges, minNumberChangesOnTreeAtEachPosition,
+						start, end);
 				
 				// Calculate the consistency index
 				checkIfInconsistent(position, positionIndex, inconsistentPositions, consistencyIndices, stateCountsPerPosition,
@@ -303,34 +363,42 @@ public class ConsistencyIndex {
 		return result;
 	}
 	
-	public static Hashtable<Character, boolean[]> noteStateVectorForEachNucleotide(){
+	public static Hashtable<Character, boolean[]> noteStateVectorForEachCharacter(){
 		
-		Hashtable<Character, boolean[]> possibleNucleotidesForEachNucleotide = new Hashtable<Character, boolean[]>();
+		Hashtable<Character, boolean[]> possibleStatesForEachCharacter = new Hashtable<Character, boolean[]>();
+		
+		// NUCLEOTIDES
 		boolean[] possibleForA = {true, false, false, false};
-		possibleNucleotidesForEachNucleotide.put('A', possibleForA);
-		possibleNucleotidesForEachNucleotide.put('a', possibleForA);
+		possibleStatesForEachCharacter.put('A', possibleForA);
+		possibleStatesForEachCharacter.put('a', possibleForA);
 		boolean[] possibleForC = {false, true, false, false};
-		possibleNucleotidesForEachNucleotide.put('C', possibleForC);
-		possibleNucleotidesForEachNucleotide.put('c', possibleForC);
+		possibleStatesForEachCharacter.put('C', possibleForC);
+		possibleStatesForEachCharacter.put('c', possibleForC);
 		boolean[] possibleForG = {false, false, true, false};
-		possibleNucleotidesForEachNucleotide.put('G', possibleForG);
-		possibleNucleotidesForEachNucleotide.put('g', possibleForG);
+		possibleStatesForEachCharacter.put('G', possibleForG);
+		possibleStatesForEachCharacter.put('g', possibleForG);
 		boolean[] possibleForT = {false, false, false, true};
-		possibleNucleotidesForEachNucleotide.put('T', possibleForT);
-		possibleNucleotidesForEachNucleotide.put('t', possibleForT);
+		possibleStatesForEachCharacter.put('T', possibleForT);
+		possibleStatesForEachCharacter.put('t', possibleForT);
 		boolean[] possibleForN = {true, true, true, true};
-		possibleNucleotidesForEachNucleotide.put('N', possibleForN);
-		possibleNucleotidesForEachNucleotide.put('n', possibleForN);
+		possibleStatesForEachCharacter.put('N', possibleForN);
+		possibleStatesForEachCharacter.put('n', possibleForN);
 		boolean[] possibleForDash = {true, true, true, true};
-		possibleNucleotidesForEachNucleotide.put('-', possibleForDash);
+		possibleStatesForEachCharacter.put('-', possibleForDash);
 		boolean[] possibleForR = {true, false, true, false};
-		possibleNucleotidesForEachNucleotide.put('R', possibleForR);
-		possibleNucleotidesForEachNucleotide.put('r', possibleForR);
+		possibleStatesForEachCharacter.put('R', possibleForR);
+		possibleStatesForEachCharacter.put('r', possibleForR);
 		boolean[] possibleForY = {false, true, false, true};
-		possibleNucleotidesForEachNucleotide.put('Y', possibleForY);
-		possibleNucleotidesForEachNucleotide.put('y', possibleForY);
+		possibleStatesForEachCharacter.put('Y', possibleForY);
+		possibleStatesForEachCharacter.put('y', possibleForY);
 		
-		return possibleNucleotidesForEachNucleotide;
+		// PRESENCE/ABSENCE
+		boolean[] possibleForZero = {true, false};
+		possibleStatesForEachCharacter.put('0', possibleForZero);
+		boolean[] possibleForOne = {false, true};
+		possibleStatesForEachCharacter.put('1', possibleForOne);
+		
+		return possibleStatesForEachCharacter;
 	}
 	
 	public static void checkIfInconsistent(int position, int positionIndex, ArrayList<Integer> inconsistentPositions, double[] consistencyIndices,
@@ -353,7 +421,7 @@ public class ConsistencyIndex {
 		int count = 0;
 		
 		// Examine each alleles count, how many are more than 0?
-		for(int i = 0; i < 4; i++) {
+		for(int i = 0; i < alleleCounts.length; i++) {
 			if(alleleCounts[i] > 0) {
 				count++;
 			}
@@ -372,7 +440,7 @@ public class ConsistencyIndex {
 			ArrayList<Node> internalNodes, boolean[][] terminalNodeStates,
 			int[][] internalNodeIndicesOfChanges, int[] minNumberChangesOnTreeAtEachPosition, int start, int end) {
 				
-		// Initialise an array to store the possible nucleotides for each position assigned to each internal node
+		// Initialise an array to store the possible states for each position assigned to each internal node
 		boolean[][] possibleStatesForEachInternalNode = new boolean[internalNodes.size()][nStatesPerSite];
 		
 		// Starting at the first terminal node's ancestor, visit all the internal nodes
@@ -401,68 +469,69 @@ public class ConsistencyIndex {
 				identifyPossibleStatesForInternalNode(subNodeIndices.get(i), possibleStatesForEachInternalNode, positionIndex, internalNodes, nStatesPerSite,
 						terminalNodeStates, internalNodeIndicesOfChanges, minNumberChangesOnTreeAtEachPosition);
 				
-				// Get the possible nucleotides assigned to this internal sub-node
+				// Get the possible states assigned to this internal sub-node
 				possibleStatesForSubNodes[i] = possibleStatesForEachInternalNode[subNodeIndices.get(i)];
 				
-			// If it is terminal, get the nucleotides assigned at each position
+			// If it is terminal, get the states assigned at each position
 			}else {
 				possibleStatesForSubNodes[i] = terminalNodeStates[subNodeIndices.get(i)];
 			}
 		}
 		
-		// Determine the possible nucleotides for the current node, based on those of the sub-nodes
+		// Determine the possible states for the current node, based on those of the sub-nodes
 		possibleStatesForEachInternalNode[internalNodeIndex] = getPossibleStateForInternalNodeFromPossibleStatesOfSubNodes(possibleStatesForSubNodes,
-				internalNodeIndex, positionIndex, internalNodeIndicesOfChanges, minNumberChangesOnTreeAtEachPosition);
+				internalNodeIndex, positionIndex, internalNodeIndicesOfChanges, minNumberChangesOnTreeAtEachPosition, nStatesPerSite);
 	}
 	
-	public static boolean[] getPossibleStateForInternalNodeFromPossibleStatesOfSubNodes(boolean[][] possibleNucleotidesForSubNodes,
-			int internalNodeIndex, int positionIndex, int[][] internalNodeIndicesOfChanges, int[] minNumberChangesOnTreeAtEachPosition){
+	public static boolean[] getPossibleStateForInternalNodeFromPossibleStatesOfSubNodes(boolean[][] possibleStatesForSubNodes,
+			int internalNodeIndex, int positionIndex, int[][] internalNodeIndicesOfChanges, 
+			int[] minNumberChangesOnTreeAtEachPosition, int nStatesPerSite){
 		
-		// Get the possible nucleotides for the first subNode
-		boolean[] possibleNucleotides = possibleNucleotidesForSubNodes[0];
+		// Get the possible states for the first subNode
+		boolean[] possibleStates = possibleStatesForSubNodes[0];
 		
 		// Examine the other sub-nodes
-		for(int i = 1; i < possibleNucleotidesForSubNodes.length; i++) {
+		for(int i = 1; i < possibleStatesForSubNodes.length; i++) {
 		
-			// Compare the current sub-nodes possible nucleotides to those stored
-			possibleNucleotides =  comparePossibleNucleotidesOfTwoSubNodes(possibleNucleotides, possibleNucleotidesForSubNodes[i], positionIndex, internalNodeIndex,
-					internalNodeIndicesOfChanges, minNumberChangesOnTreeAtEachPosition);
+			// Compare the current sub-nodes possible states to those stored
+			possibleStates =  comparePossibleStatesOfTwoSubNodes(possibleStates, possibleStatesForSubNodes[i], positionIndex, internalNodeIndex,
+					internalNodeIndicesOfChanges, minNumberChangesOnTreeAtEachPosition, nStatesPerSite);
 		}
 		
-		return possibleNucleotides;		
+		return possibleStates;		
 	}
 	
-	public static boolean[] comparePossibleNucleotidesOfTwoSubNodes(boolean[] a, boolean[] b, int positionIndex, int internalNodeIndex,
-			int[][] internalNodeIndicesOfChanges, int[] minNumberChangesOnTreeAtEachPosition) {
+	public static boolean[] comparePossibleStatesOfTwoSubNodes(boolean[] a, boolean[] b, int positionIndex, int internalNodeIndex,
+			int[][] internalNodeIndicesOfChanges, int[] minNumberChangesOnTreeAtEachPosition, int nStatesPerSite) {
 		
-		// Initialise a vector to store the possible nucleotides found in both a and b (union)
+		// Initialise a vector to store the possible states found in both a and b (union)
 		boolean[] union = new boolean[4];
 		
-		// Initialise a vector to store the possible nucleotides found only in a or b (intersect)
+		// Initialise a vector to store the possible states found only in a or b (intersect)
 		boolean[] intersect = new boolean[4];
 		
-		// Initialise a variable to record whether common possible nucleotides found
+		// Initialise a variable to record whether common possible states found
 		boolean common = false;
 		
-		// Examine the possible nucleotides
-		for(int i = 0; i < 4; i++) {
+		// Examine the possible states
+		for(int i = 0; i < nStatesPerSite; i++) {
 			
-			// Check for a common nucleotide
+			// Check for a common state
 			if(a[i] == true && b[i] == true) {
 				intersect[i] = true;
 				common = true;
 				
-			// Check for a non-common nucleotide
+			// Check for a non-common state
 			}else if(a[i] != b[i]){
 				union[i] = true;
 			}
 		}
 		
-		// If common possible nucleotides found, return the intersect (only those common nucleotides)
+		// If common possible states found, return the intersect (only those common states)
 		if(common) {
 			return intersect;
 			
-		// Else return the union (all possible nucleotides) and increment the tree length for the current position
+		// Else return the union (all possible states) and increment the tree length for the current position
 		}else {
 			internalNodeIndicesOfChanges[positionIndex][minNumberChangesOnTreeAtEachPosition[positionIndex]] = internalNodeIndex;
 			minNumberChangesOnTreeAtEachPosition[positionIndex]++;
@@ -472,18 +541,23 @@ public class ConsistencyIndex {
 	
 	public static void countAllelesAtEachPositionInSequences(int position, int positionIndex, boolean[][] terminalNodeStates, int nTerminalNodes, int nStatesPerSite,
 			ArrayList<Sequence> sequences, int[] terminalNodeIndexForEachSequence, int[][] stateCountsPerPosition, 
-			Hashtable<Character, boolean[]> stateVectorForEachNucleotide) {
+			Hashtable<Character, boolean[]> stateVectorForEachState) {
 						
 		// Build a hashtable to note which count position is for each allele
-		Hashtable<Character, Integer> nucleotidePositions = new Hashtable<Character, Integer>();
-		nucleotidePositions.put('A', 0);
-		nucleotidePositions.put('a', 0);
-		nucleotidePositions.put('C', 1);
-		nucleotidePositions.put('c', 1);
-		nucleotidePositions.put('G', 2);
-		nucleotidePositions.put('g', 2);
-		nucleotidePositions.put('T', 3);
-		nucleotidePositions.put('t', 3);
+		Hashtable<Character, Integer> statePositions = new Hashtable<Character, Integer>();
+		statePositions.put('A', 0);
+		statePositions.put('a', 0);
+		statePositions.put('C', 1);
+		statePositions.put('c', 1);
+		statePositions.put('G', 2);
+		statePositions.put('g', 2);
+		statePositions.put('T', 3);
+		statePositions.put('t', 3);
+		
+		// Codes for presence/absence
+		statePositions.put('0', 0);
+		statePositions.put('1', 1);
+		
 		
 		// Examine each sequence
 		for(int sequenceIndex = 0; sequenceIndex < sequences.size(); sequenceIndex++) {
@@ -491,24 +565,25 @@ public class ConsistencyIndex {
 			// Get the terminal node index of the current sequence
 			int terminalNodeIndex = terminalNodeIndexForEachSequence[sequenceIndex];
 			
-			// Get the current nucleotide
-			char nucleotide = sequences.get(sequenceIndex).getNucleotide(position);
+			// Get the current state
+			char state = sequences.get(sequenceIndex).getState(position);
 				
-			// Only examine nucleotide characters, skip anything else
-			if(nucleotidePositions.containsKey(nucleotide)) {
+			// Only examine recognised state characters, skip anything else
+			if(statePositions.containsKey(state)) {
 					
 				// Count the current allele
-				stateCountsPerPosition[positionIndex][nucleotidePositions.get(nucleotide)]++;
+				stateCountsPerPosition[positionIndex][statePositions.get(state)]++;
 			}
 			
-			// Check if nucleotide is one we expect
-			if(stateVectorForEachNucleotide.containsKey(nucleotide)) {
-				// Note the current state at the current position (for terminal node states) for the terminal node associated with the current sequence
-				terminalNodeStates[terminalNodeIndex] = stateVectorForEachNucleotide.get(nucleotide);
+			// Check if state is one we expect
+			if(stateVectorForEachState.containsKey(state)) {
 				
-			// Throw an error - found unexpected character (not one of: A, a, C, c, G, g, T, t, N, n, -, R, r, Y, y
+				// Note the current state at the current position (for terminal node states) for the terminal node associated with the current sequence
+				terminalNodeStates[terminalNodeIndex] = stateVectorForEachState.get(state);
+				
+			// Throw an error - found unexpected character (not one of: A, a, C, c, G, g, T, t, N, n, -, R, r, Y, y, 0, or 1)
 			}else {
-				System.err.println((char)27 + "[31mERROR!! Unrecognised character (" + nucleotide + ") in nucleotide alignment at position: " + (sequenceIndex + 1) + (char)27 + "[0m");
+				System.err.println((char)27 + "[31mERROR!! Unrecognised character state (" + state + ") at position: " + (sequenceIndex + 1) + (char)27 + "[0m");
 				System.exit(0);
 			}
 		}

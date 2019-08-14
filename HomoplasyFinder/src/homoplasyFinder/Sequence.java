@@ -10,19 +10,19 @@ public class Sequence {
 	public char species;
 	public int length;
 	
-	public Sequence(String sequenceName, char[] nucleotides){
+	public Sequence(String sequenceName, char[] states){
 		
 		this.name = sequenceName;
-		this.sequence = nucleotides;
-		this.length = nucleotides.length;
+		this.sequence = states;
+		this.length = states.length;
 	}
 	
 	// Setting methods
 	public void setName(String sequenceName){
 		this.name = sequenceName;
 	}
-	public void setSequence(char[] nucleotides){
-		this.sequence = nucleotides;
+	public void setSequence(char[] states){
+		this.sequence = states;
 	}
 	public void setSpecies(char letter){
 		this.species = letter;
@@ -38,7 +38,7 @@ public class Sequence {
 	public char getSpecies(){
 		return this.species;
 	}
-	public char getNucleotide(int position) {
+	public char getState(int position) {
 		return this.sequence[position];
 	}
 	public int getLength() {

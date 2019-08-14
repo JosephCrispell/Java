@@ -9,6 +9,7 @@ import java.io.InputStreamReader;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Hashtable;
 import java.util.Set;
@@ -72,6 +73,98 @@ public class Methods {
 		return string;
 	}
 	
+	public static PresenceAbsence readPresenceAbsenceTable(String fileName, boolean verbose) throws NumberFormatException, IOException{
+		/**
+		 * Presence absence table structure:
+		 * 		start,end,isolateA,isolateB,...
+		 * 		7,53,1,0,1,...
+		 * 		1045,1054,1,0,0,...
+		 * 
+		 * - Comma separated. 
+		 * - Columns are tips in phylogeny
+		 * - Rows are regions on genome
+		 * - Presence = 1
+		 * - Absence = 0
+		 */
+		
+		// Print progress if requested
+		if(verbose == true){
+			System.out.println("Reading presence/absence file: " + fileName + "...");
+		}
+		
+		// Try to open the input file
+		InputStream input = null;
+		  	try {
+		  		input = new FileInputStream(fileName);
+		   	}catch(FileNotFoundException e){
+		   		System.err.println((char)27 + "[31mERROR!! The input presence/absence file: \"" + fileName + "\" could not be found!" + (char)27 + "[0m");
+		   		System.exit(0);
+		   	}
+		BufferedReader reader = new BufferedReader(new InputStreamReader(input));
+    	
+		// Initialise an Array list to store the region coordinates
+		ArrayList<int[]> regionCoords = new ArrayList<int[]>();
+		
+    	// Initialise variables to store the sequence information
+    	String[] names = null;
+    	StringBuilder[] sequences = null;
+    	    	
+    	// Initialise a line counter
+    	int lineNo = -1;
+    	
+    	// Begin reading the presence/absence file
+    	String line = null;
+    	String[] parts;
+    	while(( line = reader.readLine()) != null){
+    		
+    		// Iterate the line counter
+    		lineNo++;
+    		
+    		// Split the line into its parts
+    		parts = line.split(",", -1);
+    		
+    		// Get information from header line
+    		if(lineNo == 0) {
+    			
+    			// Store the isolate names (should link to tips in phylogeny
+    			names = Arrays.copyOfRange(parts, 2, parts.length);
+    			
+    			// Initialise strings to store the zeros and ones
+    			sequences = new StringBuilder[names.length];
+    			for(int i = 0; i < names.length; i++) {
+    				sequences[i] = new StringBuilder();
+    			}
+    			
+    			// Skip line
+    			continue;
+    		}
+    		
+    		// Store the coordinates of the current region
+    		int[] coords = {Integer.parseInt(parts[0]), Integer.parseInt(parts[1])};
+    		regionCoords.add(coords);
+    		
+    		// Add the zeros and ones to the growing sequences
+    		for(int i = 0; i < names.length; i++) {
+   				sequences[i].append(parts[i + 2]);
+    		}
+    	}
+    	
+    	// Close the presence/absence file
+    	reader.close();
+    	
+    	// Initialise an ArrayList to store the sequences of zeros and ones
+    	ArrayList<Sequence> presenceAbsenceSequences = new ArrayList<Sequence>(names.length);
+    	
+    	// Examine each isolate
+    	for(int i = 0; i < names.length; i++) {
+    		
+    		// Create a Sequence object for each isolate (sequence of zeros and ones)
+    		presenceAbsenceSequences.add(new Sequence(names[i], sequences[i].toString().toCharArray()));
+    	}
+		
+		return new PresenceAbsence(regionCoords, presenceAbsenceSequences);		
+	}
+	
 	public static ArrayList<Sequence> readFastaFile(String fileName, boolean verbose) throws IOException{
 		
 		/**
@@ -85,20 +178,20 @@ public class Methods {
 		 * 
 		 */
 		
+		// Print progress if requested
 		if(verbose == true){
 			System.out.println("Reading fasta file: " + fileName + "...");
 		}
 		
-		// Open the Sequence Fasta File for Reading
-    	InputStream input = null;
-    	try {
-    		input = new FileInputStream(fileName);
-    	}catch(FileNotFoundException e){
-    		System.err.println((char)27 + "[31mERROR!! The input FASTA file: \"" + fileName + "\" could not be found!" + (char)27 + "[0m");
-    		System.exit(0);
-    	}
-    	
-    	BufferedReader reader = new BufferedReader(new InputStreamReader(input));
+		// Try to open the input file
+		InputStream input = null;
+		  	try {
+		  		input = new FileInputStream(fileName);
+		   	}catch(FileNotFoundException e){
+		   		System.err.println((char)27 + "[31mERROR!! The input FASTA file: \"" + fileName + "\" could not be found!" + (char)27 + "[0m");
+		   		System.exit(0);
+		   	}
+		BufferedReader reader = new BufferedReader(new InputStreamReader(input));
     	
     	// Initialise Variables to Store the Sequence Information
     	String isolateName = "";
@@ -139,6 +232,8 @@ public class Methods {
     			sequence.append(line);
        		}  		
     	}
+    	
+    	// Close the FASTA file
 		reader.close();
 		
 		// Store the last isolate
@@ -192,7 +287,6 @@ public class Methods {
 		
 		return string.toString();
 	}
-
 
 	public static ArrayList<Character> subsetChar(ArrayList<Character> array, int start, int end){
 		

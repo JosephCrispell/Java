@@ -4,6 +4,7 @@ public class Arguments {
 
 	public boolean verbose = false;
 	public String fastaFile;
+	public String presenceAbsenceFile;
 	public String treeFile;
 	public boolean createFasta = false;
 	public boolean createAnnotatedNewickTree = false;
@@ -21,9 +22,14 @@ public class Arguments {
 		System.out.println("HomoplasyFinder: a tool to identify homoplasies within a phylogenetic tree and alignment");
 		
 		System.out.println("\nNecessary command line arguments:");
-		System.out.println("\t--fasta [fullPathToFASTAFile]\tThe input FASTA containing a nucleotide alignment (sequential format)");
 		System.out.println("\t--tree [fullPathToTreeFile]\tThe input Newick formatted tree file");
-		
+		System.out.println("One of the following:");
+		System.out.println("\t--fasta [fullPathToFASTAFile]\tThe input FASTA containing a nucleotide alignment (sequential format)");
+		System.out.println("\t--presenceAbsence [fullPathToPresenceAbsenceFile]\tThe input CSV containing presence/absence matrix: (0=absent, 1=present");
+		System.out.println("\t\t\t\t\t\t\t\t\tstart,end,isolateA,isolateB,isolateC,...");
+		System.out.println("\t\t\t\t\t\t\t\t\t7,53,1,0,1,...");
+		System.out.println("\t\t\t\t\t\t\t\t\t1045,1054,1,0,0,...");
+				
 		System.out.println("\nOptional command line arguments:");
 		System.out.println("\t--verbose\t\tA flag to turn on detailed progress information");
 		System.out.println("\t--createFasta\t\tA flag to create a FASTA file without inconsistent sites");
@@ -35,25 +41,28 @@ public class Arguments {
 
 	// Getting methods
 	public boolean isVerbose() {
-		return verbose;
+		return this.verbose;
 	}
 	public String getFastaFile() {
-		return fastaFile;
+		return this.fastaFile;
+	}
+	public String getPresenceAbsenceFile() {
+		return this.presenceAbsenceFile;
 	}
 	public String getTreeFile() {
-		return treeFile;
+		return this.treeFile;
 	}
 	public boolean isCreateFasta() {
-		return createFasta;
+		return this.createFasta;
 	}
 	public boolean isCreateAnnotatedNewickTree() {
-		return createAnnotatedNewickTree;
+		return this.createAnnotatedNewickTree;
 	}
 	public boolean isIncludeConsistentSitesInReport() {
-		return includeConsistentSitesInReport;
+		return this.includeConsistentSitesInReport;
 	}
 	public boolean isMultithread() {
-		return multithread;
+		return this.multithread;
 	}
 
 	
@@ -63,7 +72,7 @@ public class Arguments {
 		// Examine each argument
 		for(int i = 0; i < args.length; i++) {
 			
-			// Check that FASTA file has been provided
+			// Check if FASTA file has been provided
 			if(args[i].equals("--fasta")) {
 				this.fastaFile = args[i + 1];
 				i++;
@@ -72,7 +81,12 @@ public class Arguments {
 			}else if(args[i].equals("--tree")) {
 				this.treeFile = args[i + 1];
 				i++;
-				
+			
+			// Check if presence/absence file has been provided
+			}else if(args[i].equals("--presenceAbsence")) {
+				this.presenceAbsenceFile = args[i + 1];
+				i++;
+
 			// Check if verbose parameter present?
 			}else if(args[i].equals("--verbose")) {
 				this.verbose = true;
@@ -107,8 +121,8 @@ public class Arguments {
 		}
 		
 		// Check both FASTA and tree files were provided
-		if(this.fastaFile == null || this.treeFile == null) {
-			System.err.println((char)27 + "[31mERROR!! HomoplasyFinder requires the full path names of both a FASTA file and a newick formatted tree file.\n" + (char)27 + "[0m");
+		if((this.fastaFile == null && this.presenceAbsenceFile == null) || this.treeFile == null) {
+			System.err.println((char)27 + "[31mERROR!! HomoplasyFinder requires the full path names to a newick formatted tree file and either a FASTA file or presence/absence table.\n" + (char)27 + "[0m");
 			printHelp();
 			System.exit(0);
 		}
