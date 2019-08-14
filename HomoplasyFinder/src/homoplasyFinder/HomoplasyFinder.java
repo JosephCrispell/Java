@@ -68,49 +68,84 @@ public class HomoplasyFinder {
 		}
 	}	
 	
-	public static int[] runHomoplasyFinderFromR(String treeFile, String fastaFile, String pathForOutput,
+	public static int[] runHomoplasyFinderFromR(String treeFile, String fastaFile, String presenceAbsenceFile, String pathForOutput,
 			boolean createFasta, boolean createReport, boolean createTree, boolean includeConsistentSites, boolean verbose,
 			boolean multithread) throws IOException {
 		
 		// Get the current date
 		String date = Methods.getCurrentDate("dd-MM-yy");
 		
-		// Read in the sequences
-		ArrayList<Sequence> sequences = Methods.readFastaFile(fastaFile, false);
-		
 		// Read the NEWICK tree and store as a traversable node set
 		Tree tree = new Tree(treeFile);
 		
-		// Calculate the consistency index of each position in the alignment on the phylogeny
-		ConsistencyIndex consistency = new ConsistencyIndex(tree, sequences, verbose, multithread, 4);
+		// Initialise an object to store the consistency index information for each site
+		ConsistencyIndex consistency = null;
 		
-		// Create a FASTA file without inconsistent sites
-		if(createFasta) {
-			consistency.printSequencesWithoutInConsistentSites(pathForOutput + "nInconsistentSites_" + date + 
-					".fasta");
-			if(verbose) {
-				System.out.println("\nCreated output FASTA file without inconsistent sites:\n\t" + 
-						pathForOutput + "nInconsistentSites_" + date + ".fasta");
+		// Check if FASTA file provided
+		if(fastaFile.matches("Not provided") == false) {
+			
+			// Read in the sequences
+			ArrayList<Sequence> sequences = Methods.readFastaFile(fastaFile, verbose);
+			
+			// Calculate the consistency index of each position in the alignment on the phylogeny
+			consistency = new ConsistencyIndex(tree, sequences, verbose, multithread, 4);
+			
+			// Create a FASTA file without inconsistent sites
+			if(createFasta) {
+				consistency.printSequencesWithoutInConsistentSites(pathForOutput + "nInconsistentSites_" + date + 
+						".fasta");
+				if(verbose) {
+					System.out.println("\nCreated output FASTA file without inconsistent sites:\n\t" + 
+							pathForOutput + "nInconsistentSites_" + date + ".fasta");
+				}
+			}
+			
+			// Create an annotated NEWICK tree file
+			if(createTree) {
+				consistency.printAnnotatedTree(pathForOutput + "annotatedNewickTree_" + date + ".tree");
+				if(verbose) {
+					System.out.println("Created Newick phylogenetic tree file with annotated inconsistent positions:\n\t" + 
+							pathForOutput + "annotatedNewickTree_" + date + ".tree");
+				}
+			}		
+			
+			// Create a report file
+			if(createReport) {
+				consistency.printSummary(pathForOutput + "consistencyIndexReport_" + date + ".txt", includeConsistentSites);
+				if(verbose) {
+					System.out.println("Created report detailing the inconsistent sites identified:\n\t" + 
+							pathForOutput + "consistencyIndexReport_" + date + ".txt");
+				}
+			}
+		
+		// Otherwise read in the presence/absence table
+		}else {
+			
+			// Read in the presence absence matrix
+			PresenceAbsence presenceAbsenceMatrix = Methods.readPresenceAbsenceTable(presenceAbsenceFile, verbose);
+			
+			// Calculate the consistency index of each position in the alignment on the phylogeny
+			consistency = new ConsistencyIndex(tree, presenceAbsenceMatrix.getBooleanSequences(), verbose, multithread, 2);
+						
+			// Create an annotated NEWICK tree file
+			if(createTree) {
+				consistency.printAnnotatedTree(pathForOutput + "annotatedNewickTree_" + date + ".tree");
+				if(verbose) {
+					System.out.println("Created Newick phylogenetic tree file with annotated inconsistent positions:\n\t" + 
+						pathForOutput + "annotatedNewickTree_" + date + ".tree");
+				}
+			}		
+						
+			// Create a report file
+			if(createReport) {
+				consistency.printSummary(pathForOutput + "consistencyIndexReport_" + date + ".txt",
+						presenceAbsenceMatrix.getRegionCoords(), includeConsistentSites);
+				if(verbose) {
+					System.out.println("Created report detailing the inconsistent regions identified:\n\t" + 
+							pathForOutput + "consistencyIndexReport_" + date + ".txt");
+				}
 			}
 		}
-		
-		// Create an annotated NEWICK tree file
-		if(createTree) {
-			consistency.printAnnotatedTree(pathForOutput + "annotatedNewickTree_" + date + ".tree");
-			if(verbose) {
-				System.out.println("Created Newick phylogenetic tree file with annotated inconsistent positions:\n\t" + 
-						pathForOutput + "annotatedNewickTree_" + date + ".tree");
-			}
-		}		
-		
-		// Create a report file
-		if(createReport) {
-			consistency.printSummary(pathForOutput + "consistencyIndexReport_" + date + ".txt", includeConsistentSites);
-			if(verbose) {
-				System.out.println("Created report detailing the inconsistent sites identified:\n\t" + 
-						pathForOutput + "consistencyIndexReport_" + date + ".txt");
-			}
-		}	
 		
 		return consistency.getPositions();
 	}
