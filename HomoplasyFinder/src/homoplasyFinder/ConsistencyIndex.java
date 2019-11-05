@@ -143,7 +143,7 @@ public class ConsistencyIndex {
 		
 		// Open an output file
 		if(fileName == null){
-			fileName = "sequences_withoutHomoplasies_" + this.date + ".fasta";
+			fileName = "sequences_withoutInconsistentSites_" + this.date + ".fasta";
 		}
 		BufferedWriter bWriter = WriteToFile.openFile(fileName, false);
 		

@@ -23,7 +23,7 @@ public class ExamineHeterozygousSites {
 		String date = CalendarMethods.getCurrentDate("dd-MM-yyyy");
 		
 		// Set the path variable
-		String path = "/home/josephcrispell/Desktop/Research/RepublicOfIreland/Fastqs/vcfFiles/";
+		String path = "/home/josephcrispell/Desktop/Research/RepublicOfIreland/Mbovis/Wicklow/vcfFiles/";
 		
 		// Find the VCF Files
 		String[] vcfFileNames = MergeVcfFiles.findVcfFilesInDirectory(path);

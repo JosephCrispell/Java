@@ -96,11 +96,14 @@ public class ArrayListMethods {
 	}
 	public static String toStringDouble(ArrayList<Double> array, String sep){
 		StringBuilder string = new StringBuilder(array.size());
-		string.append(array.get(0));
-		for(int i = 1; i < array.size(); i++){
-			string.append(sep);
-			string.append(array.get(i));
-		}
+		
+		if(array.size() != 0) {
+			string.append(array.get(0));
+			for(int i = 1; i < array.size(); i++){
+				string.append(sep);
+				string.append(array.get(i));
+			}
+		}		
 		
 		return string.toString();
 	}

@@ -42,7 +42,7 @@ public class Methods {
 		int pos = -1;
 		for(int i = 0; i < array.length; i++){
 			
-			if(positionsToIgnore.containsKey(pos) == true){
+			if(positionsToIgnore.containsKey(i) == true){
 				continue;
 			}
 			

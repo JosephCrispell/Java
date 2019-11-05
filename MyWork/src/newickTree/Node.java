@@ -17,6 +17,7 @@ public class Node {
 	public ArrayList<Boolean> subNodeTypes = new ArrayList<Boolean>();
 	
 	public double branchLength = -1;
+	public double height = -1;
 	
 	public Hashtable<String, ArrayList<Double>> nodeInfo;
 	public Hashtable<String, ArrayList<Double>> branchInfo;
@@ -43,6 +44,9 @@ public class Node {
 	public void setParentIndex(int index) {
 		this.parentIndex = index;
 	}
+	public void setHeight(double value) {
+		this.height = value;
+	}
 	
 	// Getting methods
 	public double getBranchLength() {
@@ -65,6 +69,9 @@ public class Node {
 	}
 	public Hashtable<String, ArrayList<Double>> getNodeInfo(){
 		return this.nodeInfo;
+	}
+	public double getHeight() {
+		return this.height;
 	}
 	
 	// General methods

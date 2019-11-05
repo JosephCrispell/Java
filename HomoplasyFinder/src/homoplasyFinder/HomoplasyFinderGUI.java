@@ -36,7 +36,7 @@ public class HomoplasyFinderGUI extends JFrame {
 	public String fastaFile = "None provided";
 	public String presenceAbsenceFile = "None provided";
 	public String reportFile = "consistencyIndexReport_" + date + ".txt";
-	public String outputFastaFile = "sequences_withoutHomoplasies_" + date + ".fasta";
+	public String outputFastaFile = "sequences_noInconsistentSites_" + date + ".fasta";
 	public String outputTreeFile = "annotatedNewickTree_" + date + ".tree";
 	
 	// Create boolean variables to record whether consistent sites are to be included in report and whether to multithread
@@ -187,7 +187,7 @@ public class HomoplasyFinderGUI extends JFrame {
 		// Create a label to choose the output FASTA file
 		JButton buttonOutputFastaFile = new JButton("Change output sequences file");
 		buttonOutputFastaFile.setBounds(10, 126, 272, 23);
-		buttonOutputFastaFile.setToolTipText("Select the file to print the FASTA formatted nucleotide sequences without homoplasies into");
+		buttonOutputFastaFile.setToolTipText("Select the file to print the FASTA formatted nucleotide sequences without inconsistent sites into");
 		
 		// Add mouse listener that will open file chooser when report file button clicked
 		buttonOutputFastaFile.addMouseListener(new MouseAdapter() {
@@ -297,7 +297,7 @@ public class HomoplasyFinderGUI extends JFrame {
 						
 						// Check if running on FASTA file
 						if(fastaFile.matches("None provided") == false) {
-							textArea.append("Created FASTA nucleotide alignment file without homoplasies: " + outputFastaFile);
+							textArea.append("Created FASTA nucleotide alignment file without inconsistent sites: " + outputFastaFile);
 						}
 
 					}else{
@@ -397,7 +397,7 @@ public class HomoplasyFinderGUI extends JFrame {
 			ConsistencyIndex consistency = new ConsistencyIndex(tree, sequences, false, this.multithread, 4);
 			
 			// Create a FASTA file without inconsistent sites
-			consistency.printSequencesWithoutInConsistentSites(path + "noInconsistentSites_" + date + ".fasta");
+			consistency.printSequencesWithoutInConsistentSites(path + this.outputFastaFile);
 			
 			// Create an annotated NEWICK tree file
 			consistency.printAnnotatedTree(path + "annotatedNewickTree_" + date + ".tree");

@@ -9,10 +9,11 @@ public class HomoplasyFinder {
 		
 		// Get the command line arguments
 		Arguments arguments = new Arguments(args);
-//		String path = "/home/josephcrispell/Desktop/Research/Homoplasy/INDELS/";
+//		String path = "/home/josephcrispell/Desktop/PhilAshton/";
 //		String[] testArgs = {
-//				"--tree", path + "neighbourJoining_13-08-19.tree",
-//				"--presenceAbsence", path + "indel_sites.csv"};
+//				"--tree", path + "2019.11.04_all_L4_masked.snp-sites.fa.tree",
+//				"--fasta", path + "2019.11.04_all_L4_masked.snp-sites.fa.for_joe",
+//				"--createFasta"};
 //		Arguments arguments = new Arguments(testArgs);
 		
 		// Get the current date
@@ -35,7 +36,7 @@ public class HomoplasyFinder {
 			
 			// Create a FASTA file without inconsistent sites
 			if(arguments.isCreateFasta()) {
-				consistency.printSequencesWithoutInConsistentSites(path + "noInconsistentSites_" + date + ".fasta");
+				consistency.printSequencesWithoutInConsistentSites(path + "sequences_noInconsistentSites_" + date + ".fasta");
 			}
 			
 			// Create an annotated NEWICK tree file
@@ -92,11 +93,11 @@ public class HomoplasyFinder {
 			
 			// Create a FASTA file without inconsistent sites
 			if(createFasta) {
-				consistency.printSequencesWithoutInConsistentSites(pathForOutput + "nInconsistentSites_" + date + 
+				consistency.printSequencesWithoutInConsistentSites(pathForOutput + "sequences_noInconsistentSites_" + date + 
 						".fasta");
 				if(verbose) {
 					System.out.println("\nCreated output FASTA file without inconsistent sites:\n\t" + 
-							pathForOutput + "nInconsistentSites_" + date + ".fasta");
+							pathForOutput + "sequences_noInconsistentSites_" + date + ".fasta");
 				}
 			}
 			
