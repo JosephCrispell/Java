@@ -9,10 +9,10 @@ public class HomoplasyFinder {
 		
 		// Get the command line arguments
 		Arguments arguments = new Arguments(args);
-//		String path = "/home/josephcrispell/Desktop/PhilAshton/";
+//		String path = "/home/josephcrispell/Desktop/WorkingOnHomoplasyFinder/";
 //		String[] testArgs = {
-//				"--tree", path + "2019.11.04_all_L4_masked.snp-sites.fa.tree",
-//				"--fasta", path + "2019.11.04_all_L4_masked.snp-sites.fa.for_joe",
+//				"--tree", path + "example.tree",
+//				"--fasta", path + "example.fasta",
 //				"--createFasta"};
 //		Arguments arguments = new Arguments(testArgs);
 		
