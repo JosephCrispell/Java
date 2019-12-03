@@ -15,7 +15,8 @@ public class HomoplasyFinder {
 		String path = "/home/josephcrispell/Desktop/WorkingOnHomoplasyFinder/";
 		String[] testArgs = {
 				"--tree", path + "example_29-11-19.tree",
-				"--fasta", path + "example_29-11-19.fasta"};
+				"--fasta", path + "example_29-11-19.fasta",
+				"--verbose"};
 		Arguments arguments = new Arguments(testArgs);
 		
 		// Get the current date
@@ -27,16 +28,14 @@ public class HomoplasyFinder {
 		// Read the NEWICK tree and store as a traversable node set
 		Tree tree = new Tree(arguments.getTreeFile());
 		
-		// Initialise a matrix to store the states of each tip at each site/trait
-		int[][] tipStates;
+		// Initialise a states object to store the states of each tip at each site/trait
+		States tipStates;
 		
 		// Check if FASTA file provided
 		if(arguments.getFastaFile() != null) {
 			
 			// Read in the sequences
-			ArrayList<Sequence> sequences = Methods.readFastaFile(arguments.getFastaFile(), arguments.isVerbose());
-			
-			// Build tip states matrix (
+			tipStates = new States(tree.getTerminalNodes(), arguments.getFastaFile(), "fasta", arguments.isVerbose());
 			
 		// Otherwise read in the traits file
 		}else {
