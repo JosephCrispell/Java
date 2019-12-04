@@ -1,10 +1,6 @@
 package homoplasyFinderV2;
 
 import java.io.IOException;
-import java.util.ArrayList;
-
-import homoplasyFinder.Methods;
-import homoplasyFinder.Sequence;
 
 public class HomoplasyFinder {
 
@@ -15,7 +11,8 @@ public class HomoplasyFinder {
 		String path = "/home/josephcrispell/Desktop/WorkingOnHomoplasyFinder/";
 		String[] testArgs = {
 				"--tree", path + "example_29-11-19.tree",
-				"--fasta", path + "example_29-11-19.fasta",
+//				"--fasta", path + "example_29-11-19.fasta",
+				"--traits", path + "example_traits_29-11-19.csv",
 				"--verbose"};
 		Arguments arguments = new Arguments(testArgs);
 		
@@ -29,7 +26,7 @@ public class HomoplasyFinder {
 		Tree tree = new Tree(arguments.getTreeFile());
 		
 		// Initialise a states object to store the states of each tip at each site/trait
-		States tipStates;
+		States tipStates = null;
 		
 		// Check if FASTA file provided
 		if(arguments.getFastaFile() != null) {
@@ -38,11 +35,13 @@ public class HomoplasyFinder {
 			tipStates = new States(tree.getTerminalNodes(), arguments.getFastaFile(), "fasta", arguments.isVerbose());
 			
 		// Otherwise read in the traits file
-		}else {
+		}else if(arguments.getTraitsFile() != null){
 			
+			// Read in the states for each trait
+			tipStates = new States(tree.getTerminalNodes(), arguments.getTraitsFile(), "traits", arguments.isVerbose());
 		}
 		
-	}
-	
-	
+		// Calculate the consistency index of each position/trait in the states table on the phylogeny
+		ConsistencyIndex consistency = new ConsistencyIndex(tree, tipStates, arguments.isVerbose(), arguments.isMultithread());
+	}	
 }

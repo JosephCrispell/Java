@@ -34,6 +34,9 @@ public class Tree {
 	public int getNInternalNodes() {
 		return this.internalNodes.size();
 	}
+	public int getNTerminalNodes() {
+		return this.terminalNodes.size();
+	}
 	
 	// General methods
 	public void print(String fileName) throws IOException {

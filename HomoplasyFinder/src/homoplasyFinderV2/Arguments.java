@@ -26,7 +26,7 @@ public class Arguments {
 		System.out.println("ONE of the following:");
 		System.out.println("\t--fasta [fullPathToFASTAFile]\tThe input FASTA containing a nucleotide alignment (sequential format)");
 		System.out.println("\t--traits [fullPathToTraitsFile]\tThe input CSV containing traits associated with each tip/sequence (first column must contain IDs)");
-				
+		
 		System.out.println("\nOptional command line arguments:");
 		System.out.println("\t--verbose\t\tA flag to turn on detailed progress information");
 		System.out.println("\t--createFasta\t\tA flag to create a FASTA file without inconsistent sites");
@@ -117,9 +117,9 @@ public class Arguments {
 			}
 		}
 		
-		// Check both FASTA|traits and tree files were provided
+		// Check both FASTA|traits|INDELs and tree files were provided
 		if((this.fastaFile == null && this.traitsFile == null) || this.treeFile == null) {
-			System.err.println((char)27 + "[31mERROR!! HomoplasyFinder requires the full path names to a newick formatted tree file and either a FASTA file or presence/absence table.\n" + (char)27 + "[0m");
+			System.err.println((char)27 + "[31mERROR!! HomoplasyFinder requires the full path names to a newick formatted tree file and either a FASTA file or traits csv.\n" + (char)27 + "[0m");
 			printHelp();
 			System.exit(0);
 		}

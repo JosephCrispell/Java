@@ -397,7 +397,7 @@ public class HomoplasyFinderGUI extends JFrame {
 			ConsistencyIndex consistency = new ConsistencyIndex(tree, sequences, false, this.multithread, 4);
 			
 			// Create a FASTA file without inconsistent sites
-			consistency.printSequencesWithoutInConsistentSites(path + this.outputFastaFile);
+			consistency.printFASTAWithoutInConsistentSites(path + this.outputFastaFile);
 			
 			// Create an annotated NEWICK tree file
 			consistency.printAnnotatedTree(path + "annotatedNewickTree_" + date + ".tree");

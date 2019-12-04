@@ -53,7 +53,7 @@ public class ConsistencyIndexThread extends Thread{
 		this.consistencyIndices = new double[this.nSites]; // Consistency index of each site
 		
 		// Calculate the consistency index of each position
-		ConsistencyIndex.calculateConsistencyIndexForEachSiteOnPhylogeny(this.nSites, this.nTerminalNodes, this.nStatesPerSite,
+		ConsistencyIndex.calculateConsistencyIndices(this.nSites, this.nTerminalNodes, this.nStatesPerSite,
 						this.sequences, this.terminalNodeIndexForEachSequence, this.stateCountsPerPosition, this.internalNodes, this.internalNodeIndicesOfChanges,
 						this.minNumberChangesOnTreeAtEachPosition, this.inconsistentPositions,
 						this.consistencyIndices, this.startPosition, this.endPosition);

@@ -17,26 +17,19 @@ public class ConsistencyIndex {
 	
 	// Tree
 	private Tree tree;
-	private ArrayList<Node> internalNodes;
-	private int nInternalNodes;
-	private ArrayList<Node> terminalNodes;
-	private int nTerminalNodes;
 	
-	// Sequences
-	private ArrayList<Sequence> sequences;
-	private int nSites;
-	private int nStatesPerSite;
-	private int[] terminalNodeIndexForEachSequence;
+	// States table
+	private States statesTable;
 	
 	// Consistency index
-	private int[][] stateCountsPerPosition;
+	private int[][] stateCountsAtEachPosition; // Concatenated counts for each state at each position
+	private String[][] statesAtEachPosition;
 	private int[] minNumberChangesOnTreeAtEachPosition;
 	private int[][] internalNodeIndicesOfChanges;
 	private ArrayList<Integer> inconsistentPositions;
 	private double[] consistencyIndices;
 	
-	public ConsistencyIndex(Tree tree, ArrayList<Sequence> sequences, boolean verbose, boolean multithread,
-			int nStates) {
+	public ConsistencyIndex(Tree tree, States tipStates, boolean verbose, boolean multithread) {
 		
 		/**
 		 * Algorithm to calculate the minimum number of changes of each site in an alignment on a phylogeny
@@ -89,35 +82,29 @@ public class ConsistencyIndex {
 		// Note whether verbose outputs wanted
 		this.verbose = verbose;
 		
-		// Store the number of states per site
-		this.nStatesPerSite = nStates;
-		
-		// Store the tree and sequences
-		storeTree(tree);
-		storeSequences(sequences);
+		// Store the tree and tip states at each position/trait
+		this.tree = tree;
+		this.statesTable = tipStates;
 		
 		// Initialise all the necessary variables for storing the information associated with calculating the consistency indices
-		this.stateCountsPerPosition = new int[this.nSites][this.nStatesPerSite]; // Counts for each possible state at each position
-		this.minNumberChangesOnTreeAtEachPosition = new int[this.nSites]; // The minimum number of changes for each position
-		this.internalNodeIndicesOfChanges = new int[this.nSites][this.nInternalNodes]; // The internal node indices where those changes occur
+		this.stateCountsAtEachPosition = new int[this.statesTable.getNSites()][0]; // Concatenated counts for each possible state at each position
+		this.statesAtEachPosition = new String[this.statesTable.getNSites()][0]; // Ordered array of states observed at each position
+		this.minNumberChangesOnTreeAtEachPosition = new int[this.statesTable.getNSites()]; // The minimum number of changes for each position
+		this.internalNodeIndicesOfChanges = new int[this.statesTable.getNSites()][this.tree.getNInternalNodes()]; // The internal node indices where those changes occur
 		this.inconsistentPositions = new ArrayList<Integer>(); // Array store the inconsistent sites (consistency < 1)
-		this.consistencyIndices = new double[this.nSites]; // Consistency index of each site
+		this.consistencyIndices = new double[this.statesTable.getNSites()]; // Consistency index of each site
 		
 		// Check if we want to multithread
 		if(multithread) {
 						
 			// Calculate the consistency index of each position
-			calculateConsistencyIndicesUsingMultipleThreads(this.stateCountsPerPosition, this.minNumberChangesOnTreeAtEachPosition,
-					this.internalNodeIndicesOfChanges, this.inconsistentPositions, this.consistencyIndices, this.nSites, 
-					this.sequences, this.terminalNodeIndexForEachSequence, this.internalNodes, this.nStatesPerSite, this.nTerminalNodes);			
 			
 		}else {
 			
 			// Calculate the consistency index of each position
-			calculateConsistencyIndexForEachSiteOnPhylogeny(this.nSites, this.nTerminalNodes, this.nStatesPerSite,
-					this.sequences, this.terminalNodeIndexForEachSequence, this.stateCountsPerPosition,
-					this.internalNodes, this.internalNodeIndicesOfChanges, this.minNumberChangesOnTreeAtEachPosition,
-					this.inconsistentPositions, this.consistencyIndices, 0, this.nSites - 1);
+			calculateConsistencyIndices(this.statesTable, this.tree.getNTerminalNodes(), this.stateCountsAtEachPosition,
+					this.statesAtEachPosition, this.tree.getInternalNodes(), this.internalNodeIndicesOfChanges, this.minNumberChangesOnTreeAtEachPosition,
+					this.inconsistentPositions, this.consistencyIndices);
 		}
 		
 		// Print summary if verbose
@@ -136,7 +123,7 @@ public class ConsistencyIndex {
 	}
 	
 	// Output methods
-	public void printSequencesWithoutInConsistentSites(String fileName) throws IOException {
+	public void printFASTAWithoutInConsistentSites(String fileName) throws IOException {
 		
 		// Create a hashtable with the inconsistent positions
 		Hashtable<Integer, Integer> positionsToIgnore = Methods.indexArrayListInteger(this.inconsistentPositions);
@@ -148,21 +135,17 @@ public class ConsistencyIndex {
 		BufferedWriter bWriter = WriteToFile.openFile(fileName, false);
 		
 		// Print out the number of isolates and sites in FASTA
-		int newSequenceLength = this.nSites - this.inconsistentPositions.size();
-		WriteToFile.writeLn(bWriter, sequences.size() + " " + newSequenceLength);
-		
-		// Initialise an array to each isolate sequence data
-		char[] sequence = new char[newSequenceLength];
+		int newSequenceLength = this.statesTable.getNSites() - this.inconsistentPositions.size();
+		WriteToFile.writeLn(bWriter, this.tree.getNTerminalNodes() + " " + newSequenceLength);
 		
 		// Write out each of the sequences
-		for(int i = 0; i < sequences.size(); i++){
+		for(int i = 0; i < this.tree.getNTerminalNodes(); i++){
 			
 			// Print sequence ID
-			WriteToFile.writeLn(bWriter, ">" + sequences.get(i).getName());
+			WriteToFile.writeLn(bWriter, ">" + this.tree.getTerminalNodes().get(i).getName());
 			
-			// Print sequence
-			sequence = Methods.deletePositions(sequences.get(i).getSequence(), positionsToIgnore);
-			WriteToFile.writeLn(bWriter, Methods.toString(sequence));
+			// Build the nucleotide sequence for printing
+			WriteToFile.writeLn(bWriter, this.statesTable.getSequence(i, positionsToIgnore));
 		}
 		WriteToFile.close(bWriter);
 	}
@@ -176,11 +159,31 @@ public class ConsistencyIndex {
 			for(int i = 0; i < this.minNumberChangesOnTreeAtEachPosition[position]; i++) {
 				
 				// Annotate the current internal node - by providing it with an node label (name)
-				Node internalNode = this.internalNodes.get(this.internalNodeIndicesOfChanges[position][i]);
+				Node internalNode = this.tree.getInternalNodes().get(this.internalNodeIndicesOfChanges[position][i]);
+				
+				// Check if node already has name
 				if(internalNode.getName() != null) {
-					internalNode.setName(internalNode.getName() + "-" + (position + 1));
+					
+					// Check if dealing with FASTA positions
+					if(this.statesTable.getFileType().matches("fasta")) {
+						internalNode.setName(internalNode.getName() + "-" + (position + 1));
+					
+					// Otherwise print trait name
+					}else {
+						internalNode.setName(internalNode.getName() + "-" + this.statesTable.getSites()[position]);
+					}					
+				
+				// If not, create one
 				}else {
-					internalNode.setName(Integer.toString(position + 1));
+					
+					// Check if dealing with FASTA positions
+					if(this.statesTable.getFileType().matches("fasta")) {
+						internalNode.setName(Integer.toString(position + 1));
+					
+					// Otherwise print trait name
+					}else {
+						internalNode.setName(this.statesTable.getSites()[position]);
+					}
 				}
 			}
 		}
@@ -190,10 +193,26 @@ public class ConsistencyIndex {
 	}
 	
 	private void printSummary() {
-		System.out.println("Identified " + this.inconsistentPositions.size() + " positions with consistency index < 1: ");
-		for(int position : this.inconsistentPositions) {
-			System.out.println(position + 1);
+		
+		// Check if fasta file
+		if(this.statesTable.getFileType().matches("fasta")) {
+			
+			// Print brief summary of inconsistent sites
+			System.out.println("Identified " + this.inconsistentPositions.size() + " positions with consistency index < 1: ");
+			for(int position : this.inconsistentPositions) {
+				System.out.println(position + 1);
+			}
+			
+		// Otherwise print summary of trait consistencies
+		}else {
+			
+			// Print brief summary of inconsistent traits
+			System.out.println("Identified " + this.inconsistentPositions.size() + " traits with consistency index < 1: ");
+			for(int position : this.inconsistentPositions) {
+				System.out.println(this.statesTable.getSites()[position]);
+			}
 		}
+		
 	}
 	
 	public void printSummary(String fileName, boolean includeConsistentSites) throws IOException {
@@ -207,54 +226,18 @@ public class ConsistencyIndex {
 		// Print each position
 		String output = "";
 		if(includeConsistentSites) {
-			for(int position = 0; position < this.nSites; position++) {
-				if(areMultipleStatesPresent(this.stateCountsPerPosition[position])) {
+			for(int position = 0; position < this.statesTable.getNSites(); position++) {
+				if(areMultipleStatesPresent(this.stateCountsAtEachPosition[position])) {
 					output += (position + 1) + "\t" + this.consistencyIndices[position] + "\t" + 
-							Methods.toString(this.stateCountsPerPosition[position], ":") + "\t" + this.minNumberChangesOnTreeAtEachPosition[position] + "\n";
+							Methods.toString(this.stateCountsAtEachPosition[position], ":") + "\t" + this.minNumberChangesOnTreeAtEachPosition[position] + "\n";
 				}else {
-					output += (position + 1) + "\t" + 1 + "\t" + Methods.toString(this.stateCountsPerPosition[position], ":") + "\t" + "-" + "\n";
+					output += (position + 1) + "\t" + 1 + "\t" + Methods.toString(this.stateCountsAtEachPosition[position], ":") + "\t" + "-" + "\n";
 				}				
 			}	
 		}else {
 			for(int position : this.inconsistentPositions) {
 				output += (position + 1) + "\t" + this.consistencyIndices[position] + "\t" + 
-						Methods.toString(this.stateCountsPerPosition[position], ":") + "\t" + this.minNumberChangesOnTreeAtEachPosition[position] + "\n";
-			}			
-		}
-		WriteToFile.write(bWriter, output);		
-		
-		// Close the file
-		WriteToFile.close(bWriter);
-	
-	}
-	
-	public void printSummary(String fileName, ArrayList<int[]> regionCoords, boolean includeConsistentSites) throws IOException {
-		
-		// Open the file
-		BufferedWriter bWriter = WriteToFile.openFile(fileName, false);
-		
-		// Print a summary of the inconsistent positions identified
-		WriteToFile.writeLn(bWriter, "Start\tEnd\tConsistencyIndex\tCounts\tMinimumNumberChangesOnTree");
-		
-		// Print each position
-		String output = "";
-		if(includeConsistentSites) {
-			for(int position = 0; position < this.nSites; position++) {
-				if(areMultipleStatesPresent(this.stateCountsPerPosition[position])) {
-					output += regionCoords.get(position)[0] + "\t" + regionCoords.get(position)[1] + "\t" + 
-				              this.consistencyIndices[position] + "\t" + 
-							  Methods.toString(this.stateCountsPerPosition[position], ":") + "\t" + 
-				              this.minNumberChangesOnTreeAtEachPosition[position] + "\n";
-				}else {
-					output += regionCoords.get(position)[0] + "\t" + regionCoords.get(position)[1] + "\t" + 1 + "\t" + 
-				              Methods.toString(this.stateCountsPerPosition[position], ":") + "\t" + "-" + "\n";
-				}				
-			}	
-		}else {
-			for(int position : this.inconsistentPositions) {
-				output += regionCoords.get(position)[0] + "\t" + regionCoords.get(position)[1] + "\t" + 
-			              this.consistencyIndices[position] + "\t" + Methods.toString(this.stateCountsPerPosition[position], ":") + 
-			              "\t" + this.minNumberChangesOnTreeAtEachPosition[position] + "\n";
+						Methods.toString(this.stateCountsAtEachPosition[position], ":") + "\t" + this.minNumberChangesOnTreeAtEachPosition[position] + "\n";
 			}			
 		}
 		WriteToFile.write(bWriter, output);		
@@ -265,34 +248,39 @@ public class ConsistencyIndex {
 	}
 	
 	public void printSummary(JTextArea guiTextArea) throws IOException {
-				
-		// Print a summary of the inconsistent positions identified
-		guiTextArea.append("Identified " + this.inconsistentPositions.size() + " positions with consistency index < 1: \n");
-		guiTextArea.append("Position\tConsistencyIndex\tCountsACGT\tMinimumNumberChangesOnTree\n");
 		
-		// Print each position
-		String output = "";
-		for(int position : this.inconsistentPositions) {
-			output += (position + 1) + "\t" + this.consistencyIndices[position] + "\t" + 
-					Methods.toString(this.stateCountsPerPosition[position], ":") + "\t" + this.minNumberChangesOnTreeAtEachPosition[position] + "\n";
+		// Check if fasta file
+		if(this.statesTable.getFileType().matches("fasta")) {
+					
+			// Print a summary of the inconsistent positions identified
+			guiTextArea.append("Identified " + this.inconsistentPositions.size() + " positions with consistency index < 1: \n");
+			guiTextArea.append("Position\tConsistencyIndex\tCounts_A:C:G:T\tMinimumNumberChangesOnTree\n");
+			
+			// Print information for each position
+			String output = "";
+			for(int position : this.inconsistentPositions) {
+				output += (position + 1) + "\t" + this.consistencyIndices[position] + "\t" + 
+						Methods.toString(this.stateCountsAtEachPosition[position], ":") + "\t" + this.minNumberChangesOnTreeAtEachPosition[position] + "\n";
+			}
+			guiTextArea.append(output + "\n");
+					
+		// Otherwise print summary of trait consistencies
+		}else {
+			
+			// Print brief summary of inconsistent traits
+			guiTextArea.append("Identified " + this.inconsistentPositions.size() + " positions with consistency index < 1: \n");
+			guiTextArea.append("Trait\tConsistencyIndex\tTraits\tCounts\tMinimumNumberChangesOnTree\n");
+			
+			// Print information for each position
+			String output = "";
+			for(int position : this.inconsistentPositions) {
+				output += this.statesTable.getSites()[position] + "\t" + this.consistencyIndices[position] + "\t" + 
+						Methods.toString(this.statesAtEachPosition[position], ":") + "\t" + 
+						Methods.toString(this.stateCountsAtEachPosition[position], ":") + "\t" + 
+						this.minNumberChangesOnTreeAtEachPosition[position] + "\n";
+			}
+			guiTextArea.append(output + "\n");
 		}
-		guiTextArea.append(output + "\n");
-	}
-	
-	public void printSummary(JTextArea guiTextArea, ArrayList<int[]> regionCoords) throws IOException {
-		
-		// Print a summary of the inconsistent positions identified
-		guiTextArea.append("Identified " + this.inconsistentPositions.size() + " positions with consistency index < 1: \n");
-		guiTextArea.append("Start\tEnd\tConsistencyIndex\tCountsACGT\tMinimumNumberChangesOnTree\n");
-		
-		// Print each position
-		String output = "";
-		for(int position : this.inconsistentPositions) {
-			output += regionCoords.get(position)[0] + "\t" + regionCoords.get(position)[1] + "\t" + 
-					"\t" + this.consistencyIndices[position] + "\t" + 
-					Methods.toString(this.stateCountsPerPosition[position], ":") + "\t" + this.minNumberChangesOnTreeAtEachPosition[position] + "\n";
-		}
-		guiTextArea.append(output + "\n");
 	}
 	
 	public int[] getPositions() {
@@ -306,36 +294,27 @@ public class ConsistencyIndex {
 	}
 	
 	// Class specific methods
-	public static void calculateConsistencyIndexForEachSiteOnPhylogeny(int nSites, int nTerminalNodes, int nStatesPerSite,
-			ArrayList<Sequence> sequences, int[] terminalNodeIndexForEachSequence, int[][] stateCountsPerPosition,
-			ArrayList<Node> internalNodes, int[][] internalNodeIndicesOfChanges, int[] minNumberChangesOnTreeAtEachPosition,
-			ArrayList<Integer> inconsistentPositions, double[] consistencyIndices, int start, int end) {
-		
-		// Initialise a hashtable storing a boolean vector - corresponding to states
-		Hashtable<Character, boolean[]> stateVectorForEachCharacterState = noteStateVectorForEachCharacter();
+	public static void calculateConsistencyIndices(States states, int nTerminalNodes, int[][] stateCountsAtEachPosition,
+			String[][] statesAtEachPosition, ArrayList<Node> internalNodes, int[][] internalNodeIndicesOfChanges, 
+			int[] minNumberChangesOnTreeAtEachPosition, ArrayList<Integer> inconsistentPositions, double[] consistencyIndices) {
 		
 		// Examine each position in the alignment
-		for(int position = start; position <= end; position++) {
-			
-			// If multithreading the index for storing information will be different than position
-			int positionIndex = position - start;
+		for(int position = 0; position < states.getNSites(); position++) {
 			
 			// Count the number of times each state is found at the current position and note terminal node states
-			boolean[][] terminalNodeStates = new boolean[nTerminalNodes][nStatesPerSite];
-			countAllelesAtEachPositionInSequences(position, positionIndex, terminalNodeStates, nTerminalNodes, nStatesPerSite,
-					sequences, terminalNodeIndexForEachSequence, stateCountsPerPosition, 
-					stateVectorForEachCharacterState);
+			boolean[][] terminalNodeStates = states.getTipStates(position);
+			stateCountsAtEachPosition[position] = states.getStateCountsAtSite();
+			statesAtEachPosition[position] = states.getStates();
 			
 			// Check if multiple alleles present - i.e. not a constant site
-			if(areMultipleStatesPresent(stateCountsPerPosition[positionIndex])) {
+			if(areMultipleStatesPresent(stateCountsAtEachPosition[position])) {
 				
 				// Calculate the minimum number of changes of each position on the phylogeny
-				calculateMinimumNumberOfChangesOnPhylogeny(positionIndex, nStatesPerSite,
-						internalNodes, terminalNodeStates, internalNodeIndicesOfChanges, minNumberChangesOnTreeAtEachPosition,
-						start, end);
+				calculateMinimumNumberOfChangesOnPhylogeny(position, states.getNStates(),
+						internalNodes, terminalNodeStates, internalNodeIndicesOfChanges, minNumberChangesOnTreeAtEachPosition);
 				
 				// Calculate the consistency index
-				checkIfInconsistent(position, positionIndex, inconsistentPositions, consistencyIndices, stateCountsPerPosition,
+				checkIfInconsistent(position, position, inconsistentPositions, consistencyIndices, stateCountsAtEachPosition,
 						minNumberChangesOnTreeAtEachPosition);
 			}
 		}
@@ -351,6 +330,7 @@ public class ConsistencyIndex {
 		
 		// Examine the counts
 		for(int i = 0; i < stateCounts.length; i++) {
+			
 			if(stateCounts[i] > 1) {
 				count++;
 				if(count > 1) {
@@ -361,44 +341,6 @@ public class ConsistencyIndex {
 		}
 		
 		return result;
-	}
-	
-	public static Hashtable<Character, boolean[]> noteStateVectorForEachCharacter(){
-		
-		Hashtable<Character, boolean[]> possibleStatesForEachCharacter = new Hashtable<Character, boolean[]>();
-		
-		// NUCLEOTIDES
-		boolean[] possibleForA = {true, false, false, false};
-		possibleStatesForEachCharacter.put('A', possibleForA);
-		possibleStatesForEachCharacter.put('a', possibleForA);
-		boolean[] possibleForC = {false, true, false, false};
-		possibleStatesForEachCharacter.put('C', possibleForC);
-		possibleStatesForEachCharacter.put('c', possibleForC);
-		boolean[] possibleForG = {false, false, true, false};
-		possibleStatesForEachCharacter.put('G', possibleForG);
-		possibleStatesForEachCharacter.put('g', possibleForG);
-		boolean[] possibleForT = {false, false, false, true};
-		possibleStatesForEachCharacter.put('T', possibleForT);
-		possibleStatesForEachCharacter.put('t', possibleForT);
-		boolean[] possibleForN = {true, true, true, true};
-		possibleStatesForEachCharacter.put('N', possibleForN);
-		possibleStatesForEachCharacter.put('n', possibleForN);
-		boolean[] possibleForDash = {true, true, true, true};
-		possibleStatesForEachCharacter.put('-', possibleForDash);
-		boolean[] possibleForR = {true, false, true, false};
-		possibleStatesForEachCharacter.put('R', possibleForR);
-		possibleStatesForEachCharacter.put('r', possibleForR);
-		boolean[] possibleForY = {false, true, false, true};
-		possibleStatesForEachCharacter.put('Y', possibleForY);
-		possibleStatesForEachCharacter.put('y', possibleForY);
-		
-		// PRESENCE/ABSENCE
-		boolean[] possibleForZero = {true, false};
-		possibleStatesForEachCharacter.put('0', possibleForZero);
-		boolean[] possibleForOne = {false, true};
-		possibleStatesForEachCharacter.put('1', possibleForOne);
-		
-		return possibleStatesForEachCharacter;
 	}
 	
 	public static void checkIfInconsistent(int position, int positionIndex, ArrayList<Integer> inconsistentPositions, double[] consistencyIndices,
@@ -438,7 +380,7 @@ public class ConsistencyIndex {
 	
 	public static void calculateMinimumNumberOfChangesOnPhylogeny(int positionIndex, int nStatesPerSite,
 			ArrayList<Node> internalNodes, boolean[][] terminalNodeStates,
-			int[][] internalNodeIndicesOfChanges, int[] minNumberChangesOnTreeAtEachPosition, int start, int end) {
+			int[][] internalNodeIndicesOfChanges, int[] minNumberChangesOnTreeAtEachPosition) {
 				
 		// Initialise an array to store the possible states for each position assigned to each internal node
 		boolean[][] possibleStatesForEachInternalNode = new boolean[internalNodes.size()][nStatesPerSite];
@@ -448,6 +390,7 @@ public class ConsistencyIndex {
 				internalNodes, nStatesPerSite, terminalNodeStates, internalNodeIndicesOfChanges, minNumberChangesOnTreeAtEachPosition);
 	}
 
+	
 	public static void identifyPossibleStatesForInternalNode(int internalNodeIndex, boolean[][] possibleStatesForEachInternalNode, int positionIndex,
 			ArrayList<Node> internalNodes, int nStatesPerSite, boolean[][] terminalNodeStates, int[][] internalNodeIndicesOfChanges,
 			int[] minNumberChangesOnTreeAtEachPosition) {
@@ -539,56 +482,6 @@ public class ConsistencyIndex {
 		}
 	}
 	
-	public static void countAllelesAtEachPositionInSequences(int position, int positionIndex, boolean[][] terminalNodeStates, int nTerminalNodes, int nStatesPerSite,
-			ArrayList<Sequence> sequences, int[] terminalNodeIndexForEachSequence, int[][] stateCountsPerPosition, 
-			Hashtable<Character, boolean[]> stateVectorForEachState) {
-						
-		// Build a hashtable to note which count position is for each allele
-		Hashtable<Character, Integer> statePositions = new Hashtable<Character, Integer>();
-		statePositions.put('A', 0);
-		statePositions.put('a', 0);
-		statePositions.put('C', 1);
-		statePositions.put('c', 1);
-		statePositions.put('G', 2);
-		statePositions.put('g', 2);
-		statePositions.put('T', 3);
-		statePositions.put('t', 3);
-		
-		// Codes for presence/absence
-		statePositions.put('0', 0);
-		statePositions.put('1', 1);
-		
-		
-		// Examine each sequence
-		for(int sequenceIndex = 0; sequenceIndex < sequences.size(); sequenceIndex++) {
-			
-			// Get the terminal node index of the current sequence
-			int terminalNodeIndex = terminalNodeIndexForEachSequence[sequenceIndex];
-			
-			// Get the current state
-			char state = sequences.get(sequenceIndex).getState(position);
-				
-			// Only examine recognised state characters, skip anything else
-			if(statePositions.containsKey(state)) {
-					
-				// Count the current allele
-				stateCountsPerPosition[positionIndex][statePositions.get(state)]++;
-			}
-			
-			// Check if state is one we expect
-			if(stateVectorForEachState.containsKey(state)) {
-				
-				// Note the current state at the current position (for terminal node states) for the terminal node associated with the current sequence
-				terminalNodeStates[terminalNodeIndex] = stateVectorForEachState.get(state);
-				
-			// Throw an error - found unexpected character (not one of: A, a, C, c, G, g, T, t, N, n, -, R, r, Y, y, 0, or 1)
-			}else {
-				System.err.println((char)27 + "[31mERROR!! Unrecognised character state (" + state + ") at position: " + (sequenceIndex + 1) + (char)27 + "[0m");
-				System.exit(0);
-			}
-		}
-	}
-
 	public static void collect(ConsistencyIndexThread[] threads, int[][] stateCountsPerPosition, int[] minNumberChangesOnTreeAtEachPosition,
 			int[][] internalNodeIndicesOfChanges, ArrayList<Integer> inconsistentPositions, double[] consistencyIndices, int nSitesPerThread) {
 		
@@ -620,101 +513,55 @@ public class ConsistencyIndex {
 		}
 	}
 	
-	public static void calculateConsistencyIndicesUsingMultipleThreads(int[][] stateCountsPerPosition, int[] minNumberChangesOnTreeAtEachPosition,
-			int[][] internalNodeIndicesOfChanges, ArrayList<Integer> inconsistentPositions,	double[] consistencyIndices, int nSites, 
-			ArrayList<Sequence> sequences, int[] terminalNodeIndexForEachSequence, ArrayList<Node> internalNodes, int nStatesPerSite,
-			int nTerminalNodes) {
-		
-		// Find out the number of threads available
-		int nThreads = Runtime.getRuntime().availableProcessors();
-
-		// Initialise an array to store the thread objects
-		ConsistencyIndexThread[] threads = new ConsistencyIndexThread[nThreads];
-		
-		// Calculate the number of sites to assign to each thread
-		int nSitesPerThread = nSites / nThreads;
-		
-		// Start the threads
-		for(int i = 0; i < nThreads; i++) {
-			
-			// Calculate the start and end of the current subset of positions to assign to the current thread
-			int start = (i * nSitesPerThread);
-			int end = start + (nSitesPerThread - 1);
-			if(end > nSites - 1 || i == nThreads - 1) {
-				end = nSites - 1;
-			}
-			
-			// Create the current thread with the necessary data
-			threads[i] = new ConsistencyIndexThread("thread-" + i, start, end, nTerminalNodes, sequences, terminalNodeIndexForEachSequence,
-					internalNodes, nStatesPerSite);
-			
-			// Start the current thread
-			threads[i].start();
-		}
-		
-		// Check the threads are finished
-		ConsistencyIndexThread.waitUntilAllFinished(threads);
-		
-		// Collect the data calculated on each thread
-		collect(threads, stateCountsPerPosition, minNumberChangesOnTreeAtEachPosition, internalNodeIndicesOfChanges,
-				inconsistentPositions, consistencyIndices, nSitesPerThread);
-	}
-	
-	private void noteTerminalNodeIndexAssociatedWithEachSequence(int nTerminalNodes, ArrayList<Sequence> sequences,
-			ArrayList<Node> terminalNodes){
-		
-		// Check there are the same number of terminal nodes in the tree file as there are sequences in the FASTA file
-		if(nTerminalNodes != sequences.size()) {
-			System.err.println((char)27 + "[31mERROR!! The number of tips in the tree file (" + nTerminalNodes + 
-					") isn't equal to the number of sequences (" + sequences.size() + ") provided!" + (char)27 + "[0m");
-			System.err.println((char)27 + "[31m        Also note the sequence and tip IDs must match exactly." + (char)27 + "[0m");
-			System.exit(0);
-		}
-		
-		// Initialise a hashtable to store the indices of each terminal node
-		Hashtable<String, Integer> indices = new Hashtable<String, Integer>();
-		
-		// Store the index of terminal node
-		for(int i = 0; i < nTerminalNodes; i++) {
-			indices.put(terminalNodes.get(i).getName(), i);
-		}
-		
-		// Initialise an array to store the terminal node index associated with sequence
-		this.terminalNodeIndexForEachSequence = new int[sequences.size()];
-				
-		// Examine each terminal node and notes its sequence index
-		for(int i = 0; i < sequences.size(); i++) {
-
-			if(indices.containsKey(sequences.get(i).getName())) {
-				this.terminalNodeIndexForEachSequence[i] = indices.get(sequences.get(i).getName());
-			}else {
-				System.err.println((char)27 + "[31mERROR!! The following sequence name: \"" + sequences.get(i).getName() + "\" isn't present as a tip label in the newick tree file." + (char)27 + "[0m");
-				System.err.println((char)27 + "[31m        The sequence and tip IDs must match exactly." + (char)27 + "[0m");
-				System.exit(0);
-			}			
-		}
-	}
+//	public static void calculateConsistencyIndicesUsingMultipleThreads(int[][] stateCountsPerPosition, int[] minNumberChangesOnTreeAtEachPosition,
+//			int[][] internalNodeIndicesOfChanges, ArrayList<Integer> inconsistentPositions,	double[] consistencyIndices, int nSites, 
+//			ArrayList<Sequence> sequences, int[] terminalNodeIndexForEachSequence, ArrayList<Node> internalNodes, int nStatesPerSite,
+//			int nTerminalNodes) {
+//		
+//		// Find out the number of threads available
+//		int nThreads = Runtime.getRuntime().availableProcessors();
+//
+//		// Initialise an array to store the thread objects
+//		ConsistencyIndexThread[] threads = new ConsistencyIndexThread[nThreads];
+//		
+//		// Calculate the number of sites to assign to each thread
+//		int nSitesPerThread = nSites / nThreads;
+//		
+//		// Start the threads
+//		for(int i = 0; i < nThreads; i++) {
+//			
+//			// Calculate the start and end of the current subset of positions to assign to the current thread
+//			int start = (i * nSitesPerThread);
+//			int end = start + (nSitesPerThread - 1);
+//			if(end > nSites - 1 || i == nThreads - 1) {
+//				end = nSites - 1;
+//			}
+//			
+//			// Create the current thread with the necessary data
+//			threads[i] = new ConsistencyIndexThread("thread-" + i, start, end, nTerminalNodes, sequences, terminalNodeIndexForEachSequence,
+//					internalNodes, nStatesPerSite);
+//			
+//			// Start the current thread
+//			threads[i].start();
+//		}
+//		
+//		// Check the threads are finished
+//		ConsistencyIndexThread.waitUntilAllFinished(threads);
+//		
+//		// Collect the data calculated on each thread
+//		collect(threads, stateCountsPerPosition, minNumberChangesOnTreeAtEachPosition, internalNodeIndicesOfChanges,
+//				inconsistentPositions, consistencyIndices, nSitesPerThread);
+//	}
 	
 	private void storeTree(Tree tree) {
 		
 		// Store the tree
 		this.tree = tree;
-		
-		// Get the internal and terminal nodes from the tree
-		this.internalNodes = this.tree.getInternalNodes();
-		this.nInternalNodes = this.internalNodes.size();
-		this.terminalNodes = this.tree.getTerminalNodes();
-		this.nTerminalNodes = this.terminalNodes.size();
 	}
 	
-	private void storeSequences(ArrayList<Sequence> sequences) {
+	private void storeStatesTable(States states) {
 		
 		// Store the sequences and their length
-		this.sequences = sequences;
-		this.nSites = this.sequences.get(0).length;
-		
-		// Note the terminal node index associated with each sequence
-		noteTerminalNodeIndexAssociatedWithEachSequence(this.nTerminalNodes, this.sequences,
-				this.terminalNodes);
+		this.statesTable = states;
 	}
 }
