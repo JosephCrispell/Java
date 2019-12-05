@@ -23,7 +23,6 @@ public class States {
 	
 	private int nStates; // Number of states for position/trait
 	private int nSites; // Number of positions/traits examining
-	private int[] stateCountsAtSite; // Number of times each state for site/trait
 	
 	private String fileType; // Either "fasta" or "traits"
 	
@@ -68,9 +67,6 @@ public class States {
 	public int getNStates() {
 		return this.nStates;
 	}
-	public int[] getStateCountsAtSite() {
-		return this.stateCountsAtSite;
-	}
 	public String getFileType() {
 		return this.fileType;
 	}
@@ -78,7 +74,7 @@ public class States {
 		
 		return this.states;
 	}
-	
+
 	// Methods - printing FASTA
 	public String getSequence(int sequenceIndex, Hashtable<Integer, Integer> positionsToIgnore) {
 		
@@ -101,7 +97,7 @@ public class States {
 	}
 	
 	// Methods - getting position/trait states	
-	public boolean[][] getTipStates(int position){
+	public boolean[][] getTipStates(int position, int positionIndex, int[][] stateCountsAtEachPosition, String[][] statesAtEachPosition){
 		
 		// Check if states from traits file - redefine state options for each trait
 		if(this.fileType.matches("traits")) {
@@ -111,7 +107,8 @@ public class States {
 		}
 		
 		// Define an array to record the
-		this.stateCountsAtSite = new int[this.nStates];
+		stateCountsAtEachPosition[positionIndex] = new int[this.nStates];
+		statesAtEachPosition[positionIndex] = this.states;
 		
 		// Initialise a matrix to store the state options for each tip
 		boolean[][] stateOptionsForTips = new boolean[this.statesTable.length][this.nStates];
@@ -121,7 +118,7 @@ public class States {
 			
 			// Count current state if not NA
 			if(this.stateIndices.get(this.statesTable[row][position]) != null) {
-				this.stateCountsAtSite[this.stateIndices.get(this.statesTable[row][position])]++;
+				stateCountsAtEachPosition[positionIndex][this.stateIndices.get(this.statesTable[row][position])]++;
 			}
 			
 			// Store the state options for the current state

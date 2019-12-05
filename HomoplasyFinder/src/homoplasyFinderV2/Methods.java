@@ -57,6 +57,11 @@ public class Methods {
 	}
 	
 	public static String toString(String[] array, String sep){
+		
+		if(array.length == 0) {
+			return "";
+		}
+		
 		String string = array[0];
 		
 		for(int i = 1; i < array.length; i++){
@@ -67,6 +72,11 @@ public class Methods {
 	}
 	
 	public static String toString(int[] array, String sep){
+		
+		if(array.length == 0) {
+			return "";
+		}
+		
 		String string = Integer.toString(array[0]);
 		
 		for(int i = 1; i < array.length; i++){

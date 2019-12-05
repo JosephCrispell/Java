@@ -4,83 +4,62 @@ import java.util.ArrayList;
 
 public class ConsistencyIndexThread extends Thread{
 
-	// Start and end of positions assigned to current thread
-	public int startPosition;
-	public int endPosition;
-	
 	// Tree
-	private ArrayList<Node> internalNodes;
-	private int nTerminalNodes;
+	private Tree tree;
 	
-	// Sequences
-	private ArrayList<Sequence> sequences;
-	public int nSites;
-	private int nStatesPerSite;
-	private int[] terminalNodeIndexForEachSequence;
+	// States table
+	private States statesTable;
+	
+	// Record number of sites examined by current thread
+	private int nSitesExamined;
 	
 	// Consistency index
-	public int[][] stateCountsPerPosition;
-	public int[] minNumberChangesOnTreeAtEachPosition;
-	public int[][] internalNodeIndicesOfChanges;
-	public ArrayList<Integer> inconsistentPositions;
-	public double[] consistencyIndices;
+	private int[][] stateCountsAtEachPosition; // Concatenated counts for each state at each position
+	private String[][] statesAtEachPosition;
+	private int[] minNumberChangesOnTreeAtEachPosition;
+	private int[][] internalNodeIndicesOfChanges;
+	private ArrayList<Integer> inconsistentPositions;
+	private double[] consistencyIndices;
 	
-	public ConsistencyIndexThread(String name, int start, int end, int nTerminalNodes, ArrayList<Sequence> sequences,
-			int[] terminalNodeIndexForEachSequence, ArrayList<Node> internalNodes, int nStatesPerSite) {
+	// Store the start and end of section current thread will work on
+	private int start;
+	private int end;
+	
+	public ConsistencyIndexThread(String name, Tree tree, States tipStates, int start, int end) {
 		
 		// Assign name to the current thread - using the position
 		super(name);
+				
+		// Store the tree and tip states at each position/trait
+		this.tree = tree;
+		this.statesTable = tipStates;
 		
-		// Store the input information
-		this.startPosition = start;
-		this.endPosition = end;
-		this.nSites = (this.endPosition - this.startPosition) + 1;
-		this.nTerminalNodes = nTerminalNodes;
-		this.sequences = sequences;
-		this.terminalNodeIndexForEachSequence = terminalNodeIndexForEachSequence;
-		this.internalNodes = internalNodes;
-		this.nStatesPerSite = nStatesPerSite;
+		// Store the start and end
+		this.start = start;
+		this.end = end;
+		
+		// Calculate the number of sites examined by current thread
+		this.nSitesExamined = (end - start) + 1;
 	}
 	
 	// Define a run method - this will execute when thread started
 	public void run(){
 
-		// Initialise the necessary variables
-		this.stateCountsPerPosition = new int[this.nSites][this.nStatesPerSite]; // Counts for each possible (A, C, G, T) at each position
-		this.minNumberChangesOnTreeAtEachPosition = new int[this.nSites]; // The minimum number of changes for each position
-		this.internalNodeIndicesOfChanges = new int[this.nSites][this.internalNodes.size()]; // The internal node indices where those changes occur
+		// Initialise all the necessary variables for storing the information associated with calculating the consistency indices
+		this.stateCountsAtEachPosition = new int[this.nSitesExamined][0]; // Concatenated counts for each possible state at each position
+		this.statesAtEachPosition = new String[this.nSitesExamined][0]; // Ordered array of states observed at each position
+		this.minNumberChangesOnTreeAtEachPosition = new int[this.nSitesExamined]; // The minimum number of changes for each position
+		this.internalNodeIndicesOfChanges = new int[this.nSitesExamined][this.tree.getInternalNodes().size()]; // The internal node indices where those changes occur
 		this.inconsistentPositions = new ArrayList<Integer>(); // Array store the inconsistent sites (consistency < 1)
-		this.consistencyIndices = new double[this.nSites]; // Consistency index of each site
+		this.consistencyIndices = new double[this.nSitesExamined]; // Consistency index of each site
 		
 		// Calculate the consistency index of each position
-		ConsistencyIndex.calculateConsistencyIndices(this.nSites, this.nTerminalNodes, this.nStatesPerSite,
-						this.sequences, this.terminalNodeIndexForEachSequence, this.stateCountsPerPosition, this.internalNodes, this.internalNodeIndicesOfChanges,
-						this.minNumberChangesOnTreeAtEachPosition, this.inconsistentPositions,
-						this.consistencyIndices, this.startPosition, this.endPosition);
+		ConsistencyIndex.calculateConsistencyIndices(this.statesTable, this.tree, this.stateCountsAtEachPosition,
+				this.statesAtEachPosition, this.internalNodeIndicesOfChanges, this.minNumberChangesOnTreeAtEachPosition,
+				this.inconsistentPositions, this.consistencyIndices, this.start, this.end);
 	}
 	
-	// Getting methods
-	public int getNSites() {
-		return nSites;
-	}
-	public int[][] getStateCountsPerPosition() {
-		return stateCountsPerPosition;
-	}
-	public int[] getMinNumberChangesOnTreeAtEachPosition() {
-		return minNumberChangesOnTreeAtEachPosition;
-	}
-	public int[][] getInternalNodeIndicesOfChanges() {
-		return internalNodeIndicesOfChanges;
-	}
-	public ArrayList<Integer> getInconsistentPositions() {
-		return inconsistentPositions;
-	}
-	public double[] getConsistencyIndices() {
-		return consistencyIndices;
-	}
-
-	
-	// General methods
+	// Methods to monitor progress
 	public static boolean finished(ConsistencyIndexThread[] threads){
 
 		// Initialise a variable to record whether all finished
@@ -100,7 +79,6 @@ public class ConsistencyIndexThread extends Thread{
 		return finished;
 	}
 
-	// Define a method to wait until threads finished
 	public static void waitUntilAllFinished(ConsistencyIndexThread[] threads){
 
 		// Initialise a variable to record whether all threads finished
@@ -111,6 +89,109 @@ public class ConsistencyIndexThread extends Thread{
 
 			// Check whether all threads finished
 			allFinished = finished(threads);
+		}
+	}
+
+	// Getting methods
+	public States getStatesTable() {
+		return statesTable;
+	}
+	public int[][] getStateCountsAtEachPosition() {
+		return stateCountsAtEachPosition;
+	}
+	public String[][] getStatesAtEachPosition() {
+		return statesAtEachPosition;
+	}
+	public int[] getMinNumberChangesOnTreeAtEachPosition() {
+		return minNumberChangesOnTreeAtEachPosition;
+	}
+	public int[][] getInternalNodeIndicesOfChanges() {
+		return internalNodeIndicesOfChanges;
+	}
+	public ArrayList<Integer> getInconsistentPositions() {
+		return inconsistentPositions;
+	}
+	public double[] getConsistencyIndices() {
+		return consistencyIndices;
+	}
+	public int getStart() {
+		return start;
+	}
+	public int getEnd() {
+		return end;
+	}
+	public int getNSitesExamined() {
+		return this.nSitesExamined;
+	}
+	
+	// Methods run multithreading
+	public static void calculateConsistencyIndicesOnMultipleThreads(States states, Tree tree, int[][] stateCountsAtEachPosition,
+			String[][] statesAtEachPosition, int[][] internalNodeIndicesOfChanges, int[] minNumberChangesOnTreeAtEachPosition,
+			ArrayList<Integer> inconsistentPositions, double[] consistencyIndices) {
+		
+		// Find out the number of threads available
+		int nThreads = Runtime.getRuntime().availableProcessors();
+
+		// Initialise an array to store the thread objects
+		ConsistencyIndexThread[] threads = new ConsistencyIndexThread[nThreads];
+		
+		// Calculate the number of sites to assign to each thread
+		int nSitesPerThread = states.getNSites() / nThreads;
+		
+		// Start the threads
+		for(int i = 0; i < nThreads; i++) {
+			
+			// Calculate the start and end of the current subset of positions to assign to the current thread
+			int start = (i * nSitesPerThread);
+			int end = start + (nSitesPerThread - 1);
+			if(end > states.getNSites() - 1 || i == nThreads - 1) {
+				end = states.getNSites() - 1;
+			}
+			
+			// Create the current thread with the necessary data
+			threads[i] = new ConsistencyIndexThread("thread-" + i, tree, states, start, end);
+			
+			// Start the current thread
+			threads[i].start();
+		}
+		
+		// Check the threads are finished
+		waitUntilAllFinished(threads);
+		
+		// Collect the data calculated on each thread
+		collect(threads, stateCountsAtEachPosition, statesAtEachPosition, minNumberChangesOnTreeAtEachPosition, internalNodeIndicesOfChanges,
+				inconsistentPositions, consistencyIndices, nSitesPerThread);		
+	}
+	
+	public static void collect(ConsistencyIndexThread[] threads, int[][] stateCountsAtEachPosition, String[][] statesAtEachPosition, int[] minNumberChangesOnTreeAtEachPosition,
+			int[][] internalNodeIndicesOfChanges, ArrayList<Integer> inconsistentPositions, double[] consistencyIndices, int nSitesPerThread) {
+		
+		// Input the data collected from each thread
+		for(int i = 0; i < threads.length; i++) {
+			
+			// Retrieve the data for the positions analysed by the current thread
+			for(int position = 0; position < threads[i].getNSitesExamined(); position++) {
+				
+				// Calculate the index of the current position from the current thread in the overall data
+				int positionIndex = position + (i * nSitesPerThread);
+				
+				// Store the information calculated for the current position
+				stateCountsAtEachPosition[positionIndex] = threads[i].getStateCountsAtEachPosition()[position];
+				statesAtEachPosition[positionIndex] = threads[i].getStatesAtEachPosition()[position];
+				minNumberChangesOnTreeAtEachPosition[positionIndex] = threads[i].getMinNumberChangesOnTreeAtEachPosition()[position];
+				internalNodeIndicesOfChanges[positionIndex] = threads[i].getInternalNodeIndicesOfChanges()[position];
+				consistencyIndices[positionIndex] = threads[i].getConsistencyIndices()[position]; // Consistency index of each site
+			}
+			
+			// Store the inconsistent positions found by the current thread
+			addInconsistentPositionsFromThread(inconsistentPositions, threads[i]);
+		}
+	}
+	
+	public static void addInconsistentPositionsFromThread(ArrayList<Integer> inconsistentPositions, ConsistencyIndexThread thread) {
+		
+		for(int position : thread.getInconsistentPositions()) {
+			inconsistentPositions.add(position);
 		}
 	}
 }

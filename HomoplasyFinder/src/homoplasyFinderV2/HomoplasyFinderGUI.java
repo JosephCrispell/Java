@@ -34,7 +34,7 @@ public class HomoplasyFinderGUI extends JFrame {
 	// Create variables to record the tree, FASTA, and report files selected
 	public String treeFile = "None provided";
 	public String fastaFile = "None provided";
-	public String presenceAbsenceFile = "None provided";
+	public String traitsFile = "None provided";
 	public String reportFile = "consistencyIndexReport_" + date + ".txt";
 	public String outputFastaFile = "sequences_noInconsistentSites_" + date + ".fasta";
 	public String outputTreeFile = "annotatedNewickTree_" + date + ".tree";
@@ -46,7 +46,7 @@ public class HomoplasyFinderGUI extends JFrame {
 	// Create matching labels that will record to the user the tree and FASTA file selected
 	public JLabel labelTreeFileSelected;
 	public JLabel labelFastaFileSelected;
-	public JLabel labelPresenceAbsenceFileSelected;
+	public JLabel labelTraitsFileSelected;
 	public JLabel labelReportFileSelected;
 	public JLabel labelOutputFastaFileSelected;
 	public JLabel labelOutputTreeFileSelected;
@@ -134,14 +134,14 @@ public class HomoplasyFinderGUI extends JFrame {
 		/**
 		 *  Create a label for the presence/absence file - located beside button and will update once presence/absence file found
 		 */
-		this.labelPresenceAbsenceFileSelected = new JLabel(this.presenceAbsenceFile);
-		this.labelPresenceAbsenceFileSelected.setBounds(300, 72, 326, 14);
-		getContentPane().add(this.labelPresenceAbsenceFileSelected);
+		this.labelTraitsFileSelected = new JLabel(this.traitsFile);
+		this.labelTraitsFileSelected.setBounds(300, 72, 326, 14);
+		getContentPane().add(this.labelTraitsFileSelected);
 		
 		// Create browse button for FASTA file
 		JButton buttonPresenceAbsenceFile = new JButton("Find presence/absence file");
 		buttonPresenceAbsenceFile.setBounds(10, 68, 272, 23);
-		buttonPresenceAbsenceFile.setToolTipText("A CSV file containing a table reporting the presence/absence of INDELS");
+		buttonPresenceAbsenceFile.setToolTipText("A CSV file containing traits associated with each tip/sequence (first column must contain IDs)");
 		
 		// Add mouse listener that will open file chooser when FASTA file button clicked
 		buttonPresenceAbsenceFile.addMouseListener(new MouseAdapter() {
@@ -149,7 +149,7 @@ public class HomoplasyFinderGUI extends JFrame {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				
-				presenceAbsenceFile = findFile(labelPresenceAbsenceFileSelected, "open");
+				traitsFile = findFile(labelTraitsFileSelected, "open");
 			}
 		});
 		getContentPane().add(buttonPresenceAbsenceFile);
@@ -274,7 +274,7 @@ public class HomoplasyFinderGUI extends JFrame {
 		 */
 		JButton buttonRun = new JButton("Run");
 		buttonRun.setBounds(280, 200, 67, 23);
-		buttonRun.setToolTipText("Run homoplasyFinder on the selected tree and FASTA file");
+		buttonRun.setToolTipText("Run homoplasyFinder on the selected tree and FASTA/traits file");
 		buttonRun.addMouseListener(new MouseAdapter() {
 			
 			// Add listener for mouse click
@@ -286,7 +286,7 @@ public class HomoplasyFinderGUI extends JFrame {
 					
 					// Check that both a tree file and the FASTA or presence/absence file have been provided
 					if(treeFile.matches("None provided") == false && 
-							(fastaFile.matches("None provided") == false ||	presenceAbsenceFile.matches("None provided") == false)){
+							(fastaFile.matches("None provided") == false ||	traitsFile.matches("None provided") == false)){
 						
 						// Run homoplasyFinder
 						runHomoplasyFinder();
@@ -387,47 +387,37 @@ public class HomoplasyFinderGUI extends JFrame {
 		// Read the NEWICK tree and store as a traversable node set
 		Tree tree = new Tree(this.treeFile);
 		
+		// Initialise a states object to store the states of each tip at each site/trait
+		States tipStates = null;
+		
 		// Check if FASTA file provided
 		if(this.fastaFile.matches("None provided") == false) {
-		
+			
 			// Read in the sequences
-			ArrayList<Sequence> sequences = Methods.readFastaFile(this.fastaFile, false);
+			tipStates = new States(tree.getTerminalNodes(), this.fastaFile, "fasta", false);
 			
-			// Calculate the consistency index of each position in the alignment on the phylogeny
-			ConsistencyIndex consistency = new ConsistencyIndex(tree, sequences, false, this.multithread, 4);
+		// Otherwise read in the traits file
+		}else if(this.traitsFile.matches("None provided") == false){
 			
-			// Create a FASTA file without inconsistent sites
-			consistency.printFASTAWithoutInConsistentSites(path + this.outputFastaFile);
-			
-			// Create an annotated NEWICK tree file
-			consistency.printAnnotatedTree(path + "annotatedNewickTree_" + date + ".tree");
-			
-			// Create a report file
-			consistency.printSummary(path + "consistencyIndexReport_" + date + ".txt", this.includeConsistentSitesInReport);
-			
-			// Print summary to text area of GUI
-			consistency.printSummary(this.textArea);
-			
-		// Read in presence absence file instead
-		}else {
-			
-			// Read in the presence absence matrix
-			PresenceAbsence presenceAbsenceMatrix = Methods.readPresenceAbsenceTable(this.presenceAbsenceFile, 
-					false);
-			
-			// Calculate the consistency index of each position in the alignment on the phylogeny
-			ConsistencyIndex consistency = new ConsistencyIndex(tree, presenceAbsenceMatrix.getBooleanSequences(), false,
-					this.multithread, 2);
-			
-			// Create an annotated NEWICK tree file
-			consistency.printAnnotatedTree(path + "annotatedNewickTree_" + date + ".tree");
-			
-			// Create a report file
-			consistency.printSummary(path + "consistencyIndexReport_" + date + ".txt", presenceAbsenceMatrix.getRegionCoords(),
-					this.includeConsistentSitesInReport);
-			
-			// Print summary to text area of GUI
-			consistency.printSummary(this.textArea, presenceAbsenceMatrix.getRegionCoords());
-		}		
+			// Read in the states for each trait
+			tipStates = new States(tree.getTerminalNodes(), this.traitsFile, "traits", false);
+		}
+		
+		// Calculate the consistency index of each position/trait in the states table on the phylogeny
+		ConsistencyIndex consistency = new ConsistencyIndex(tree, tipStates, false, this.multithread);
+		
+		// Create a FASTA file without inconsistent sites
+		if(tipStates.getFileType().matches("fasta")) {
+			consistency.printFASTAWithoutInConsistentSites(path + "sequences_noInconsistentSites_" + date + ".fasta");
+		}
+					
+		// Create an annotated NEWICK tree file
+		consistency.printAnnotatedTree(path + "annotatedNewickTree_" + date + ".tree");
+		
+		// Create a report file
+		consistency.printSummary(path + "consistencyIndexReport_" + date + ".txt", this.includeConsistentSitesInReport);
+		
+		// Print summary to text area of GUI
+		consistency.printSummary(this.textArea);
 	}
 }

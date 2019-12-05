@@ -23,9 +23,9 @@ public class Arguments {
 		
 		System.out.println("\nNecessary command line arguments:");
 		System.out.println("\t--tree [fullPathToTreeFile]\tThe input Newick formatted tree file");
-		System.out.println("ONE of the following:");
+		System.out.println("\tONE of the following:");
 		System.out.println("\t--fasta [fullPathToFASTAFile]\tThe input FASTA containing a nucleotide alignment (sequential format)");
-		System.out.println("\t--traits [fullPathToTraitsFile]\tThe input CSV containing traits associated with each tip/sequence (first column must contain IDs)");
+		System.out.println("\t--traits [fullPathToTraitsFile]\tThe input CSV containing traits associated with each tip/sequence (first column must contain tip IDs)");
 		
 		System.out.println("\nOptional command line arguments:");
 		System.out.println("\t--verbose\t\tA flag to turn on detailed progress information");

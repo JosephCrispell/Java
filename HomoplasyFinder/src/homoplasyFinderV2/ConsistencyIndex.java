@@ -98,13 +98,16 @@ public class ConsistencyIndex {
 		if(multithread) {
 						
 			// Calculate the consistency index of each position
+			ConsistencyIndexThread.calculateConsistencyIndicesOnMultipleThreads(this.statesTable, this.tree, this.stateCountsAtEachPosition,
+					this.statesAtEachPosition, this.internalNodeIndicesOfChanges, this.minNumberChangesOnTreeAtEachPosition,
+					this.inconsistentPositions, this.consistencyIndices);
 			
 		}else {
 			
 			// Calculate the consistency index of each position
-			calculateConsistencyIndices(this.statesTable, this.tree.getNTerminalNodes(), this.stateCountsAtEachPosition,
-					this.statesAtEachPosition, this.tree.getInternalNodes(), this.internalNodeIndicesOfChanges, this.minNumberChangesOnTreeAtEachPosition,
-					this.inconsistentPositions, this.consistencyIndices);
+			calculateConsistencyIndices(this.statesTable, this.tree, this.stateCountsAtEachPosition,
+					this.statesAtEachPosition, this.internalNodeIndicesOfChanges, this.minNumberChangesOnTreeAtEachPosition,
+					this.inconsistentPositions, this.consistencyIndices, 0, this.statesTable.getNSites() - 1);
 		}
 		
 		// Print summary if verbose
@@ -220,26 +223,63 @@ public class ConsistencyIndex {
 		// Open the file
 		BufferedWriter bWriter = WriteToFile.openFile(fileName, false);
 		
-		// Print a summary of the inconsistent positions identified
-		WriteToFile.writeLn(bWriter, "Position\tConsistencyIndex\tCountsACGT\tMinimumNumberChangesOnTree");
-		
-		// Print each position
+		// Create an output string
 		String output = "";
-		if(includeConsistentSites) {
-			for(int position = 0; position < this.statesTable.getNSites(); position++) {
-				if(areMultipleStatesPresent(this.stateCountsAtEachPosition[position])) {
+		
+		// Check if fasta file
+		if(this.statesTable.getFileType().matches("fasta")) {
+			
+			// Print a summary of the inconsistent positions identified
+			output += "Position\tConsistencyIndex\tCountsACGT\tMinimumNumberChangesOnTree\n";
+			
+			// Print each position
+			if(includeConsistentSites) {
+				for(int position = 0; position < this.statesTable.getNSites(); position++) {
+					if(areMultipleStatesPresent(this.stateCountsAtEachPosition[position])) {
+						output += (position + 1) + "\t" + this.consistencyIndices[position] + "\t" + 
+								Methods.toString(this.stateCountsAtEachPosition[position], ":") + "\t" + this.minNumberChangesOnTreeAtEachPosition[position] + "\n";
+					}else {
+						output += (position + 1) + "\t" + 1 + "\t" + Methods.toString(this.stateCountsAtEachPosition[position], ":") + "\t" + "-" + "\n";
+					}				
+				}	
+			}else {
+				for(int position : this.inconsistentPositions) {
 					output += (position + 1) + "\t" + this.consistencyIndices[position] + "\t" + 
 							Methods.toString(this.stateCountsAtEachPosition[position], ":") + "\t" + this.minNumberChangesOnTreeAtEachPosition[position] + "\n";
-				}else {
-					output += (position + 1) + "\t" + 1 + "\t" + Methods.toString(this.stateCountsAtEachPosition[position], ":") + "\t" + "-" + "\n";
-				}				
-			}	
+				}			
+			}
+			
+		// Otherwise print trait information
 		}else {
-			for(int position : this.inconsistentPositions) {
-				output += (position + 1) + "\t" + this.consistencyIndices[position] + "\t" + 
-						Methods.toString(this.stateCountsAtEachPosition[position], ":") + "\t" + this.minNumberChangesOnTreeAtEachPosition[position] + "\n";
-			}			
+			
+			// Print a summary of the inconsistent positions identified
+			output += "Trait\tConsistencyIndex\tTraits\tCounts\tMinimumNumberChangesOnTree\n";
+			
+			// Print each position
+			if(includeConsistentSites) {
+				for(int position = 0; position < this.statesTable.getNSites(); position++) {
+					if(areMultipleStatesPresent(this.stateCountsAtEachPosition[position])) {
+						output += this.statesTable.getSites()[position] + "\t" + this.consistencyIndices[position] + "\t" + 
+								Methods.toString(this.statesAtEachPosition[position], ":") + "\t" + 
+								Methods.toString(this.stateCountsAtEachPosition[position], ":") + "\t" + 
+								this.minNumberChangesOnTreeAtEachPosition[position] + "\n";
+					}else {
+						output += this.statesTable.getSites()[position] + "\t" + 1 + "\t" + 
+								Methods.toString(this.statesAtEachPosition[position], ":") + "\t" + 
+								Methods.toString(this.stateCountsAtEachPosition[position], ":") + "\t" + "-" + "\n";
+					}				
+				}	
+			}else {
+				for(int position : this.inconsistentPositions) {
+					output += this.statesTable.getSites()[position] + "\t" + this.consistencyIndices[position] + "\t" + 
+							Methods.toString(this.statesAtEachPosition[position], ":") + "\t" + 
+							Methods.toString(this.stateCountsAtEachPosition[position], ":") + "\t" + 
+							this.minNumberChangesOnTreeAtEachPosition[position] + "\n";
+				}			
+			}
 		}
+		
+		// Write the output to file
 		WriteToFile.write(bWriter, output);		
 		
 		// Close the file
@@ -294,27 +334,28 @@ public class ConsistencyIndex {
 	}
 	
 	// Class specific methods
-	public static void calculateConsistencyIndices(States states, int nTerminalNodes, int[][] stateCountsAtEachPosition,
-			String[][] statesAtEachPosition, ArrayList<Node> internalNodes, int[][] internalNodeIndicesOfChanges, 
-			int[] minNumberChangesOnTreeAtEachPosition, ArrayList<Integer> inconsistentPositions, double[] consistencyIndices) {
+	public static void calculateConsistencyIndices(States states, Tree tree, int[][] stateCountsAtEachPosition,
+			String[][] statesAtEachPosition, int[][] internalNodeIndicesOfChanges, int[] minNumberChangesOnTreeAtEachPosition, 
+			ArrayList<Integer> inconsistentPositions, double[] consistencyIndices, int start, int end) {
 		
 		// Examine each position in the alignment
-		for(int position = 0; position < states.getNSites(); position++) {
+		for(int position = start; position <= end; position++) {
+			
+			// If multithreading the index for storing information will be different than position
+			int positionIndex = position - start;
 			
 			// Count the number of times each state is found at the current position and note terminal node states
-			boolean[][] terminalNodeStates = states.getTipStates(position);
-			stateCountsAtEachPosition[position] = states.getStateCountsAtSite();
-			statesAtEachPosition[position] = states.getStates();
+			boolean[][] terminalNodeStates = states.getTipStates(position, positionIndex, stateCountsAtEachPosition, statesAtEachPosition);
 			
 			// Check if multiple alleles present - i.e. not a constant site
-			if(areMultipleStatesPresent(stateCountsAtEachPosition[position])) {
+			if(areMultipleStatesPresent(stateCountsAtEachPosition[positionIndex])) {
 				
 				// Calculate the minimum number of changes of each position on the phylogeny
-				calculateMinimumNumberOfChangesOnPhylogeny(position, states.getNStates(),
-						internalNodes, terminalNodeStates, internalNodeIndicesOfChanges, minNumberChangesOnTreeAtEachPosition);
+				calculateMinimumNumberOfChangesOnPhylogeny(positionIndex, states.getNStates(),
+						tree.getInternalNodes(), terminalNodeStates, internalNodeIndicesOfChanges, minNumberChangesOnTreeAtEachPosition);
 				
 				// Calculate the consistency index
-				checkIfInconsistent(position, position, inconsistentPositions, consistencyIndices, stateCountsAtEachPosition,
+				checkIfInconsistent(position, positionIndex, inconsistentPositions, consistencyIndices, stateCountsAtEachPosition,
 						minNumberChangesOnTreeAtEachPosition);
 			}
 		}
@@ -349,10 +390,10 @@ public class ConsistencyIndex {
 		// Calculate the consistency index
 		consistencyIndices[positionIndex] = calculateConsistencyIndexForPosition(stateCountsPerPosition[positionIndex], 
 				minNumberChangesOnTreeAtEachPosition[positionIndex]);
-			
+		
 		// Report the position if, the consistency index is less than 1
 		if(consistencyIndices[positionIndex] < 1) {
-				
+		
 			inconsistentPositions.add(position);
 		}
 	}
@@ -482,86 +523,4 @@ public class ConsistencyIndex {
 		}
 	}
 	
-	public static void collect(ConsistencyIndexThread[] threads, int[][] stateCountsPerPosition, int[] minNumberChangesOnTreeAtEachPosition,
-			int[][] internalNodeIndicesOfChanges, ArrayList<Integer> inconsistentPositions, double[] consistencyIndices, int nSitesPerThread) {
-		
-		// Input the data collected from each thread
-		for(int i = 0; i < threads.length; i++) {
-			
-			// Retrieve the data for the positions analysed by the current thread
-			for(int position = 0; position < threads[i].getNSites(); position++) {
-				
-				// Calculate the index of the current position from the current thread in the overall data
-				int positionIndex = position + (i * nSitesPerThread);
-				
-				// Store the information calculated for the current position
-				stateCountsPerPosition[positionIndex] = threads[i].getStateCountsPerPosition()[position];
-				minNumberChangesOnTreeAtEachPosition[positionIndex] = threads[i].getMinNumberChangesOnTreeAtEachPosition()[position];
-				internalNodeIndicesOfChanges[positionIndex] = threads[i].getInternalNodeIndicesOfChanges()[position];
-				consistencyIndices[positionIndex] = threads[i].getConsistencyIndices()[position]; // Consistency index of each site
-			}
-			
-			// Store the inconsistent positions found by the current thread
-			addInconsistentPositionsFromThread(inconsistentPositions, threads[i]);
-		}
-	}
-	
-	public static void addInconsistentPositionsFromThread(ArrayList<Integer> inconsistentPositions, ConsistencyIndexThread thread) {
-		
-		for(int position : thread.getInconsistentPositions()) {
-			inconsistentPositions.add(position);
-		}
-	}
-	
-//	public static void calculateConsistencyIndicesUsingMultipleThreads(int[][] stateCountsPerPosition, int[] minNumberChangesOnTreeAtEachPosition,
-//			int[][] internalNodeIndicesOfChanges, ArrayList<Integer> inconsistentPositions,	double[] consistencyIndices, int nSites, 
-//			ArrayList<Sequence> sequences, int[] terminalNodeIndexForEachSequence, ArrayList<Node> internalNodes, int nStatesPerSite,
-//			int nTerminalNodes) {
-//		
-//		// Find out the number of threads available
-//		int nThreads = Runtime.getRuntime().availableProcessors();
-//
-//		// Initialise an array to store the thread objects
-//		ConsistencyIndexThread[] threads = new ConsistencyIndexThread[nThreads];
-//		
-//		// Calculate the number of sites to assign to each thread
-//		int nSitesPerThread = nSites / nThreads;
-//		
-//		// Start the threads
-//		for(int i = 0; i < nThreads; i++) {
-//			
-//			// Calculate the start and end of the current subset of positions to assign to the current thread
-//			int start = (i * nSitesPerThread);
-//			int end = start + (nSitesPerThread - 1);
-//			if(end > nSites - 1 || i == nThreads - 1) {
-//				end = nSites - 1;
-//			}
-//			
-//			// Create the current thread with the necessary data
-//			threads[i] = new ConsistencyIndexThread("thread-" + i, start, end, nTerminalNodes, sequences, terminalNodeIndexForEachSequence,
-//					internalNodes, nStatesPerSite);
-//			
-//			// Start the current thread
-//			threads[i].start();
-//		}
-//		
-//		// Check the threads are finished
-//		ConsistencyIndexThread.waitUntilAllFinished(threads);
-//		
-//		// Collect the data calculated on each thread
-//		collect(threads, stateCountsPerPosition, minNumberChangesOnTreeAtEachPosition, internalNodeIndicesOfChanges,
-//				inconsistentPositions, consistencyIndices, nSitesPerThread);
-//	}
-	
-	private void storeTree(Tree tree) {
-		
-		// Store the tree
-		this.tree = tree;
-	}
-	
-	private void storeStatesTable(States states) {
-		
-		// Store the sequences and their length
-		this.statesTable = states;
-	}
 }
