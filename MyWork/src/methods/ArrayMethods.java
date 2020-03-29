@@ -1,8 +1,5 @@
 package methods;
-import org.uncommons.maths.random.MersenneTwisterRNG;
-import org.uncommons.maths.random.PoissonGenerator;
 import java.util.*;
-
 
 public class ArrayMethods {
 

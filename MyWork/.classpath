@@ -36,5 +36,6 @@
 			<attribute name="module" value="true"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="lib" path="/home/josephcrispell/Java/MyWork/Library/uncommons-maths-1.2.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

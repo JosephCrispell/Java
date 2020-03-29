@@ -27,6 +27,12 @@ public class MergeVcfFiles {
 	 */
 	public static void main(String[] args) throws IOException {
 		
+//		// De-bugging section - START
+//		args = new String[2];
+//		args[0] = "/home/josephcrispell/storage/Research/RepublicOfIreland/Mbovis/Wicklow/vcfFiles";
+//		args[1] = "false";
+//		// De-bugging section - END
+				
 		if(args[0].equals("-help") || args[0].equals("")){
 			System.out.println("Java Tool to summarise and combine a set of VCF files into a single Merged file.");
 			System.out.println("\nCommand Line Structure:");
@@ -62,11 +68,9 @@ public class MergeVcfFiles {
 			System.out.println("Beginning to merge VCF files. May take several minutes!");
 			
 			// Get the path to the directory
-//			String path = "/home/josephcrispell/Desktop/Research/RepublicOfIreland/Mbovis/WorkingOnIndels/";
 			String path = args[0];
 			
 			// Open the genome annotation file
-//			String annotationFile = "/home/josephcrispell/Desktop/Research/Reference/TransferAnnotations_23-05-18/UpdatedMaloneAnnotations_FINAL_25-05-18.gff";
 			String annotationFile = args[1];
 			
 			// Note the regions of the genome that we want to ignore
@@ -212,7 +216,7 @@ public class MergeVcfFiles {
 			file = listOfFiles[i].getName();
 			
 			// Is the file a VCF file?
-			if(file.matches("(.*).vcf(.*)")){
+			if(file.matches("(.*).vcf") || file.matches("(.*).vcf.gz")){
 				posUsed++;
 				files[posUsed] = file; // Store only the VCF files
 			}

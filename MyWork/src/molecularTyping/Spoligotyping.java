@@ -36,7 +36,7 @@ public class Spoligotyping {
 		Hashtable<String, int[]> spoligotypeBinaryCodes = readSpoligotypeConversionTable(spoligotypeConversionTable);
 				
 		// Read in the spoligotyping region information
-		String annotationFile = "C:/Users/Joseph Crisp/Desktop/UbuntuSharedFolder/Reference/TransferAnnotations_09-02-18/" + 
+		String annotationFile = "\"C:/Users/Joseph Crisp/Desktop/UbuntuSharedFolder/Reference/TransferAnnotations_09-02-18/" + 
 		"UpdatedMaloneAnnotations_09-02-18.gff";
 		int[][] spacerStartEnds = getSpacerRegionStartEnds(annotationFile,
 				"feature	CDS	3079186	307999",
@@ -46,77 +46,77 @@ public class Spoligotyping {
 		String vcfFileDirectory = "C:/Users/Joseph Crisp/Desktop/UbuntuSharedFolder/Woodchester_CattleAndBadgers/NewAnalyses_22-03-18/vcfFiles/";
 		String[] filesInDirectory = GeneralMethods.getAllFilesInDirectory(vcfFileDirectory, ".vcf.gz");
 		
-		// Get the previous spoligotype information if available
-		String isolateDataPath = "C:/Users/Joseph Crisp/Desktop/UbuntuSharedFolder/Woodchester_CattleAndBadgers/NewAnalyses_22-03-18/IsolateData/";
-		String badgerFile = isolateDataPath + "BadgerInfo_08-04-15_LatLongs_XY_Centroids.csv";
-		String cattleFile = isolateDataPath + "CattleIsolateInfo_AddedNew_TB1484-TB1490_22-03-18.csv";
-		Hashtable<String, String> isolateTypes = getBadgerIsolateSpoligotypes(badgerFile);
-		getCattleIsolateSpoligotypes(cattleFile, isolateTypes);
+//		// Get the previous spoligotype information if available
+//		String isolateDataPath = "C:/Users/Joseph Crisp/Desktop/UbuntuSharedFolder/Woodchester_CattleAndBadgers/NewAnalyses_22-03-18/IsolateData/";
+//		String badgerFile = isolateDataPath + "BadgerInfo_08-04-15_LatLongs_XY_Centroids.csv";
+//		String cattleFile = isolateDataPath + "CattleIsolateInfo_AddedNew_TB1484-TB1490_22-03-18.csv";
+//		Hashtable<String, String> isolateTypes = getBadgerIsolateSpoligotypes(badgerFile);
+//		getCattleIsolateSpoligotypes(cattleFile, isolateTypes);
 		
 		// Note the start and end of the Spoligotyping region - taken directly from annotation file
 		int[] regionOfInterest = {3080147, 3084550};
 		
-		// Open an output file
-		String outputFile = path + "SpoligotypeMatches_" + date + ".txt";
-		BufferedWriter bWriter = WriteToFile.openFile(outputFile, false);
-		
-		// Add a header
-		String[] spoligotypes = HashtableMethods.getKeysString(spoligotypeBinaryCodes);
-		WriteToFile.writeLn(bWriter, "File\tAssignedSpoligotype\tAverageDepth\tProportionNs\t" + ArrayMethods.toString(spoligotypes, "\t"));
-				
-		for(int fileIndex = 0; fileIndex < filesInDirectory.length; fileIndex++){
-			
-			System.out.println("Spoligotyping: " + filesInDirectory[fileIndex] + ". File " + (fileIndex + 1) +
-					" of " + filesInDirectory.length);
-			
-			// Read in the vcf file and store information for region of interest
-			String vcfFileName = vcfFileDirectory + filesInDirectory[fileIndex];
-			VcfFile vcfInfo = new VcfFile(vcfFileName, regionOfInterest);
-			
-			// Get the nucleotide sequence for the region of interest
-			double mappingQualityThreshold = 0;
-			double highQualityBaseDepthThreshold = 0;
-			double readDepthThreshold = 0;
-			double alleleSupportThreshold = 0;
-			double qualityScoreThreshold = 0;
-			double fqThreshold = 0;
-			
-			char[] sequence = getNucleotideSequence(vcfInfo, 
-					mappingQualityThreshold, highQualityBaseDepthThreshold, readDepthThreshold,
-					alleleSupportThreshold, qualityScoreThreshold, fqThreshold, regionOfInterest);
-			
-			// Get the nucleotide sequences of the spacers
-			char[][] isolateSpacerSequences = getSpacerSequences(sequence, spacerStartEnds, regionOfInterest[0]);
-			
-			// Find which spacer sequences are present
-			int mismatchThreshold = 0;
-			int[] foundSpacer = searchForReferenceSpacersInIsolateSpacerRegions(spacerReverseCompliments, 
-					isolateSpacerSequences, mismatchThreshold);
-			
-			// Note which spoligotype was present
-			int[][] spacerInfo = searchSpoligotypeBinaryCodes(spoligotypeBinaryCodes, foundSpacer);
-						
-			// Note the spoligotype provided if found
-			String[] parts = vcfFileName.split("/");
-			String isolateID = parts[parts.length - 1].split("_")[0];
-			if(isolateTypes.get(isolateID) != null){
-				WriteToFile.write(bWriter, parts[parts.length - 1] + "\t" + isolateTypes.get(isolateID) + 
-						"\t" + vcfInfo.getAverageDepth() + "\t" + vcfInfo.getRegionCoverage());
-			}else{
-				WriteToFile.write(bWriter, parts[parts.length - 1] + "\tNA\t" + vcfInfo.getAverageDepth() + 
-						"\t" + vcfInfo.getRegionCoverage());
-			}			
-			
-			// Print the match information
-			for(int i = 0; i < spoligotypes.length; i++){
-
-				WriteToFile.write(bWriter, "\t" + spacerInfo[i][0] + ":" + spacerInfo[i][1]);
-			}
-			WriteToFile.write(bWriter, "\n");
-		}
-		
-		// Close the output file
-		WriteToFile.close(bWriter);
+//		// Open an output file
+//		String outputFile = path + "SpoligotypeMatches_" + date + ".txt";
+//		BufferedWriter bWriter = WriteToFile.openFile(outputFile, false);
+//		
+//		// Add a header
+//		String[] spoligotypes = HashtableMethods.getKeysString(spoligotypeBinaryCodes);
+//		WriteToFile.writeLn(bWriter, "File\tAssignedSpoligotype\tAverageDepth\tProportionNs\t" + ArrayMethods.toString(spoligotypes, "\t"));
+//				
+//		for(int fileIndex = 0; fileIndex < filesInDirectory.length; fileIndex++){
+//			
+//			System.out.println("Spoligotyping: " + filesInDirectory[fileIndex] + ". File " + (fileIndex + 1) +
+//					" of " + filesInDirectory.length);
+//			
+//			// Read in the vcf file and store information for region of interest
+//			String vcfFileName = vcfFileDirectory + filesInDirectory[fileIndex];
+//			VcfFile vcfInfo = new VcfFile(vcfFileName, regionOfInterest);
+//			
+//			// Get the nucleotide sequence for the region of interest
+//			double mappingQualityThreshold = 0;
+//			double highQualityBaseDepthThreshold = 0;
+//			double readDepthThreshold = 0;
+//			double alleleSupportThreshold = 0;
+//			double qualityScoreThreshold = 0;
+//			double fqThreshold = 0;
+//			
+//			char[] sequence = getNucleotideSequence(vcfInfo, 
+//					mappingQualityThreshold, highQualityBaseDepthThreshold, readDepthThreshold,
+//					alleleSupportThreshold, qualityScoreThreshold, fqThreshold, regionOfInterest);
+//			
+//			// Get the nucleotide sequences of the spacers
+//			char[][] isolateSpacerSequences = getSpacerSequences(sequence, spacerStartEnds, regionOfInterest[0]);
+//			
+//			// Find which spacer sequences are present
+//			int mismatchThreshold = 0;
+//			int[] foundSpacer = searchForReferenceSpacersInIsolateSpacerRegions(spacerReverseCompliments, 
+//					isolateSpacerSequences, mismatchThreshold);
+//			
+//			// Note which spoligotype was present
+//			int[][] spacerInfo = searchSpoligotypeBinaryCodes(spoligotypeBinaryCodes, foundSpacer);
+//						
+//			// Note the spoligotype provided if found
+//			String[] parts = vcfFileName.split("/");
+//			String isolateID = parts[parts.length - 1].split("_")[0];
+//			if(isolateTypes.get(isolateID) != null){
+//				WriteToFile.write(bWriter, parts[parts.length - 1] + "\t" + isolateTypes.get(isolateID) + 
+//						"\t" + vcfInfo.getAverageDepth() + "\t" + vcfInfo.getRegionCoverage());
+//			}else{
+//				WriteToFile.write(bWriter, parts[parts.length - 1] + "\tNA\t" + vcfInfo.getAverageDepth() + 
+//						"\t" + vcfInfo.getRegionCoverage());
+//			}			
+//			
+//			// Print the match information
+//			for(int i = 0; i < spoligotypes.length; i++){
+//
+//				WriteToFile.write(bWriter, "\t" + spacerInfo[i][0] + ":" + spacerInfo[i][1]);
+//			}
+//			WriteToFile.write(bWriter, "\n");
+//		}
+//		
+//		// Close the output file
+//		WriteToFile.close(bWriter);
 	}
 	
 	public static void getCattleIsolateSpoligotypes(String fileName, Hashtable<String, String> isolateSpoligotypes) throws IOException{
@@ -468,13 +468,24 @@ public class Spoligotyping {
 		for(int i = 0; i < sequences.length; i++){
 						
 			// Get the reverse
-			reverseCompliments[i] = ArrayMethods.reverse(sequences[i].getSequence());
+			reverseCompliments[i] = reverse(sequences[i].getSequence());
 			
 			// Get the compliment
 			reverseCompliments[i] = getSequenceComplement(reverseCompliments[i]);
 		}
 		
 		return reverseCompliments;
+	}
+	
+	public static char[] reverse(char[] array){
+		
+		char[] reversed = new char[array.length];
+		
+		for(int i = 0; i < array.length; i++){
+			reversed[array.length - (i + 1)] = array[i];
+		}
+		
+		return reversed;
 	}
 	
 	public static char[] getSequenceComplement(char[] sequence){

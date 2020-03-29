@@ -57,5 +57,7 @@ public class HomoplasyFinder {
 		
 		// Create a report file
 		consistency.printSummary(path + "consistencyIndexReport_" + date + ".txt", arguments.isIncludeConsistentSitesInReport());
-	}	
+	}
+	
+	STILL NEED TO ADD THE R FUNCTION!
 }

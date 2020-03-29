@@ -100,12 +100,20 @@ public class SnpInfo {
 				continue;
 			}
 			
+			// Split the values string into separate strings
 			stringValues = parts[1].split(",");
 			
 			// Convert each value string into double
 			values = new double[stringValues.length];
 			
 			for(int i = 0; i < stringValues.length; i++){
+				
+				// Check value doesn't equal "."
+				if(stringValues[i].matches(".")) {
+					continue;
+				}
+				
+				// Otherwise convert to double
 				values[i] = Double.parseDouble(stringValues[i]);
 			}
 			
@@ -152,6 +160,14 @@ public class SnpInfo {
 			values = new double[stringValues.length];
 			
 			for(int x = 0; x < stringValues.length; x++){
+				
+				// Check value doesn't equal "."
+				if(stringValues[x].matches(".")) {
+					continue;
+				}
+				
+				// Otherwise convert to double
+				
 				values[x] = Double.parseDouble(stringValues[x]);
 			}
 			

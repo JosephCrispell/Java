@@ -5,9 +5,6 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Random;
 
-
-import org.uncommons.maths.random.MersenneTwisterRNG;
-
 public class GeneralMethods {
 
 	/**
