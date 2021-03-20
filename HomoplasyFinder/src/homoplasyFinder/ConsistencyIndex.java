@@ -367,30 +367,56 @@ public class ConsistencyIndex {
 		
 		Hashtable<Character, boolean[]> possibleStatesForEachCharacter = new Hashtable<Character, boolean[]>();
 		
+		// IUPAC nucleotide codes: https://www.ncbi.nlm.nih.gov/Class/MLACourse/Modules/MolBioReview/iupac_nt_abbreviations.html
+		
 		// NUCLEOTIDES
-		boolean[] possibleForA = {true, false, false, false};
+		boolean[] possibleForA = {true, false, false, false}; // A
 		possibleStatesForEachCharacter.put('A', possibleForA);
 		possibleStatesForEachCharacter.put('a', possibleForA);
-		boolean[] possibleForC = {false, true, false, false};
+		boolean[] possibleForC = {false, true, false, false}; // C
 		possibleStatesForEachCharacter.put('C', possibleForC);
 		possibleStatesForEachCharacter.put('c', possibleForC);
-		boolean[] possibleForG = {false, false, true, false};
+		boolean[] possibleForG = {false, false, true, false}; // G
 		possibleStatesForEachCharacter.put('G', possibleForG);
 		possibleStatesForEachCharacter.put('g', possibleForG);
-		boolean[] possibleForT = {false, false, false, true};
+		boolean[] possibleForT = {false, false, false, true}; // T
 		possibleStatesForEachCharacter.put('T', possibleForT);
 		possibleStatesForEachCharacter.put('t', possibleForT);
-		boolean[] possibleForN = {true, true, true, true};
-		possibleStatesForEachCharacter.put('N', possibleForN);
-		possibleStatesForEachCharacter.put('n', possibleForN);
-		boolean[] possibleForDash = {true, true, true, true};
-		possibleStatesForEachCharacter.put('-', possibleForDash);
-		boolean[] possibleForR = {true, false, true, false};
+		boolean[] possibleForM = {true, true, false, false};  // A or C
+		possibleStatesForEachCharacter.put('M', possibleForM);
+		possibleStatesForEachCharacter.put('m', possibleForM);
+		boolean[] possibleForR = {true, false, true, false};  // A or G
 		possibleStatesForEachCharacter.put('R', possibleForR);
 		possibleStatesForEachCharacter.put('r', possibleForR);
-		boolean[] possibleForY = {false, true, false, true};
+		boolean[] possibleForW = {true, false, false, true};  // A or T
+		possibleStatesForEachCharacter.put('W', possibleForW);
+		possibleStatesForEachCharacter.put('w', possibleForW);
+		boolean[] possibleForS = {false, true, true, false};  // C or G
+		possibleStatesForEachCharacter.put('S', possibleForS);
+		possibleStatesForEachCharacter.put('s', possibleForS);		
+		boolean[] possibleForY = {false, true, false, true};  // C or T
 		possibleStatesForEachCharacter.put('Y', possibleForY);
 		possibleStatesForEachCharacter.put('y', possibleForY);
+		boolean[] possibleForK = {false, false, true, true};  // G or T
+		possibleStatesForEachCharacter.put('K', possibleForK);
+		possibleStatesForEachCharacter.put('k', possibleForK);
+		boolean[] possibleForV = {true, true, true, false};  // A, C, or G
+		possibleStatesForEachCharacter.put('V', possibleForV);
+		possibleStatesForEachCharacter.put('v', possibleForV);
+		boolean[] possibleForH = {true, true, false, true};  // A, C, or T
+		possibleStatesForEachCharacter.put('H', possibleForH);
+		possibleStatesForEachCharacter.put('h', possibleForH);
+		boolean[] possibleForD = {true, false, true, true};  // A, G, or T
+		possibleStatesForEachCharacter.put('D', possibleForD);
+		possibleStatesForEachCharacter.put('d', possibleForD);
+		boolean[] possibleForB = {false, true, true, true};  // C, G, or T
+		possibleStatesForEachCharacter.put('B', possibleForB);
+		possibleStatesForEachCharacter.put('b', possibleForB);
+		boolean[] possibleForN = {true, true, true, true};   // A, C, G, or T
+		possibleStatesForEachCharacter.put('N', possibleForN);
+		possibleStatesForEachCharacter.put('n', possibleForN);
+		boolean[] possibleForDash = {true, true, true, true};// A, C, G, or T 
+		possibleStatesForEachCharacter.put('-', possibleForDash);
 		
 		// PRESENCE/ABSENCE
 		boolean[] possibleForZero = {true, false};
